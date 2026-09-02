@@ -490,6 +490,11 @@ function surfaceH(lon, lat, extra){
 function surfCart(lon, lat, extra){
   return Cesium.Cartesian3.fromDegrees(lon, lat, surfaceH(lon, lat, extra || 0));
 }
+// 地形真实顶面椭球高：几何 height=surfaceH(...,AL_LIFT)，顶点着色器再抬 (H-DM.minH)*(EXAG-1)
+function terrainTopH(lon, lat){
+  var H = surfaceH(lon, lat, AL_LIFT);
+  return H + (H - DM.minH) * (EXAG - 1.0);
+}
 function geoCenter(ring){
   var x = 0, y = 0, n = ring.length;
   for (var i = 0; i < n; i++){ x += ring[i][0]; y += ring[i][1]; }
@@ -1014,7 +1019,7 @@ function addPoints(){
 
     // 每个矿区统一加名称标注（距离缩放：近看才显，避免远景堆叠）
     var lb = viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 30),
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, terrainTopH(p.lon, p.lat) + 28),
       label: {
         text: p.county + ' · ' + (CAT_NAMES[p.dom] || ''),
         font: '600 10px "Noto Serif SC"',
@@ -1027,23 +1032,22 @@ function addPoints(){
         translucencyByDistance: new Cesium.NearFarScalar(300000, 1.0, 650000, 0.25)
       }
     });
-    lb._lon = p.lon; lb._lat = p.lat; lb._h = 30;
+    lb._lon = p.lon; lb._lat = p.lat; lb._h = 28;
     labelEnts.push(lb);
 
-    // 屏幕空间点标：独立贴地 entity, 避免悬在光柱中部; 穿透遮挡保证全览可见
+    // 屏幕空间点标：真正附着在 DEM 顶面(与地形着色器/AL_LIFT 一致)；开启 depth-test 随山体遮挡 = 贴地
     var pe = viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 6),
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, terrainTopH(p.lon, p.lat) + 4),
       point: {
         pixelSize: 11,
         color: col.withAlpha(0.95),
         outlineColor: Cesium.Color.fromCssColorString('#ffe6bc').withAlpha(0.9),
         outlineWidth: 2,
         scaleByDistance: new Cesium.NearFarScalar(5000, 1.7, 900000, 0.55),
-        translucencyByDistance: new Cesium.NearFarScalar(1200000, 1.0, 2400000, 0.25),
-        disableDepthTestDistance: Number.POSITIVE_INFINITY
+        translucencyByDistance: new Cesium.NearFarScalar(1200000, 1.0, 2400000, 0.25)
       }
     });
-    pe._idx = i; pe._lon = p.lon; pe._lat = p.lat; pe._cat = p.dom; pe._h = 6;
+    pe._idx = i; pe._lon = p.lon; pe._lat = p.lat; pe._cat = p.dom; pe._h = 4;
     markerEnts.push(pe);
   }
 }
@@ -1090,12 +1094,22 @@ function refreshHeights(){
   applyLayerVis();
 }
 
-/* 矿点贴地：光柱/标签随垂直夸张按 surfaceH 重算 */
+/* 矿点贴地：光柱/标签/点标随垂直夸张与地形顶面重算 */
 function applyLift(){
   var i, e, z;
   for (i = 0; i < elevEnts.length; i++){
     e = elevEnts[i];
     z = surfaceH(e._lon, e._lat, e._h);
+    e.position = Cesium.Cartesian3.fromDegrees(e._lon, e._lat, z);
+  }
+  for (i = 0; i < markerEnts.length; i++){
+    e = markerEnts[i];
+    z = terrainTopH(e._lon, e._lat) + (e._h || 4);
+    e.position = Cesium.Cartesian3.fromDegrees(e._lon, e._lat, z);
+  }
+  for (i = 0; i < labelEnts.length; i++){
+    e = labelEnts[i];
+    z = terrainTopH(e._lon, e._lat) + (e._h || 28);
     e.position = Cesium.Cartesian3.fromDegrees(e._lon, e._lat, z);
   }
 }
@@ -1398,12 +1412,17 @@ function buildProcGallery(){
 }
 
 /* 工艺卡精准导航：直接飞到该代代表性稀土矿点，不再回退概览 */
+var _procToken = 0;
 function flyToProc(p){
   hidePopup();
   var ll = PROC_LL[p.g];
   if (!ll) return;
-  flyTo(ll[0], ll[1], 12000, -30, 0, 2.2);
-  setTimeout(function(){ showProcPopup(p); }, 1500);
+  var myTok = ++_procToken;
+  viewer.camera.flyToBoundingSphere(
+    new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(ll[0], ll[1], 0), 1),
+    { duration: 2.2,
+      offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-30), 12000),
+      complete: function(){ if (myTok === _procToken) showProcPopup(p); } });
 }
 function showProcPopup(p){
   var ll = PROC_LL[p.g];
