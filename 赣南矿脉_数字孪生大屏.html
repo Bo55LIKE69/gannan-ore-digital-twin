@@ -203,31 +203,24 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ccard .ct{font-size:10px;color:var(--copper);margin:2px 0 3px}
 .ccard .cd{font-size:10.5px;color:var(--dim2);line-height:1.55}
 
-/* 章节叙述卡 */
-.chapter{background:linear-gradient(160deg,rgba(201,148,74,.09),rgba(201,148,74,.02));
-  border:1px solid rgba(201,148,74,.24);border-radius:9px;padding:14px 15px;margin-bottom:14px;
-  position:relative;overflow:hidden}
-.chapter .idx{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.24em}
-.chapter .ttl{font-size:17px;font-weight:700;color:#f0e0c0;margin:5px 0 7px;letter-spacing:.03em}
-.chapter .body{font-size:11.5px;color:#9aa4b2;line-height:1.85;letter-spacing:.02em}
-.chapter .kv{display:flex;gap:16px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
-.chapter .kv .i .v{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);font-weight:600}
-.chapter .kv .i .l{font-size:9.5px;color:var(--dim2);letter-spacing:.1em;margin-top:1px}
-
-/* ===== 章节标签（右面板顶部，替代底部故事条） ===== */
-.chtabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px}
-.chtab{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:14px;cursor:pointer;
-  border:1px solid var(--border);background:var(--panel-2);
-  transition:all .22s;opacity:.6;white-space:nowrap}
-.chtab:hover{opacity:1;border-color:rgba(201,148,74,.5)}
-.chtab .cn{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim2);
-  padding:0 4px;border-radius:6px;background:rgba(255,255,255,.06)}
-.chtab .nm{font-size:10.5px;color:var(--dim)}
-.chtab:hover .nm{color:var(--text)}
-.chtab.on{opacity:1;background:rgba(201,148,74,.16);border-color:var(--gold);
-  box-shadow:0 0 12px rgba(201,148,74,.22)}
-.chtab.on .cn{background:var(--gold);color:#1a1206;font-weight:600}
-.chtab.on .nm{color:#f0d9a8;font-weight:600}
+/* 稀土开采工艺画廊 */
+.proccard{display:flex;gap:11px;align-items:stretch;padding:9px;border-radius:9px;cursor:pointer;
+  border:1px solid rgba(201,148,74,.18);background:var(--panel-2);margin-bottom:11px;
+  transition:all .22s;overflow:hidden}
+.proccard:hover{border-color:var(--gold);background:rgba(201,148,74,.1);
+  box-shadow:0 0 14px rgba(201,148,74,.2)}
+.procimg{width:104px;height:78px;object-fit:cover;border-radius:6px;flex:0 0 auto;
+  border:1px solid rgba(255,255,255,.08);background:#1a1d24}
+.procmeta{display:flex;flex-direction:column;justify-content:space-between;min-width:0;flex:1}
+.proc-h{display:flex;align-items:center;gap:7px}
+.proc-gen{font-size:9px;font-weight:700;color:#1a1206;padding:1px 6px;border-radius:10px;white-space:nowrap}
+.proc-name{font-size:13px;font-weight:600;color:#f0e0c0}
+.proc-yr{font-size:9.5px;color:var(--dim2);margin-left:auto;font-family:'JetBrains Mono',monospace}
+.proc-d{font-size:10.5px;color:var(--dim);line-height:1.5;margin:4px 0;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.proc-foot{display:flex;justify-content:space-between;align-items:center;
+  font-size:10px;color:var(--dim2)}
+.proc-go{color:var(--gold);font-weight:600}
 
 /* 弹窗 */
 .popup{position:absolute;z-index:200;background:var(--panel);border:1px solid rgba(201,148,74,.5);
@@ -298,7 +291,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   <div class="src">ASTER GDEM 30m · 山体阴影 315°/45°<br>赣州市矿产地数据库（474 处）</div>
 </div>
 
-<div class="hint" id="hint">1–6 切换章节 · H 隐藏面板 · 点击矿点查看详情</div>
+<div class="hint" id="hint">H 隐藏面板 · 点击矿点查看详情</div>
 
 <!-- 左面板 -->
 <div class="panel" id="leftPanel">
@@ -328,7 +321,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   <div class="sec">
     <div class="sec-t">显示图层</div>
     <div class="sw-row"><span>等高线</span><div class="sw on" id="swContour"></div></div>
-    <div class="sw-row"><span>县域面 / 边界</span><div class="sw on" id="swCounty"></div></div>
+    <div class="sw-row"><span>县域面 / 边界</span><div class="sw" id="swCounty"></div></div>
     <div class="sw-row"><span>矿点光柱</span><div class="sw on" id="swPoints"></div></div>
     <div class="sw-row"><span>名称标注</span><div class="sw on" id="swLabels"></div></div>
   </div>
@@ -383,17 +376,9 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 
 <!-- 右面板 -->
 <div class="panel" id="rightPanel">
-  <div class="chtabs" id="chTabs"></div>
-  <div class="chapter">
-    <div class="idx" id="chIdx">CHAPTER 00</div>
-    <div class="ttl" id="chTtl">—</div>
-    <div class="body" id="chBody">—</div>
-    <div class="kv" id="chKv"></div>
-  </div>
-
-  <div class="sec" id="genSec" style="display:none">
-    <div class="sec-t">稀土工艺代际 <span class="sub">点击定位</span></div>
-    <div id="genList"></div>
+  <div class="sec" id="procSec">
+    <div class="sec-t">稀土开采工艺 <span class="sub">点击飞行 · 四代演进</span></div>
+    <div id="procList"></div>
   </div>
 
   <div class="sec">
@@ -1330,31 +1315,7 @@ function showCasePopup(idx){
   p.classList.add('show');
 }
 
-function buildGenList(){
-  var gens = [
-    { g: 1, n: '池浸', y: '1970s', r: '30~38%', c: '#e2544a' },
-    { g: 2, n: '堆浸', y: '1980s末', r: '45~55%', c: '#c0703a' },
-    { g: 3, n: '原地浸矿', y: '1990s', r: '70~78%', c: '#c9944a' },
-    { g: 4, n: '无铵绿色', y: '近年', r: '82~88%', c: '#5aa06a' }
-  ];
-  var html = '';
-  gens.forEach(function(x){
-    var cases = (D.cases || []).filter(function(c){ return c.gen === x.g; });
-    html += '<div class="rank" data-g="' + x.g + '">' +
-      '<span class="dot" style="width:8px;height:8px;border-radius:50%;background:' + x.c + ';box-shadow:0 0 7px ' + x.c + '"></span>' +
-      '<span class="nm">' + x.n + '<span style="color:#5c6574;font-size:10px"> · ' + x.y + '</span></span>' +
-      '<span class="c" style="width:auto;font-size:10px;color:#828b9a">' + x.r + '</span></div>';
-  });
-  $('genList').innerHTML = html;
-  var rows = document.querySelectorAll('#genList .rank');
-  for (var i = 0; i < rows.length; i++){
-    rows[i].addEventListener('click', function(){
-      var g = parseInt(this.getAttribute('data-g'), 10);
-      var c = (D.cases || []).filter(function(x){ return x.gen === g; })[0];
-      if (c) flyToCase((D.cases || []).indexOf(c));
-    });
-  }
-}
+/* 工艺代际列表函数已移除：由稀土开采工艺画廊（buildProcGallery）取代 */
 
 function fillStats(){
   var s = D.stats || {};
@@ -1378,101 +1339,50 @@ function fillStats(){
 /* =========================================================
    8. 故事章节
    ========================================================= */
-var CHAPTERS = [
-  {
-    t: '序章 · 岭表之地',
-    b: '赣南地处南岭东段，全境丘陵与山地交错，海拔自 89 米的河谷盆地抬升至 2009 米的齐云山。' +
-       '这套起伏的地壳褶皱，决定了风化壳离子吸附型稀土与石英脉型钨锡的赋存格局——山，是矿的前提。',
-    kv: [['89–2009', '海拔区间 m'], ['30 m', 'DEM 分辨率'], ['1024²', '地形格网']],
-    cam: [115.05, 25.80, 265000, -52, -18],
-    vis: { points: 1, county: 0 }
-  },
-  {
-    t: '第一章 · 矿脉格局',
-    b: '474 处矿产地散布于 18 个县域。钨锡多金属以 270 处占据绝对主导，构成"世界钨都"的骨架；' +
-       '黑色金属、有色及贵金属沿 NE 向构造带断续出露，稀土则高度集中于南部的定南—龙南一带。',
-    kv: [['474', '矿产地 / 处'], ['18', '县域 / 个'], ['57.0%', '钨锡占比']],
-    cam: [115.05, 25.80, 175000, -56, -14],
-    vis: { points: 1, county: 1 }
-  },
-  {
-    t: '第二章 · 集聚之谜',
-    b: 'NNI 仅 0.59（Z = −17.06），远低于 1 的随机阈值；Moran\'s I 达 0.53（Z = 18.04）——' +
-       '矿点在空间上既强烈集聚，又显著正相关。泰森多边形变异系数 140.17%，是 64% 均匀分布阈值的两倍有余。',
-    kv: [['0.5905', 'NNI'], ['0.5314', "Moran's I"], ['140.17%', '泰森 CV']],
-    cam: [115.05, 25.80, 150000, -62, -10],
-    vis: { points: 1, county: 1 }
-  },
-  {
-    t: '第三章 · 钨都脊梁',
-    b: 'Gi* 热点分析把答案指向西部：崇义、大余构成核心热点区，与西华山—漂塘—盘古山钨锡成矿带完全重合。' +
-       '这套"西热东冷"的格局，是燕山期花岗岩侵入与构造裂隙共同书写的结果。',
-    kv: [['崇义·大余', 'Gi* 热点核心'], ['270', '钨锡矿点'], ['西热东冷', '空间格局']],
-    cam: [114.36, 25.58, 58000, -46, 22],
-    vis: { points: 1, county: 1 }
-  },
-  {
-    t: '第四章 · 稀土四十年',
-    b: '从池浸的全坡面铲山，到堆浸、原地浸矿，再到无铵绿色工艺——四代技术把回收率从 30% 推到 88%，' +
-       '却也留下了"地表完好、内脏慢性中毒"的隐性创伤：闭矿 12 年后，土壤氨氮仍为本底值的 12~40 倍。',
-    kv: [['4 代', '开采工艺'], ['30→88%', '回收率'], ['12~40×', '土壤氨氮残留']],
-    cam: [114.98, 24.92, 42000, -44, 8],
-    vis: { points: 1, cases: 1, county: 1 },
-    gen: true
-  },
-  {
-    t: '尾声 · 绿色重生',
-    b: '累计 92.7 km² 废弃矿山完成治理。第四代无铵工艺把每吨稀土的植被损毁压缩到 2~3 m²，' +
-       '废液闭环回收、外排水质达地表水 Ⅲ 类。山体正在重新长回它的形状。',
-    kv: [['92.7', '治理面积 km²'], ['2~3', '植被损毁 m²/t'], ['Ⅲ 类', '外排水质']],
-    cam: [115.00, 25.65, 215000, -50, -12],
-    vis: { points: 1, county: 1 }
-  }
+var PROCS = [
+  { g:1, img:'工艺图/池浸.png',            n:'池浸',     y:'1970s',  r:'30~38%', c:'#e2544a',
+    d:'全坡面剥离表土、筑池浸矿，植被损毁最大，是第一代工艺。' },
+  { g:2, img:'工艺图/堆浸.png',            n:'堆浸',     y:'1980s末', r:'45~55%', c:'#c0703a',
+    d:'原矿就地筑堆、喷淋浸出，处理规模与效率显著提升。' },
+  { g:3, img:'工艺图/原地浸矿.png',         n:'原地浸矿', y:'1990s',  r:'70~78%', c:'#c9944a',
+    d:'打注液井原地浸出，不搬动矿石，地表扰动大幅减小。' },
+  { g:4, img:'工艺图/无铵绿色原地浸矿.png', n:'无铵绿色', y:'近年',   r:'82~88%', c:'#5aa06a',
+    d:'无铵浸矿剂 + 废液闭环回收，绿色工艺、外排水达Ⅲ类。' }
 ];
+var PROC_CAM = [114.98, 24.92, 42000, -44, 8];   // 定南—龙南稀土矿区概览
 
-var curCh = -1;
 
-function buildSteps(){
+function buildProcGallery(){
   var html = '';
-  CHAPTERS.forEach(function(c, i){
-    var parts = c.t.split(' · ');
-    var ord = parts[0] || ('第' + (i + 1) + '章');
-    var nm = parts[1] || c.t;
-    html += '<div class="chtab" data-i="' + i + '" title="' + (c.t + '：' + c.b.slice(0, 40) + '…') + '">' +
-      '<span class="cn">' + ord + '</span>' +
-      '<span class="nm">' + nm + '</span></div>';
+  PROCS.forEach(function(p){
+    html += '<div class="proccard" data-g="' + p.g + '">' +
+      '<img class="procimg" src="' + p.img + '" alt="' + p.n + '" loading="lazy">' +
+      '<div class="procmeta">' +
+        '<div class="proc-h"><span class="proc-gen" style="background:' + p.c + '">第' + p.g + '代</span>' +
+          '<span class="proc-name">' + p.n + '</span>' +
+          '<span class="proc-yr">' + p.y + '</span></div>' +
+        '<div class="proc-d">' + p.d + '</div>' +
+        '<div class="proc-foot"><span>回收率 ' + p.r + '</span>' +
+          '<span class="proc-go">点击飞行 ▸</span></div>' +
+      '</div></div>';
   });
-  $('chTabs').innerHTML = html;
-  var els = document.querySelectorAll('.chtab');
-  for (var i = 0; i < els.length; i++){
-    els[i].addEventListener('click', function(){ gotoChapter(parseInt(this.getAttribute('data-i'), 10)); });
+  $('procList').innerHTML = html;
+  var rows = document.querySelectorAll('#procList .proccard');
+  for (var i = 0; i < rows.length; i++){
+    rows[i].addEventListener('click', function(){
+      var g = parseInt(this.getAttribute('data-g'), 10);
+      var cs = (D.cases || []).filter(function(x){ return x.gen === g; });
+      if (cs.length) flyToCase((D.cases || []).indexOf(cs[0]));
+      else flyTo(PROC_CAM[0], PROC_CAM[1], PROC_CAM[2], PROC_CAM[3], PROC_CAM[4], 2.6);
+    });
   }
 }
 
-function gotoChapter(i){
-  if (i < 0 || i >= CHAPTERS.length) return;
-  curCh = i;
-  var c = CHAPTERS[i];
-  var els = document.querySelectorAll('.chtab');
-  for (var k = 0; k < els.length; k++) els[k].classList.toggle('on', k === i);
-
-  $('chIdx').textContent = 'CHAPTER ' + (i < 10 ? '0' + i : i);
-  $('chTtl').textContent = c.t;
-  $('chBody').textContent = c.b;
-  var kv = '';
-  c.kv.forEach(function(x){ kv += '<div class="i"><div class="v">' + x[0] + '</div><div class="l">' + x[1] + '</div></div>'; });
-  $('chKv').innerHTML = kv;
-  $('genSec').style.display = c.gen ? 'block' : 'none';
+function initView(){
+  LAYER.points = 1; LAYER.county = 0;
+  syncSwitches(); applyLayerVis();
+  flyTo(115.05, 25.80, 265000, -52, -18, 2.6);
   $('rightPanel').scrollTop = 0;
-
-  flyTo(c.cam[0], c.cam[1], c.cam[2], c.cam[3], c.cam[4], 2.6);
-
-  // 图层
-  LAYER.points = !!c.vis.points;
-  LAYER.county = !!c.vis.county;
-  syncSwitches();
-  applyLayerVis();
-  if (i !== 4) $('popup').classList.remove('show');
 }
 
 /* =========================================================
@@ -1897,11 +1807,7 @@ function bindUI(){
   });
 
   window.addEventListener('keydown', function(e){
-    if (e.key >= '1' && e.key <= '6'){
-      var n = parseInt(e.key, 10) - 1;
-      if (n < CHAPTERS.length) gotoChapter(n);
-    }
-    else if (e.key === 'h' || e.key === 'H'){
+    if (e.key === 'h' || e.key === 'H'){
       $('leftPanel').classList.toggle('hidden');
       $('rightPanel').classList.toggle('hidden');
     }
@@ -1927,13 +1833,12 @@ function startApp(){
   buildHotLegend();
   buildLegend();
   buildRank();
-  buildGenList();
-  buildSteps();
+  buildProcGallery();
   fillStats();
   bindUI();
   syncSwitches();
   try { if (window.AL) alShow('density'); } catch (e) { console.warn('density 默认开启失败', e); }
-  gotoChapter(0);
+  initView();
   setTimeout(function(){ $('loader').classList.add('hide'); }, 900);
 }
 
