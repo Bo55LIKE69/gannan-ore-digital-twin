@@ -13,7 +13,6 @@
 <script src="hotspot_data.js"></script>
 <script src="point_score.js"></script>
 <script src="analysis_layers.js"></script>
-  <script src="ndvi_data.js"></script>
 <style>
 :root{
   --bg:#05070c;
@@ -313,6 +312,15 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
       <div class="ctl-h"><span>晕渲强度</span><span class="cv" id="vHs">55%</span></div>
       <input type="range" id="sHs" min="0" max="100" step="1" value="55">
     </div>
+    <div class="ctl">
+      <div class="ctl-h"><span>地形配色</span></div>
+      <select id="palSel" class="pal-sel">
+        <option value="terrain">地形（棕黄）</option>
+        <option value="elev">高程彩虹</option>
+        <option value="gray">灰度</option>
+        <option value="green">植被绿阶</option>
+      </select>
+    </div>
     <div class="ramp"></div>
     <div class="ramp-lbl"><span id="rl0">—</span><span>海拔配色</span><span id="rl1">—</span></div>
   </div>
@@ -331,8 +339,6 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
       <div class="ctl-h"><span>整体离地抬升</span><span class="cv" id="vLift">0 m</span></div>
       <input type="range" id="sLift" min="0" max="12000" step="250" value="0">
     </div>
-    <div class="sw-row"><span>地表锚点（穿透遮挡）</span><div class="sw on" id="swPin"></div></div>
-    <div class="note">锚点始终贴在 DEM 表面并关闭深度测试，山体挡不住；抬升滑杆只抬光柱，锚点留地并以引线相连。</div>
   </div>
 
   <div class="sec">
@@ -341,17 +347,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
     <div class="sw-row"><span>LISA 空间自相关</span><div class="sw" id="swAl_lisa"></div></div>
     <div class="sw-row"><span>Gi* 冷热点(网格)</span><div class="sw" id="swAl_gistar_grid"></div></div>
     <div class="sw-row"><span>县级矿山统计</span><div class="sw" id="swAl_county"></div></div>
-    <div class="sw-row"><span>植被指数 NDVI</span><div class="sw" id="swAl_ndvi"></div></div>
     <div class="sw-row"><span>矿点冷热点 (Gi*)</span><div class="sw on" id="swHotspot"></div></div>
     <div class="hot-note" id="alNote">点击叠加到地形；默认仅显示核密度；冷热点按县域上色。</div>
-    <div class="sw-row pal-row"><span>配色方案</span>
-      <select id="palSel" class="pal-sel">
-        <option value="blue-red">蓝—黄—红</option>
-        <option value="green">红—黄—绿（植被）</option>
-        <option value="thermal">墨—紫—橙—黄</option>
-        <option value="ice">白—青—蓝</option>
-      </select>
-    </div>
     <div id="alLegend" class="hot-legend"></div>
   </div>
 
@@ -437,7 +434,6 @@ var countyPrims = null;
 var hotspotPrims = [];
 var EXAG = 1.6;
 var LIFT = 0;                 // 矿点整体离地抬升（m），只作用于矿点/案例，锚点留地
-var pinEnts = [], tetherEnts = [];   // 地表锚点 / 锚点引线
 var SINK = 180;               // 光柱底部扎入地表的深度，保证"钉"在 DEM 上
 
 var CAT_COLORS = {
@@ -657,13 +653,13 @@ var TERRAIN_VS = [
 
 var TERRAIN_FS = [
   'uniform sampler2D u_hillshade;',
-  'uniform float u_hmin, u_hmax, u_hs, u_contour, u_px, u_alpha;',
+  'uniform float u_hmin, u_hmax, u_hs, u_contour, u_px, u_alpha, u_demPal;',
   'uniform float u_fogNear, u_fogFar;',
   'uniform vec3  u_fogColor;',
   'in vec2 v_st;',
   'in float v_h;',
   'in float v_dist;',
-  'vec3 ramp(float t) {',
+  'vec3 rampTerrain(float t) {',
   '    vec3 c0 = vec3(0.122, 0.059, 0.043);',
   '    vec3 c1 = vec3(0.227, 0.116, 0.069);',
   '    vec3 c2 = vec3(0.384, 0.213, 0.117);',
@@ -679,9 +675,44 @@ var TERRAIN_FS = [
   '    c = mix(c, c6, smoothstep(0.87, 1.00, t));',
   '    return c;',
   '}',
+  'vec3 rampElev(float t) {',
+  '    vec3 c0 = vec3(0.10, 0.20, 0.55);',
+  '    vec3 c1 = vec3(0.00, 0.55, 0.75);',
+  '    vec3 c2 = vec3(0.15, 0.70, 0.35);',
+  '    vec3 c3 = vec3(0.95, 0.85, 0.20);',
+  '    vec3 c4 = vec3(0.90, 0.30, 0.18);',
+  '    vec3 c = mix(c0, c1, smoothstep(0.00, 0.25, t));',
+  '    c = mix(c, c2, smoothstep(0.25, 0.50, t));',
+  '    c = mix(c, c3, smoothstep(0.50, 0.72, t));',
+  '    c = mix(c, c4, smoothstep(0.72, 1.00, t));',
+  '    return c;',
+  '}',
+  'vec3 rampGray(float t) {',
+  '    vec3 c0 = vec3(0.13, 0.13, 0.15);',
+  '    vec3 c1 = vec3(0.55, 0.55, 0.58);',
+  '    vec3 c2 = vec3(0.93, 0.93, 0.95);',
+  '    vec3 c = mix(c0, c1, smoothstep(0.00, 0.50, t));',
+  '    c = mix(c, c2, smoothstep(0.50, 1.00, t));',
+  '    return c;',
+  '}',
+  'vec3 rampGreen(float t) {',
+  '    vec3 c0 = vec3(0.10, 0.22, 0.12);',
+  '    vec3 c1 = vec3(0.30, 0.55, 0.22);',
+  '    vec3 c2 = vec3(0.70, 0.80, 0.30);',
+  '    vec3 c3 = vec3(0.78, 0.66, 0.40);',
+  '    vec3 c = mix(c0, c1, smoothstep(0.00, 0.40, t));',
+  '    c = mix(c, c2, smoothstep(0.40, 0.70, t));',
+  '    c = mix(c, c3, smoothstep(0.70, 1.00, t));',
+  '    return c;',
+  '}',
   'void main() {',
   '    float t = clamp((v_h - u_hmin) / max(u_hmax - u_hmin, 1.0), 0.0, 1.0);',
-  '    vec3 col = ramp(t);',
+  '    vec3 col;',
+  '    if (u_demPal < 0.5) col = rampTerrain(t);',
+  '    else if (u_demPal < 1.5) col = rampElev(t);',
+  '    else if (u_demPal < 2.5) col = rampGray(t);',
+  '    else col = rampGreen(t);',
+
   '    float hs = texture(u_hillshade, v_st).r;',
   '    col *= mix(1.0 - u_hs, 1.0 + u_hs * 0.85, hs);',
   '    if (u_contour > 0.5) {',
@@ -734,6 +765,7 @@ function addTerrain(){
     u_contour: LAYER.contour ? 1.0 : 0.0,
     u_px: _uPx,
     u_alpha: 1.0,
+    u_demPal: 0.0,
     u_fogNear: _uFogNear,
     u_fogFar: _uFogFar,
     u_fogColor: new Cesium.Cartesian3(0.058, 0.050, 0.043)
@@ -993,38 +1025,6 @@ function addPoints(){
     pointEnts.push(e);
     elevEnts.push(e);
 
-    // 地表锚点：关闭深度测试，永远压在地形之上，任何视角都可见 —— 即每个矿区的标识
-    var pin = viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 60),
-      point: {
-        pixelSize: 8,
-        color: col.withAlpha(0.98),
-        outlineColor: Cesium.Color.fromCssColorString('#070a11').withAlpha(0.9),
-        outlineWidth: 2,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 750000)
-      }
-    });
-    pin._cat = p.dom; pin._lon = p.lon; pin._lat = p.lat; pin._h = 60;
-    pin._idx = i; pin._pin = true; pin._useLift = false;
-    pinEnts.push(pin);
-    elevEnts.push(pin);
-
-    // 锚点引线：抬升滑杆拉起光柱后，用它把光柱和地表锚点连起来
-    var th = viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base),
-      polyline: {
-        positions: [
-          Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base),
-          Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base)
-        ],
-        width: 1.1,
-        material: col.withAlpha(0.42),
-        show: false
-      }
-    });
-    th._cat = p.dom; th._lon = p.lon; th._lat = p.lat; th._tether = true;
-    tetherEnts.push(th);
 
     // 每个矿区统一加名称标注（距离缩放：近看才显，避免远景堆叠）
     var lb = viewer.entities.add({
@@ -1088,22 +1088,13 @@ function refreshHeights(){
   applyLayerVis();
 }
 
-/* 矿点贴地：光柱/标签按 LIFT 抬升，锚点始终留在 DEM 表面，引线连接两者 */
+/* 矿点贴地：光柱/标签按 LIFT 抬升 */
 function applyLift(){
   var i, e, z;
   for (i = 0; i < elevEnts.length; i++){
     e = elevEnts[i];
     z = surfaceH(e._lon, e._lat, e._h) + (e._useLift ? LIFT : 0);
     e.position = Cesium.Cartesian3.fromDegrees(e._lon, e._lat, z);
-  }
-  for (i = 0; i < tetherEnts.length; i++){
-    e = tetherEnts[i];
-    var g = surfaceH(e._lon, e._lat, 0);
-    e.polyline.positions = [
-      Cesium.Cartesian3.fromDegrees(e._lon, e._lat, g),
-      Cesium.Cartesian3.fromDegrees(e._lon, e._lat, g + LIFT)
-    ];
-    e.show = LIFT > 1 && LAYER.points && LAYER.pin;
   }
 }
 
@@ -1179,6 +1170,25 @@ function flyTo(lon, lat, range, pitch, heading, dur){
 /* =========================================================
    7. 面板内容
    ========================================================= */
+// DEM 地形配色方案（多套，客户端可切换）；与着色器 u_demPal 一一对应
+var DEM_PAL = 'terrain';
+var DEM_PAL_IDX = { terrain: 0.0, elev: 1.0, gray: 2.0, green: 3.0 };
+var DEM_PALS = {
+  terrain: { stops:['rgb(31,15,11)','rgb(58,30,18)','rgb(98,54,30)','rgb(142,90,45)','rgb(185,139,81)','rgb(218,179,120)','rgb(243,230,198)'], pos:[0,16,34,54,72,87,100] },
+  elev:    { stops:['rgb(26,51,140)','rgb(0,140,191)','rgb(38,179,89)','rgb(242,217,51)','rgb(230,77,46)'], pos:[0,25,50,72,100] },
+  gray:    { stops:['rgb(33,33,38)','rgb(140,140,148)','rgb(237,237,242)'], pos:[0,50,100] },
+  green:   { stops:['rgb(26,56,31)','rgb(77,140,56)','rgb(179,204,77)','rgb(199,168,102)'], pos:[0,40,70,100] }
+};
+function buildDemLegend(){
+  var el = document.querySelector('.ramp'); if (!el) return;
+  var p = DEM_PALS[DEM_PAL] || DEM_PALS.terrain;
+  var grad = p.stops.map(function(c, i){ return c + ' ' + p.pos[i] + '%'; }).join(',');
+  el.style.background = 'linear-gradient(90deg,' + grad + ')';
+  var r0 = document.getElementById('rl0'), r1 = document.getElementById('rl1');
+  if (r0 && DM) r0.textContent = (DM.minH | 0) + ' m';
+  if (r1 && DM) r1.textContent = (DM.maxH | 0) + ' m';
+}
+
 function buildLegend(){
   var stat = D.catStat || {}, total = 0, k;
   for (k in stat) total += stat[k];
@@ -1528,7 +1538,7 @@ function alColor(meta, props){
   if (v <= 0) return new Cesium.Color(0, 0, 0, 0);   // 密度0 / 无值：透明
   var rg = alRange[cf] || { mn: 0, mx: 1 };
   var t = (rg.mx > rg.mn) ? (v - rg.mn) / (rg.mx - rg.mn) : 0;
-  t = Math.pow(t, 0.5);   // 低值拉伸：让稀疏矿点区 / 低 NDVI 也清晰可见
+  t = Math.pow(t, 0.5);   // 低值拉伸：让稀疏矿点区也清晰可见
   return seqRamp(t).withAlpha(0.20 + 0.42 * t);
 }
 
@@ -1756,76 +1766,13 @@ function buildAlPoint(key, gj, meta){
   return coll;
 }
 
-/* NDVI 栅格：自定义 DEM 非 terrainProvider，GroundPrimitive 贴椭球面会被山体埋掉。
-   改为规则经纬网格（降采样 lod 顶点），逐顶点按 DEM 抬升 + 逐像元值着色。 */
-function buildAlGrid(key, meta){
-  var ND = window.NDVI_DATA; if (!ND) return null;
-  var W = ND.width, H = ND.height;
-  var b = atob(ND.data), raw = new Uint8Array(b.length);
-  for (var zi = 0; zi < b.length; zi++) raw[zi] = b.charCodeAt(zi);
-  function ndAt(i, j){ var v = raw[j * W + i]; if (v === 0) return NaN; return -1 + (v - 1) / 254 * 2; }
-  var lod = 220, nx = lod, ny = lod, gx = nx + 1, gy = ny + 1;
-  var rg = { mn: 1e18, mx: -1e18 };
-  var vals = new Float32Array(gx * gy), hs = new Float64Array(gx * gy);
-  for (var j = 0; j < gy; j++){
-    var lat = ND.south + (ND.north - ND.south) * j / ny;
-    for (var i = 0; i < gx; i++){
-      var lon = ND.west + (ND.east - ND.west) * i / nx;
-      var fi = Math.round((lon - ND.west) / (ND.east - ND.west) * (W - 1));
-      var fj = Math.round((ND.north - lat) / (ND.north - ND.south) * (H - 1));
-      fi = Math.max(0, Math.min(W - 1, fi)); fj = Math.max(0, Math.min(H - 1, fj));
-      var v = ndAt(fi, fj);
-      vals[j * gx + i] = isNaN(v) ? NaN : v;
-      if (!isNaN(v)){ if (v < rg.mn) rg.mn = v; if (v > rg.mx) rg.mx = v; }
-      hs[j * gx + i] = surfaceH(lon, lat, AL_LIFT);
-    }
-  }
-  alRange['ndvi'] = rg;
-  var VP = [], VC = [], IDX = [];
-  for (var j = 0; j < ny; j++){
-    for (var i = 0; i < nx; i++){
-      var i00 = j * gx + i;
-      if (isNaN(vals[i00]) || isNaN(vals[i00 + 1]) || isNaN(vals[i00 + gx]) || isNaN(vals[i00 + gx + 1])) continue;
-      var a0 = rg.mx > rg.mn ? Math.pow((vals[i00] - rg.mn) / (rg.mx - rg.mn), 0.5) : 0;
-      var a1 = rg.mx > rg.mn ? Math.pow((vals[i00 + 1] - rg.mn) / (rg.mx - rg.mn), 0.5) : 0;
-      var a2 = rg.mx > rg.mn ? Math.pow((vals[i00 + gx] - rg.mn) / (rg.mx - rg.mn), 0.5) : 0;
-      var a3 = rg.mx > rg.mn ? Math.pow((vals[i00 + gx + 1] - rg.mn) / (rg.mx - rg.mn), 0.5) : 0;
-      var c00 = seqRamp(a0).withAlpha(0.20 + 0.45 * a0);
-      var c10 = seqRamp(a1).withAlpha(0.20 + 0.45 * a1);
-      var c01 = seqRamp(a2).withAlpha(0.20 + 0.45 * a2);
-      var c11 = seqRamp(a3).withAlpha(0.20 + 0.45 * a3);
-      var vb = VP.length / 3;
-      alPushV(VP, VC, ND.west + (ND.east - ND.west) * i / nx,       ND.south + (ND.north - ND.south) * j / ny,       hs[i00], c00);
-      alPushV(VP, VC, ND.west + (ND.east - ND.west) * (i + 1) / nx, ND.south + (ND.north - ND.south) * j / ny,       hs[i00 + 1], c10);
-      alPushV(VP, VC, ND.west + (ND.east - ND.west) * (i + 1) / nx, ND.south + (ND.north - ND.south) * (j + 1) / ny, hs[i00 + gx + 1], c11);
-      alPushV(VP, VC, ND.west + (ND.east - ND.west) * i / nx,       ND.south + (ND.north - ND.south) * (j + 1) / ny, hs[i00 + gx], c01);
-      IDX.push(vb, vb + 1, vb + 2, vb, vb + 2, vb + 3);
-    }
-  }
-  if (!IDX.length) return null;
-  var posArr = new Float32Array(VP), colArr = new Float32Array(VC);
-  var geo = new Cesium.Geometry({
-    attributes: {
-      position: new Cesium.GeometryAttribute({ componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 3, values: posArr }),
-      color: new Cesium.GeometryAttribute({ componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 4, values: colArr }),
-      batchId: new Cesium.GeometryAttribute({ componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 1, values: new Float32Array(VP.length / 3) })
-    },
-    indices: new Uint32Array(IDX),
-    primitiveType: Cesium.PrimitiveType.TRIANGLES,
-    boundingSphere: Cesium.BoundingSphere.fromVertices(posArr)
-  });
-  var prim = new Cesium.Primitive({ geometryInstances: new Cesium.GeometryInstance({ geometry: geo }), appearance: alAppearance(), asynchronous: false, compressVertices: false, allowPicking: false });
-  prim._alStat = alMeshStat(posArr);
-  viewer.scene.primitives.add(prim);
-  return prim;
-}
+
 
 function buildAlLayer(key){
   if (alCache[key]) return alCache[key];
   var gj = window.AL && window.AL[key]; if (!gj) return null;
   var meta = window.AL_META[key];
   var obj = (meta.kind === 'poly') ? buildAlPoly(key, gj, meta)
-          : (meta.kind === 'grid') ? buildAlGrid(key, meta)
           : buildAlPoint(key, gj, meta);
   alCache[key] = obj; return obj;
 }
@@ -1864,7 +1811,7 @@ function buildAlLegend(key, on){
    9. 图层开关
    ========================================================= */
 var LAYER = { county: false, points: true, labels: true,
-              contour: true, hotspot: true, pin: true };
+              contour: true, hotspot: true };
 
 function syncSwitches(){
   $('swCounty').classList.toggle('on', LAYER.county);
@@ -1872,15 +1819,12 @@ function syncSwitches(){
   $('swLabels').classList.toggle('on', LAYER.labels);
   $('swContour').classList.toggle('on', LAYER.contour);
   $('swHotspot').classList.toggle('on', LAYER.hotspot);
-  $('swPin').classList.toggle('on', LAYER.pin);
 }
 function applyLayerVis(){
   var i;
   for (i = 0; i < countyFillPrims.length; i++) countyFillPrims[i].show = LAYER.county;
   for (i = 0; i < countyLinePrims.length; i++) countyLinePrims[i].show = LAYER.county;
   for (i = 0; i < pointEnts.length; i++) pointEnts[i].show = LAYER.points && activeCats[pointEnts[i]._cat] !== false;
-  for (i = 0; i < pinEnts.length; i++) pinEnts[i].show = LAYER.pin && LAYER.points && activeCats[pinEnts[i]._cat] !== false;
-  for (i = 0; i < tetherEnts.length; i++) tetherEnts[i].show = LAYER.pin && LAYER.points && LIFT > 1 && activeCats[tetherEnts[i]._cat] !== false;
   for (i = 0; i < labelEnts.length; i++) labelEnts[i].show = LAYER.labels;
   for (i = 0; i < hotspotPrims.length; i++) hotspotPrims[i].show = LAYER.hotspot;
   if (terrainUniforms) terrainUniforms.u_contour = LAYER.contour ? 1.0 : 0.0;
@@ -1937,7 +1881,6 @@ function bindUI(){
   sw('swContour', 'contour'); sw('swCounty', 'county');
   sw('swPoints', 'points');
   sw('swLabels', 'labels');   sw('swHotspot', 'hotspot');
-  sw('swPin', 'pin');
   // 空间分析图层：每个图层独立开关，叠加到地形
   // 隐藏效果不明显的图层（最近邻 / 泰森 / Gi*矿点 / 按矿种大类）——
   // 它们的色块或单点会被矿点光柱完全遮住，留着只会让面板臃肿
@@ -1952,12 +1895,12 @@ function bindUI(){
     })(AL_KEYS[ak]);
   }
 
-  // 配色方案切换：重建所有已开分析层 + 同步图例
+  // 地形配色切换：改 DEM 着色器 palette uniform + 同步图例色带
   var ps = document.getElementById('palSel');
   if (ps) ps.addEventListener('change', function(){
-    curPal = ps.value;
-    rebuildAlLayers();
-    for (var k in alOn){ if (alOn[k]){ buildAlLegend(k, true); break; } }
+    DEM_PAL = ps.value;
+    if (terrainUniforms) terrainUniforms.u_demPal = DEM_PAL_IDX[DEM_PAL];
+    buildDemLegend();
   });
 
   window.addEventListener('keydown', function(e){
@@ -1983,13 +1926,9 @@ function startApp(){
   initDem();
   initCesium();
   addTerrain();
+  buildDemLegend();
   buildCountyPrims();
   addPoints();
-  // NDVI 栅格图层注册（Sentinel-2 L2A 反演，最大值合成 MVC）
-  if (window.NDVI_DATA){
-    window.AL_META.ndvi = { name:'植被指数 NDVI', kind:'grid', colorBy:'ndvi', ramp:'seq', label:'NDVI' };
-    window.AL.ndvi = window.NDVI_DATA;
-  }
   addCountyLabels();
   buildHotspotLayer();
   buildHotLegend();
