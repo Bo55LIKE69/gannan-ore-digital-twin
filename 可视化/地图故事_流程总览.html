@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>岭藏矿珍 — 赣州市矿山开发与生态演变地图故事 · 流程总览</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #1a1410;
+  --bg-card: #231e18;
+  --bg-surface: #2c2620;
+  --text-primary: #e8e0d5;
+  --text-secondary: #b8a99a;
+  --text-muted: #8a7c6e;
+  --accent-gold: #c4944a;
+  --accent-copper: #b8653a;
+  --accent-teal: #5a8a7a;
+  --accent-iron: #6a8a9a;
+  --accent-red: #c4544a;
+  --accent-green: #5a9a5a;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-card: rgba(255,255,255,0.08);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+  --radius: 12px;
+  --radius-sm: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; background: var(--bg-deep); }
+
+body {
+  font-family: 'Noto Serif SC', 'SimSun', serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ===== NAV ===== */
+.top-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(26,20,16,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-card);
+  padding: 0 24px;
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  overflow-x: auto; padding: 12px 0;
+}
+.nav-inner a {
+  color: var(--text-muted); text-decoration: none;
+  font-size: 12px; white-space: nowrap;
+  padding: 6px 14px; border-radius: 100px;
+  transition: all 0.25s; letter-spacing: 0.03em;
+}
+.nav-inner a:hover, .nav-inner a.active { color: var(--accent-gold); background: rgba(196,148,74,0.08); }
+.nav-sep { color: var(--text-muted); opacity: 0.3; font-size: 10px; }
+
+/* ===== HERO ===== */
+.hero {
+  position: relative; padding: 100px 24px 80px;
+  text-align: center; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background:
+    radial-gradient(ellipse 800px 300px at 30% 20%, rgba(196,148,74,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 400px at 70% 80%, rgba(90,138,122,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 250px at 50% 50%, rgba(184,101,58,0.06) 0%, transparent 70%);
+  animation: heroPulse 12s ease-in-out infinite;
+}
+@keyframes heroPulse {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(1%,-1%) scale(1.02); }
+  66% { transform: translate(-1%,1%) scale(0.98); }
+}
+.hero-inner { position: relative; z-index: 1; }
+.hero-badge {
+  display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; color: var(--accent-gold);
+  border: 1px solid rgba(196,148,74,0.3); padding: 6px 20px;
+  border-radius: 100px; margin-bottom: 32px; text-transform: uppercase;
+}
+.hero h1 {
+  font-weight: 900; font-size: clamp(36px, 5vw, 60px);
+  color: #f0e4d0; letter-spacing: 0.04em; margin-bottom: 16px; line-height: 1.3;
+}
+.hero h1 .accent { color: var(--accent-gold); }
+.hero-subtitle {
+  font-size: 17px; color: var(--text-secondary); max-width: 620px;
+  margin: 0 auto 48px; line-height: 1.7;
+}
+
+.hero-stats {
+  display: flex; justify-content: center; gap: 0;
+  border: 1px solid var(--border-card); border-radius: var(--radius);
+  overflow: hidden; max-width: 900px; margin: 0 auto; background: var(--bg-card);
+}
+.hero-stat {
+  flex: 1; padding: 28px 16px; text-align: center; position: relative;
+}
+.hero-stat + .hero-stat { border-left: 1px solid var(--border-card); }
+.hero-stat-value {
+  font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700;
+  color: var(--accent-gold); line-height: 1; margin-bottom: 6px;
+}
+.hero-stat-label { font-size: 13px; color: var(--text-muted); letter-spacing: 0.05em; }
+
+/* ===== LAYOUT ===== */
+.container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+section { padding: 60px 0; }
+.section-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 40px;
+}
+.section-num {
+  font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700;
+  color: rgba(196,148,74,0.12); line-height: 1; flex-shrink: 0; min-width: 80px;
+}
+.section-title-group h2 { font-size: 26px; font-weight: 700; color: #f0e4d0; letter-spacing: 0.03em; }
+.section-title-group p { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+/* ===== PIPELINE OVERVIEW ===== */
+.pipeline {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 16px; margin: 40px 0;
+}
+.pipeline-step {
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: var(--radius); padding: 28px 20px; text-align: center;
+  position: relative; transition: all 0.3s;
+}
+.pipeline-step:hover { border-color: var(--accent-gold); transform: translateY(-2px); }
+.pipeline-step .step-num {
+  font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700;
+  color: var(--accent-gold); opacity: 0.3; margin-bottom: 8px;
+}
+.pipeline-step .step-icon { font-size: 28px; margin-bottom: 10px; }
+.pipeline-step h4 { font-size: 15px; color: #e8dcc8; margin-bottom: 6px; }
+.pipeline-step p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.pipeline-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-gold); font-size: 20px; opacity: 0.4;
+}
+
+/* ===== READY TRACKER ===== */
+.tracker-row {
+  display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;
+}
+.tracker-card {
+  flex: 1; min-width: 180px; background: var(--bg-card);
+  border: 1px solid var(--border-card); border-radius: var(--radius);
+  padding: 20px; text-align: center;
+}
+.tracker-num {
+  font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700;
+  line-height: 1; margin-bottom: 4px;
+}
+.tracker-num.ready { color: var(--accent-teal); }
+.tracker-num.wip { color: var(--accent-gold); }
+.tracker-num.todo { color: var(--accent-copper); }
+.tracker-label { font-size: 13px; color: var(--text-muted); }
+
+/* ===== CARD ===== */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border-card);
+  border-radius: var(--radius); padding: 36px; margin-bottom: 24px;
+  position: relative; overflow: hidden; transition: all 0.3s;
+}
+.card::after {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.card:hover::after { opacity: 0.3; }
+.card h3 { font-size: 20px; font-weight: 700; color: #e8dcc8; margin-bottom: 6px; }
+.card .card-en {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  color: var(--accent-gold); font-weight: 600; font-size: 14px; margin-left: 8px;
+}
+.card-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 100px; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.04em; margin-right: 8px;
+}
+.badge-ready { background: rgba(90,154,90,0.12); color: var(--accent-green); border: 1px solid rgba(90,154,90,0.2); }
+.badge-data { background: rgba(90,138,122,0.12); color: var(--accent-teal); border: 1px solid rgba(90,138,122,0.2); }
+.badge-chart { background: rgba(196,148,74,0.12); color: var(--accent-gold); border: 1px solid rgba(196,148,74,0.2); }
+.badge-text { background: rgba(184,101,58,0.12); color: var(--accent-copper); border: 1px solid rgba(184,101,58,0.2); }
+.badge-map { background: rgba(196,84,74,0.12); color: var(--accent-red); border: 1px solid rgba(196,84,74,0.2); }
+
+/* ===== CHECKLIST ===== */
+.checklist { display: grid; gap: 10px; margin: 16px 0; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px; background: var(--bg-surface);
+  border-radius: var(--radius-sm); font-size: 13px;
+  border-left: 3px solid transparent;
+}
+.check-item.done { border-left-color: var(--accent-teal); }
+.check-item.wip { border-left-color: var(--accent-gold); }
+.check-item.todo { border-left-color: var(--accent-copper); }
+.check-icon { flex-shrink: 0; width: 20px; text-align: center; }
+.check-icon.done { color: var(--accent-teal); }
+.check-icon.wip { color: var(--accent-gold); }
+.check-icon.todo { color: var(--accent-copper); }
+.check-content { flex: 1; color: var(--text-secondary); }
+.check-type {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.04); color: var(--text-muted);
+  margin-left: 8px; letter-spacing: 0.06em;
+}
+
+/* ===== MAP PLACEHOLDER ===== */
+.map-placeholder {
+  background: var(--bg-surface); border: 2px dashed var(--border-card);
+  border-radius: var(--radius); padding: 48px 24px; text-align: center;
+  margin: 20px 0; transition: all 0.3s;
+}
+.map-placeholder:hover { border-color: rgba(196,148,74,0.3); }
+.map-placeholder .map-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.map-placeholder h4 { color: var(--accent-gold); font-size: 16px; margin-bottom: 6px; }
+.map-placeholder p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.map-placeholder .specs {
+  display: inline-block; margin-top: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--text-muted); background: rgba(0,0,0,0.2);
+  padding: 6px 14px; border-radius: 4px;
+}
+
+/* ===== TABLE ===== */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg-surface); color: var(--accent-gold);
+  font-weight: 600; font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 12px 14px; text-align: left;
+  border-bottom: 2px solid rgba(196,148,74,0.2);
+}
+tbody td {
+  padding: 10px 14px; border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+tbody tr:hover { background: rgba(255,255,255,0.015); }
+td.num { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--accent-gold); }
+
+/* ===== FLOW ===== */
+.flow-row {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 10px; padding: 24px 0;
+}
+.flow-node {
+  background: var(--bg-surface); border: 1px solid var(--border-card);
+  padding: 12px 18px; border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text-secondary); text-align: center;
+  transition: all 0.25s; white-space: nowrap;
+}
+.flow-node:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+.flow-node strong { display: block; color: var(--accent-gold); font-size: 11px; margin-top: 4px; }
+.flow-arrow { color: var(--accent-gold); font-size: 18px; opacity: 0.4; }
+
+/* ===== RESULT GRID ===== */
+.result-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 20px;
+}
+.result-item {
+  background: var(--bg-surface); border-radius: var(--radius-sm);
+  padding: 18px; text-align: center;
+}
+.result-value {
+  font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700;
+  color: var(--accent-gold); line-height: 1.2;
+}
+.result-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.04em; }
+
+/* ===== COLLAPSIBLE ===== */
+.collapse-trigger {
+  cursor: pointer; display: flex; align-items: center; gap: 10px;
+  user-select: none;
+}
+.collapse-trigger .arrow {
+  transition: transform 0.3s; font-size: 12px; color: var(--text-muted);
+}
+.collapse-trigger.open .arrow { transform: rotate(90deg); }
+.collapse-content { display: none; margin-top: 20px; }
+.collapse-content.open { display: block; }
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center; padding: 60px 24px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted); font-size: 13px;
+}
+.footer span { color: var(--accent-gold); }
+
+/* ===== TIMELINE ===== */
+.timeline { position: relative; padding-left: 32px; margin: 24px 0; }
+.timeline::before {
+  content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(to bottom, var(--accent-gold), var(--accent-teal), var(--accent-copper));
+  opacity: 0.3;
+}
+.tl-item { position: relative; margin-bottom: 24px; }
+.tl-item::before {
+  content: ''; position: absolute; left: -28px; top: 6px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-gold); border: 2px solid var(--bg-deep);
+}
+.tl-year { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--accent-gold); }
+.tl-desc { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ===== VERDICT ===== */
+.verdict {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 18px; border-radius: 100px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.05em;
+}
+.verdict.clustered { background: rgba(184,101,58,0.15); color: var(--accent-copper); border: 1px solid rgba(184,101,58,0.25); }
+.verdict.positive { background: rgba(90,154,90,0.12); color: var(--accent-green); border: 1px solid rgba(90,154,90,0.2); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .pipeline { grid-template-columns: 1fr; }
+  .pipeline-arrow { transform: rotate(90deg); }
+  .tracker-row { flex-direction: column; }
+  .hero-stats { flex-direction: column; }
+  .hero-stat + .hero-stat { border-left: none; border-top: 1px solid var(--border-card); }
+  .result-grid { grid-template-columns: repeat(2, 1fr); }
+  .flow-row { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+  section { padding: 40px 0; }
+  .card { padding: 24px; }
+}
+@media print {
+  body { background: white; color: #222; }
+  .card { background: #fafaf8; border: 1px solid #ddd; }
+  .hero::before, body::before { display: none; }
+  .top-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="#overview">总览</a><span class="nav-sep">|</span>
+    <a href="#ch1">第一章</a><span class="nav-sep">|</span>
+    <a href="#ch2">第二章</a><span class="nav-sep">|</span>
+    <a href="#ch3">第三章</a><span class="nav-sep">|</span>
+    <a href="#ch4">第四章</a><span class="nav-sep">|</span>
+    <a href="#checklist-section">制作清单</a><span class="nav-sep">|</span>
+    <a href="#summary">总结展望</a>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">GIS Map Story · Remote Sensing · Ecological Evolution</div>
+    <h1>岭藏<span class="accent">矿珍</span></h1>
+    <p class="hero-subtitle">
+      基于GIS空间分析与多时序NDVI遥感的赣州市矿山开发与生态演变地图故事<br>
+      <span style="font-size:14px;color:var(--text-muted);">— 全流程制作总览 · 数据状态 · 待准备材料 —</span>
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">4</div>
+        <div class="hero-stat-label">故事章节</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">28</div>
+        <div class="hero-stat-label">设计地图/图表</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">474</div>
+        <div class="hero-stat-label">赣州矿山数据</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">6</div>
+        <div class="hero-stat-label">NDVI时序年份</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">511</div>
+        <div class="hero-stat-label">拆分矿种记录</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== OVERVIEW ===== -->
+<section id="overview">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">00</div>
+      <div class="section-title-group">
+        <h2>分析流程全景</h2>
+        <p>Analysis Pipeline Overview — 从原始数据到地图故事</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>数据处理 → 分析 → 制图 → 叙事 全流程</h3>
+      <p class="card-subtitle">五阶段工作流，每阶段对应不同产出</p>
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="step-num">01</div>
+          <div class="step-icon">📊</div>
+          <h4>数据准备</h4>
+          <p>全国矿产地数据裁剪<br>矿种标准化分类<br>复合矿区拆分</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">02</div>
+          <div class="step-icon">🔬</div>
+          <h4>空间分析</h4>
+          <p>NNI · 泰森CV · G指数<br>Moran's I · LISA<br>Getis-Ord Gi* 热点</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">03</div>
+          <div class="step-icon">🛰️</div>
+          <h4>遥感分析</h4>
+          <p>6期Landsat NDVI<br>缓冲区梯度分析<br>DEM地形分析</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">04</div>
+          <div class="step-icon">🗺️</div>
+          <h4>专题制图</h4>
+          <p>ArcGIS Pro出图<br>符号化与配色<br>图例与注记</p>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="step-num">05</div>
+          <div class="step-icon">📖</div>
+          <h4>故事编排</h4>
+          <p>StoryMap叙事<br>HTML交互页面<br>图文混排展示</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div class="tracker-row">
+      <div class="tracker-card">
+        <div class="tracker-num ready">100%</div>
+        <div class="tracker-label">数据准备完成度</div>
+      </div>
+      <div class="tracker-card">
+        <div class="tracker-num ready">100%</div>
+        <div class="tracker-label">空间分析完成度</div>
+      </div>
+      <div class="tracker-card">
+        <div class="tracker-num ready">100%</div>
+        <div class="tracker-label">NDVI遥感完成度</div>
+      </div>
+      <div class="tracker-card">
+        <div class="tracker-num wip">0%</div>
+        <div class="tracker-label">专题地图出图进度</div>
+      </div>
+      <div class="tracker-card">
+        <div class="tracker-num wip">30%</div>
+        <div class="tracker-label">说明文字就绪度</div>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <h3>核心数据资产总览</h3>
+      <p class="card-subtitle">所有已处理完毕、可直接用于制图的数据文件</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>数据资产</th><th>格式</th><th>内容</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>赣州矿场点（原始+拆分后）</td><td class="num">.shp</td><td>474/511条矿点记录，31种矿种</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+            <tr><td>赣州市行政边界</td><td class="num">.shp / .geojson</td><td>市级行政范围，WGS84</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+            <tr><td>矿种分类（按矿种/按大类）</td><td class="num">.shp × 25+</td><td>31个单矿种 + 6个大类shp</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+            <tr><td>空间分布分析（NNI/Moran/LISA等）</td><td class="num">.shp + .csv</td><td>五项指标完整计算结果</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+            <tr><td>冷热点分析 (Gi*)</td><td class="num">.shp</td><td>网格级 + 矿点级Gi*结果</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+            <tr><td>NDVI 时序影像 (6期)</td><td class="num">.tif</td><td>1990/2000/2010/2015/2020/2024</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+            <tr><td>NDVI 统计汇总</td><td class="num">.csv</td><td>年均值/标准差/植被覆盖比例</td><td><span class="badge badge-ready">已就绪</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 第一章 ===== -->
+<section id="ch1">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div class="section-title-group">
+        <h2>第一章 · 赣州市矿产空间分布格局</h2>
+        <p>Chapter 1 — Spatial Distribution of Mines in Ganzhou</p>
+      </div>
+    </div>
+
+    <!-- 1.1 矿产资源概况 -->
+    <div class="card">
+      <div class="collapse-trigger open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第一节 · 全市矿产资源概况<span class="card-en">Mineral Resource Overview</span></h3>
+      </div>
+      <div class="collapse-content open">
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: Word已提供框架</span>
+          <span class="badge badge-data">数据: 已就绪</span>
+          <span class="badge badge-chart">需制图: 图1</span>
+        </div>
+
+        <p class="card-subtitle">赣州市共474个矿场点（拆分后511条记录），覆盖31种矿种，6大矿产类别</p>
+
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-value">474</div>
+            <div class="result-label">全市矿场总数</div>
+          </div>
+          <div class="result-item">
+            <div class="result-value">31</div>
+            <div class="result-label">矿种种类</div>
+          </div>
+          <div class="result-item">
+            <div class="result-value">71.4%</div>
+            <div class="result-label">有色金属占比</div>
+          </div>
+          <div class="result-item">
+            <div class="result-value">241</div>
+            <div class="result-label">钨矿数量（最多）</div>
+          </div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">🎯 需要制作的图</h4>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🗺️</div>
+          <h4>图1 · 赣州市474个矿场空间分布图</h4>
+          <p>
+            底图：赣州市行政边界 + DEM地形渲染 + 主要水系<br>
+            点图层：474个矿点，按矿种大类着色<br>
+            标注：主要矿区名称、县区名称
+          </p>
+          <div class="specs">ArcGIS Pro · WGS84 · 按"矿种大类"字段唯一值渲染 · 比例尺 1:500,000</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">数据概况（矿点数量、矿种类型、分类体系）<span class="check-type">框架已有</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">赣州"世界钨都"背景介绍，矿业在赣州经济中的地位<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">矿业发展历史概述（从明清到现代）<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.2 空间聚集特征 -->
+    <div class="card">
+      <div class="collapse-trigger open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第二节 · 矿产空间聚集特征<span class="card-en">Spatial Clustering Analysis</span></h3>
+      </div>
+      <div class="collapse-content open">
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 分析报告已完整</span>
+          <span class="badge badge-data">数据: 全部shp就绪</span>
+          <span class="badge badge-chart">需制图: 图2, 图3</span>
+        </div>
+
+        <p class="card-subtitle">五项空间统计方法交叉验证：最临近指数 R=0.59、泰森CV=140%、地理集中指数 G=6.11、全局Moran's I=0.142 (p=0.001)、LISA聚类</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>指标</th><th>结果</th><th>判断</th><th>解读</th></tr></thead>
+            <tbody>
+              <tr><td>最临近指数 (NNI)</td><td class="num">R = 0.5905</td><td><span class="badge badge-text">集聚分布</span></td><td>矿点距离仅随机期望的59%</td></tr>
+              <tr><td>泰森多边形 CV</td><td class="num">CV = 140.17%</td><td><span class="badge badge-text">集聚分布</span></td><td>远超64%集聚阈值（2.2倍）</td></tr>
+              <tr><td>地理集中指数 G</td><td class="num">G = 6.107</td><td><span class="badge badge-text">集中分布</span></td><td>均匀分布期望值的4.2倍</td></tr>
+              <tr><td>全局 Moran's I</td><td class="num">I = 0.142 (p=0.001)</td><td><span class="badge badge-text">显著正相关</span></td><td>高密度区周边也是高密度区</td></tr>
+              <tr><td>局域 LISA</td><td class="num">HH:86 HL:86 LL:3030</td><td><span class="badge badge-text">热点明确</span></td><td>86个网格构成核心集聚区</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">🎯 需要制作的图</h4>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🔥</div>
+          <h4>图2 · 矿山核密度分析图 (Kernel Density)</h4>
+          <p>
+            基于矿点位置计算空间密度场<br>
+            搜索半径：10km（默认）<br>
+            配色方案：黄→橙→红渐变（低→高密度）<br>
+            叠加：主要地名标注、主要公路/铁路
+          </p>
+          <div class="specs">ArcGIS Pro Kernel Density工具 · 输出栅格100m · 按密度分级设色 (Natural Breaks 5类)</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">📐</div>
+          <h4>图3 · Moran's I 空间聚类图 (LISA)</h4>
+          <p>
+            基于3km×3km渔网网格的局域莫兰指数结果<br>
+            配色：HH(红), HL(橙), LH(浅蓝), LL(蓝), NS(灰)<br>
+            数据已就绪：局域莫兰指数_LISA.shp，按cluster字段渲染即可
+          </p>
+          <div class="specs">数据已就绪 · cluster字段: HH/HL/LH/LL/NS · 直接加载符号化</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">统计方法说明、各指标数值解读<span class="check-type">空间分布分析报告已完成</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">地质成因解读：为什么矿场呈集聚分布？与南岭成矿带的关系<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.3 不同矿种空间差异 -->
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第三节 · 不同矿种空间差异<span class="card-en">Mineral-specific Spatial Patterns</span></h3>
+      </div>
+      <div class="collapse-content">
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 框架已有</span>
+          <span class="badge badge-data">数据: 已就绪</span>
+          <span class="badge badge-chart">需制图: 图4</span>
+        </div>
+
+        <p class="card-subtitle">钨矿占47.7%、有色金属71.4%——不同矿种受不同地质构造控制，呈现差异化空间分异</p>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🎨</div>
+          <h4>图4 · 不同矿种空间分布对比图（多子图/分面地图）</h4>
+          <p>
+            方案A：四个子图并排 — (1)钨矿 (2)有色金属 (3)非金属 (4)稀土<br>
+            方案B：一张主图，六种矿种大类用不同颜色和形状叠加<br>
+            推荐方案A，每个子图用独立符号，对比更直观
+          </p>
+          <div class="specs">按矿种大类/按矿种分类shp数据已就绪 · 可分图层加载</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">矿种分类统计数据（各矿种数量、占比）<span class="check-type">矿种分类统计.csv已就绪</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">每种矿产的地质成因简述（钨=石英脉型、稀土=离子吸附型等）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">空间分布规律总结（哪种矿聚在哪、为什么）<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.4 矿山历史变化 -->
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第四节 · 矿山数量历史变化<span class="card-en">Historical Mining Evolution</span></h3>
+      </div>
+      <div class="collapse-content">
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 需补充时间序列数据</span>
+          <span class="badge badge-map">需数据: 缺少历史矿山数据</span>
+          <span class="badge badge-chart">需制图: 图5</span>
+        </div>
+
+        <p class="card-subtitle">Word文档设定了2005/2010/2016/2022四个时间节点，但当前仅有当前矿山截面数据</p>
+
+        <div class="map-placeholder" style="border-color:rgba(196,84,74,0.3);">
+          <div class="map-icon">📈</div>
+          <h4>图5 · 历年矿山数量变化图（⚠ 需补充数据）</h4>
+          <p>
+            <strong>当前状态：缺少历史年份的矿山数据</strong><br>
+            方案A：如有历年矿业权数据，做四期对比地图 + 柱状图<br>
+            方案B：用NDVI遥感间接反映矿山活动变化（第三章）<br>
+            方案C：从ArcGIS Living Atlas或全国矿业权数据库获取历史数据
+          </p>
+          <div class="specs">⚠ 需补充数据源 · 或调整策略用遥感替代</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">各时期矿山数量变化趋势与原因（政策、市场需求、资源枯竭）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">矿业政策时间线：矿产整合、绿色矿山、稀土管控等政策节点<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 第二章 ===== -->
+<section id="ch2">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div class="section-title-group">
+        <h2>第二章 · 不同矿种采矿过程演化</h2>
+        <p>Chapter 2 — Mining Methods & Ecological Impact by Mineral Type</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>核心分析框架：矿种 → 采矿方式 → 生态影响</h3>
+      <p class="card-subtitle">三类典型矿产、四种稀土工艺迭代、差异化生态影响</p>
+      <div class="flow-row">
+        <div class="flow-node">钨矿（241个）<br><strong>井工开采为主</strong></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">地表塌陷 · 废石堆 · 水土流失</div>
+        <div class="flow-arrow" style="opacity:0.2;">|</div>
+        <div class="flow-node">非金属矿（27个）<br><strong>露天开采为主</strong></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">裸露采坑 · 植被破坏 · 扬尘</div>
+        <div class="flow-arrow" style="opacity:0.2;">|</div>
+        <div class="flow-node">离子型稀土（10个）<br><strong>原地浸矿</strong></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">大面积植被退化 · 土壤污染 · 水体氨氮</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第一节 · 钨矿开采过程<span class="card-en">Tungsten Mining Evolution</span></h3>
+      </div>
+      <div class="collapse-content">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 框架已有</span>
+          <span class="badge badge-chart">需制图: 图6</span>
+        </div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-year">早期</div><div class="tl-desc">人工挖掘、巷道式开采，规模小、效率低</div></div>
+          <div class="tl-item"><div class="tl-year">中期</div><div class="tl-desc">地下开采机械化，竖井+平硐联合开拓</div></div>
+          <div class="tl-item"><div class="tl-year">现代</div><div class="tl-desc">大型机械化开采，尾矿库规范管理</div></div>
+          <div class="tl-item"><div class="tl-year">当前</div><div class="tl-desc">绿色矿山建设，废石回填、生态修复</div></div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">⚙️</div>
+          <h4>图6 · 钨矿开采工艺流程示意图</h4>
+          <p>
+            建议形式：信息图（Infographic），非地图<br>
+            展示：勘探→开拓→采准→回采→运输→选矿→尾矿处理<br>
+            标注各环节的生态影响
+          </p>
+          <div class="specs">信息图 · 可用PPT/AI制作 · 或手绘扫描</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">赣州钨矿开采史（1907年西华山发现至今）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">钨矿开采各阶段的环境影响对比<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第二节 · 非金属矿开采过程<span class="card-en">Non-metallic Mining</span></h3>
+      </div>
+      <div class="collapse-content">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 需补充</span>
+          <span class="badge badge-chart">需制图: 图7</span>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">⛏️</div>
+          <h4>图7 · 非金属矿开采工艺流程图</h4>
+          <p>
+            石灰岩、萤石、高岭土等露天开采流程<br>
+            展示：剥离表土→穿孔爆破→铲装运输→破碎筛分<br>
+            生态影响：裸露采坑、植被破坏、扬尘、水土流失
+          </p>
+          <div class="specs">信息图 · AI/PPT制作</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">非金属矿在赣州的分布与开采特点<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">露天开采与地下开采的生态影响对比<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(196,148,74,0.15);">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第三节 · 离子型稀土开采过程演化 <span style="font-size:14px;color:var(--accent-gold);">★ 重点章节</span><span class="card-en">Ion-absorption REE Mining</span></h3>
+      </div>
+      <div class="collapse-content">
+
+        <p class="card-subtitle">南方离子型稀土开采经历了从粗放到绿色的四代工艺迭代，是全书最具故事性的篇章</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-year">第一代 · 池浸法 (1970s–2003)</div>
+            <div class="tl-desc">山坡剥离表土→人工挖掘矿土→浸矿池硫酸铵浸泡→草酸沉淀→灼烧成混合稀土氧化物<br>生态代价：山体裸露、植被毁灭性破坏、水土流失严重</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year">第二代 · 堆浸法 (1990s–2007)</div>
+            <div class="tl-desc">移至专门堆场→堆筑矿土→喷淋浸出液→收集母液→沉淀回收<br>进步：减少了对山体的直接破坏，但仍需剥离表土</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year">第三代 · 原地浸矿 (2007–)</div>
+            <div class="tl-desc">不剥离表土，直接在矿体钻孔→高压注入硫酸铵溶液→地下收集母液→沉淀回收<br>进步：不破坏地表，但深层污染（地下水氨氮超标）</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year">第四代 · 绿色无铵开采 (2019–)</div>
+            <div class="tl-desc">用新型浸矿剂（镁盐/钙盐）替代硫酸铵→无氨氮污染→生态友好开采<br>趋势：从源头消除氨氮污染，实现绿色开采</div>
+          </div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">🎯 需要制作的图</h4>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🕐</div>
+          <h4>图8 · 稀土四代工艺演变时间轴</h4>
+          <p>
+            横向时间轴：1970s → 1990s → 2007 → 2019 → 未来<br>
+            纵向四层：池浸/堆浸/原地浸矿/绿色无铵<br>
+            每层展示：工艺示意图  + 生态影响示意<br>
+            <strong>这是全书的视觉锚点，建议精心制作</strong>
+          </p>
+          <div class="specs">信息图大图 · 建议用AI/PPT精心设计 · 最核心的故事图</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🔄</div>
+          <h4>图9 · 四种工艺对比示意图</h4>
+          <p>
+            2×2矩阵布局：池浸 vs 堆浸 vs 原地浸矿 vs 绿色无铵<br>
+            每个子图展示：工艺流程图 + 剖面示意图 + 生态影响指标
+          </p>
+          <div class="specs">四格信息图 · 统一风格 · 对比阅读</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">四代工艺的名称、时间段、技术要点<span class="check-type">Word文档框架已有</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">每代工艺的详细技术描述（浸矿剂、流程、回收率）<span class="check-type">需扩充</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">每代工艺的环境代价量化描述（植被破坏面积、水土流失量、氨氮排放）<span class="check-type">需编写+数据</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">政策驱动因素：各阶段技术转型的法规背景<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第四节 · 不同矿种生态影响对比<span class="card-en">Ecological Impact Comparison</span></h3>
+      </div>
+      <div class="collapse-content">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 框架已有</span>
+          <span class="badge badge-chart">需制图: 图10</span>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">📊</div>
+          <h4>图10 · 不同矿种生态影响对比图</h4>
+          <p>
+            <strong>雷达图/蛛网图</strong>：钨矿、非金属矿、稀土矿三类对比<br>
+            维度：植被破坏面积 / 水土流失 / 水污染 / 土壤污染 / 恢复周期 / 影响范围<br>
+            或做<strong>堆叠柱状图</strong>展示不同缓冲区内的NDVI变化
+          </p>
+          <div class="specs">雷达图(Excel/Python) · 或基于NDVI缓冲区数据做统计图</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">三类矿产的环境影响定性描述<span class="check-type">Word框架已有</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">量化对比数据（需要从NDVI和缓冲区分析中提取）<span class="check-type">等第三章分析完成后补充</span></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 第三章 ===== -->
+<section id="ch3">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div class="section-title-group">
+        <h2>第三章 · GIS遥感揭示矿山生态变化 ★ 核心</h2>
+        <p>Chapter 3 — Mining Ecological Change via GIS & Remote Sensing</p>
+      </div>
+    </div>
+
+    <!-- 3.1 数据与方法 -->
+    <div class="card">
+      <div class="collapse-trigger open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第一节 · 数据来源与分析方法<span class="card-en">Data & Methodology</span></h3>
+      </div>
+      <div class="collapse-content open">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 框架已有</span>
+          <span class="badge badge-data">数据: 全部就绪</span>
+          <span class="badge badge-chart">需制图: 图11</span>
+        </div>
+
+        <div class="flow-row">
+          <div class="flow-node">Landsat 5/8<br><strong>1990–2024</strong></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">NDVI计算<br><strong>6期影像</strong></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">缓冲区分析<br><strong>50/100/200/500m</strong></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">DEM地形<br><strong>坡度·坡向</strong></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">生态风险<br><strong>综合评估</strong></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>数据源</th><th>分辨率</th><th>年份</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td>Landsat 5 TM</td><td class="num">30m</td><td>1990, 2000, 2010</td><td>NDVI反演、植被变化检测</td></tr>
+              <tr><td>Landsat 8 OLI</td><td class="num">30m</td><td>2015, 2020, 2024</td><td>NDVI反演、近期变化</td></tr>
+              <tr><td>DEM (ASTER/SRTM)</td><td class="num">30m</td><td>—</td><td>坡度、坡向、高程分级</td></tr>
+              <tr><td>赣州行政边界</td><td class="num">1:25万</td><td>2025</td><td>裁剪范围</td></tr>
+              <tr><td>矿场点数据</td><td class="num">矢量点</td><td>2025</td><td>矿区位置、缓冲区生成</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🔀</div>
+          <h4>图11 · 技术路线图 (Methodology Flowchart)</h4>
+          <p>
+            展示从原始数据到最终成果的完整技术路线<br>
+            建议用流程图形式：数据输入 → 预处理 → 分析 → 输出成果<br>
+            标注每个步骤使用的工具（ArcGIS Pro / Python / GDAL）
+          </p>
+          <div class="specs">技术流程图 · PPT/Draw.io/AI制作 · 横向A3布局</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.2 NDVI时序变化 -->
+    <div class="card">
+      <div class="collapse-trigger open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第二节 · NDVI 时序变化分析<span class="card-en">NDVI Time Series</span></h3>
+      </div>
+      <div class="collapse-content open">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 统计结果已有</span>
+          <span class="badge badge-data">数据: 6期TIF就绪</span>
+          <span class="badge badge-chart">需制图: 图12-16</span>
+        </div>
+
+        <p class="card-subtitle">六期NDVI影像揭示赣州全域植被30年变化，矿区周边NDVI明显低于全域均值</p>
+
+        <div class="result-grid">
+          <div class="result-item"><div class="result-value">0.652</div><div class="result-label">1990 NDVI均值</div></div>
+          <div class="result-item"><div class="result-value">0.681</div><div class="result-label">2000 NDVI均值</div></div>
+          <div class="result-item"><div class="result-value">0.689</div><div class="result-label">2010 NDVI均值</div></div>
+          <div class="result-item"><div class="result-value">0.662</div><div class="result-label">2015 NDVI均值</div></div>
+          <div class="result-item"><div class="result-value">0.594</div><div class="result-label">2020 NDVI均值</div></div>
+          <div class="result-item"><div class="result-value">0.764</div><div class="result-label">2024 NDVI均值</div></div>
+        </div>
+
+        <p style="font-size:13px;color:var(--text-muted);">
+          <strong style="color:var(--accent-gold);">关键发现：</strong>NDVI经历"稳定→微降→骤降→反弹"的U型曲线。
+          2020年达最低值0.594（植被覆盖仅87%），可能与大规模开采活动有关；
+          2024年反弹至0.764（最高），反映了近年生态修复与绿色矿山政策成效。
+        </p>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">🎯 需要制作的图（本节图表最多）</h4>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🟢</div>
+          <h4>图12-15 · 各年份NDVI空间分布图（4张系列）</h4>
+          <p>
+            2005 / 2010 / 2016 / 2022 四个年份的NDVI专题图<br>
+            注意：实际有1990/2000/2010/2015/2020/2024六期数据<br>
+            配色：棕色(低NDVI)→黄色→浅绿→深绿(高NDVI)<br>
+            叠加：矿点位置、主要地名
+          </p>
+          <div class="specs">TIF已就绪 · ArcGIS Pro直接加载 · 统一色带(Green-Brown diverging) · 统一比例尺</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">📉</div>
+          <h4>图16 · NDVI变化趋势图</h4>
+          <p>
+            <strong>折线图</strong>：X轴=年份(1990-2024)，Y轴=NDVI均值<br>
+            可叠加三条线：全域均值 / 矿区缓冲区均值 / 稀土矿区均值<br>
+            标注关键政策节点（稀土整合2007、绿色矿山2019等）
+          </p>
+          <div class="specs">Excel/Python matplotlib绘制 · 数据来自NDVI统计汇总.csv</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">各年份NDVI均值、植被覆盖比例<span class="check-type">NDVI统计汇总.csv已就绪</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">NDVI变化驱动力分析（自然vs人为因素，气候vs采矿）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">2020年NDVI骤降的可能原因分析<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">2024年反弹与生态修复政策的关联<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.3 缓冲区分析 -->
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第三节 · 矿区缓冲区梯度分析<span class="card-en">Buffer Zone Gradient Analysis</span></h3>
+      </div>
+      <div class="collapse-content">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 框架已有</span>
+          <span class="badge badge-data">数据: NDVI已就绪</span>
+          <span class="badge badge-chart">需制图: 图17, 图18（需先做缓冲区提取）</span>
+        </div>
+
+        <p class="card-subtitle">以矿点为中心，建立50m/100m/200m/500m多级缓冲区，提取各圈层NDVI值，揭示矿山生态影响的梯度衰减规律</p>
+
+        <div class="map-placeholder" style="border-color:rgba(196,148,74,0.3);">
+          <div class="map-icon">🎯</div>
+          <h4>图17 · 矿区多级缓冲区示意图（⚠ 需先运行缓冲区分析）</h4>
+          <p>
+            以典型矿区为例，展示50m/100m/200m/500m四级缓冲区环<br>
+            底图：高分辨率遥感影像（Google Satellite或Sentinel-2）<br>
+            叠加：缓冲环 + NDVI分级设色
+          </p>
+          <div class="specs">ArcGIS Pro Multiple Ring Buffer · 建议先在Python脚本中批量提取NDVI</div>
+        </div>
+
+        <div class="map-placeholder" style="border-color:rgba(196,148,74,0.3);">
+          <div class="map-icon">📊</div>
+          <h4>图18 · 缓冲区NDVI梯度折线图（⚠ 需先提取数据）</h4>
+          <p>
+            X轴=缓冲区距离(50/100/200/500/全域)，Y轴=NDVI均值<br>
+            三条曲线：钨矿区 / 稀土矿区 / 非金属矿区<br>
+            预期：距离越近NDVI越低，稀土矿区影响范围最广
+          </p>
+          <div class="specs">需先完成缓冲区NDVI提取脚本 · 然后用Python/Excel绘图</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.4 DEM地形 -->
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第四节 · DEM地形分析<span class="card-en">DEM Terrain Analysis</span></h3>
+      </div>
+      <div class="collapse-content">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 需补充</span>
+          <span class="badge badge-map">需数据: DEM TIF</span>
+          <span class="badge badge-chart">需制图: 图19, 图20</span>
+        </div>
+
+        <div class="map-placeholder" style="border-color:rgba(196,84,74,0.3);">
+          <div class="map-icon">⛰️</div>
+          <h4>图19 · DEM坡度分析图（⚠ 需获取DEM数据）</h4>
+          <p>
+            分析矿点分布与地形的关系：多少矿在陡坡区？坡度对开采方式和生态风险的影响<br>
+            数据源：ASTER GDEM (30m) 或 SRTM (30m) — 免费获取<br>
+            叠加：矿点 + 坡度分级设色 + 污染扩散方向箭头
+          </p>
+          <div class="specs">⚠ 需下载DEM数据 (EarthExplorer / 地理空间数据云) · ArcGIS Slope工具</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🗻</div>
+          <h4>图20 · 坡度分级与矿点叠加图</h4>
+          <p>
+            坡度分5级：<5°(平原) / 5-15°(缓坡) / 15-25°(斜坡) / 25-35°(陡坡) / >35°(急坡)<br>
+            统计每级坡度中的矿点数量<br>
+            分析：陡坡矿区水土流失风险更高
+          </p>
+          <div class="specs">ArcGIS Slope + Reclassify + Zonal Statistics</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3.5 生态风险 -->
+    <div class="card">
+      <div class="collapse-trigger" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>第五节 · 全市矿山生态风险综合评价<span class="card-en">Ecological Risk Assessment</span></h3>
+      </div>
+      <div class="collapse-content">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 需编写</span>
+          <span class="badge badge-chart">需制图: 图21（核心成果图）</span>
+          <span class="badge badge-map">需综合建模</span>
+        </div>
+
+        <p class="card-subtitle">综合 NDVI变化 + 缓冲区梯度 + DEM坡度 + 矿种类型 四维指标，构建矿山生态风险指数</p>
+
+        <div class="map-placeholder" style="border-color:rgba(196,84,74,0.35);">
+          <div class="map-icon">⚠️</div>
+          <h4>图21 · 全市矿山生态风险等级图 ★ 全书核心成果图 ★</h4>
+          <p>
+            <strong>加权叠加分析：</strong><br>
+            NDVI变化率(40%) + 矿点密度(25%) + 坡度(20%) + 距水系距离(15%)<br>
+            风险等级：低 / 中 / 高 / 极高 四级<br>
+            配色：绿→黄→橙→红<br>
+            标注：高风险区域名称、主要矿区、重点治理区
+          </p>
+          <div class="specs">ArcGIS Pro Weighted Overlay / Raster Calculator · 需要DEM和NDVI变化检测结果</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字（本章最多）</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">NDVI数据与统计结果<span class="check-type">已就绪</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">NDVI变化趋势的详细解读（地理分区、矿种分区）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">缓冲区梯度规律的文字说明与量化对比<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">DEM地形对矿山生态影响的机理分析<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">生态风险评估方法说明（指标选择、权重、分级标准）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">矿山生态修复建议（分区施策、优先治理区识别）<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 第四章 ===== -->
+<section id="ch4">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div class="section-title-group">
+        <h2>第四章 · 典型案例 — 足洞稀土矿</h2>
+        <p>Chapter 4 — Zudong Rare Earth Mine Case Study</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="collapse-trigger open" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+        <span class="arrow">▶</span>
+        <h3>从宏观分析到微观案例：足洞稀土矿的30年变迁<span class="card-en">Micro-level Story</span></h3>
+      </div>
+      <div class="collapse-content open">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-text">文案: 框架已有</span>
+          <span class="badge badge-chart">需制图: 图22-28</span>
+        </div>
+
+        <p class="card-subtitle">足洞稀土矿是赣州典型的离子型稀土矿，经历了从池浸→堆浸→原地浸矿→绿色开采的完整技术迭代</p>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">🎯 需要制作的图（7张）</h4>
+
+        <div class="map-placeholder">
+          <div class="map-icon">📍</div>
+          <h4>图22 · 足洞矿区区位图</h4>
+          <p>赣州市全域图中的足洞矿区位置标注 + 矿区放大图<br>显示交通、水系、地形等地理背景</p>
+          <div class="specs">ArcGIS Pro · Locator Map样式</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🛰️</div>
+          <h4>图23-26 · 足洞矿区四期遥感影像对比 (1990/2000/2010/2024)</h4>
+          <p>
+            四张并排/上下排列的遥感影像图<br>
+            底图：Landsat真彩色或标准假彩色合成<br>
+            叠加：矿区边界、主要采矿面、修复区域<br>
+            <strong>强烈建议使用同比例尺、同范围，便于读者对比</strong>
+          </p>
+          <div class="specs">4张同比例尺遥感图 · 标准假彩色(5-4-3)突出植被 · 统一图例</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">📈</div>
+          <h4>图27 · 足洞矿区 NDVI 变化曲线图</h4>
+          <p>
+            提取足洞矿区的NDVI时间序列（1990-2024）<br>
+            标注关键事件：开采方式转换、治理工程启动等<br>
+            与全市均值对比
+          </p>
+          <div class="specs">Python提取矿区NDVI → Excel/Matplotlib绘图</div>
+        </div>
+
+        <div class="map-placeholder">
+          <div class="map-icon">🔄</div>
+          <h4>图28 · Before & After 生态修复对比图</h4>
+          <p>
+            选取足洞矿区某典型修复地块<br>
+            左：修复前（如2015年） 右：修复后（2024年）<br>
+            标注修复措施：地形重塑、植被恢复、排水系统
+          </p>
+          <div class="specs">高分辨率影像对比 · 或地面照片 · 最能打动人心的图</div>
+        </div>
+
+        <h4 style="color:var(--accent-gold);font-size:14px;margin:20px 0 12px;">📝 需要准备的文字</h4>
+        <div class="checklist">
+          <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">矿区概况框架（位置、开采历史、工艺阶段）<span class="check-type">Word已有</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">足洞矿区详细历史（建矿时间、规模变化、重要事件）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">各时期遥感影像变化解读（哪些区域变了、为什么变）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">生态修复措施与效果评价（具体用了什么技术、植被恢复率等）<span class="check-type">需编写</span></div></div>
+          <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content">足洞案例的示范意义与推广价值<span class="check-type">需编写</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 制作清单汇总 ===== -->
+<section id="checklist-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">CK</div>
+      <div class="section-title-group">
+        <h2>制作清单总汇</h2>
+        <p>Production Checklist — 需要制作的图、需要编写的文字、需要补充的数据</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎯 需要制作的图（共28张）<span class="card-en">Map & Chart Production List</span></h3>
+      <p class="card-subtitle">按优先级排序：★ 必须 | ☆ 重要 | ○ 可选</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>编号</th><th>图名</th><th>类型</th><th>数据状态</th><th>优先级</th></tr></thead>
+          <tbody>
+            <tr><td>图1</td><td>赣州474个矿场空间分布图</td><td>专题地图</td><td><span class="badge badge-data">数据就绪</span></td><td>★</td></tr>
+            <tr><td>图2</td><td>矿山核密度分析图</td><td>热力图</td><td><span class="badge badge-data">数据就绪</span></td><td>★</td></tr>
+            <tr><td>图3</td><td>Moran's I 空间聚类图 (LISA)</td><td>专题地图</td><td><span class="badge badge-ready">shp就绪</span></td><td>★</td></tr>
+            <tr><td>图4</td><td>不同矿种空间分布对比图</td><td>分面地图</td><td><span class="badge badge-data">数据就绪</span></td><td>☆</td></tr>
+            <tr><td>图5</td><td>历年矿山数量变化图</td><td>统计图+地图</td><td><span class="badge badge-map">缺历史数据</span></td><td>○</td></tr>
+            <tr><td>图6</td><td>钨矿开采工艺流程示意图</td><td>信息图</td><td><span class="badge badge-text">需设计</span></td><td>☆</td></tr>
+            <tr><td>图7</td><td>非金属矿开采工艺流程图</td><td>信息图</td><td><span class="badge badge-text">需设计</span></td><td>○</td></tr>
+            <tr><td>图8</td><td>稀土四代工艺演变时间轴</td><td>信息图大图</td><td><span class="badge badge-text">需设计</span></td><td>★ ★</td></tr>
+            <tr><td>图9</td><td>四种工艺对比示意图</td><td>四格信息图</td><td><span class="badge badge-text">需设计</span></td><td>☆</td></tr>
+            <tr><td>图10</td><td>不同矿种生态影响对比图</td><td>雷达图/柱状图</td><td><span class="badge badge-data">部分就绪</span></td><td>☆</td></tr>
+            <tr><td>图11</td><td>技术路线图</td><td>流程图</td><td><span class="badge badge-text">需设计</span></td><td>★</td></tr>
+            <tr><td>图12</td><td>2005年 NDVI 分布图</td><td>专题地图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图13</td><td>2010年 NDVI 分布图</td><td>专题地图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图14</td><td>2016年 NDVI 分布图</td><td>专题地图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图15</td><td>2022年 NDVI 分布图</td><td>专题地图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图16</td><td>NDVI变化趋势折线图</td><td>统计图</td><td><span class="badge badge-ready">CSV就绪</span></td><td>★</td></tr>
+            <tr><td>图17</td><td>矿区多级缓冲区示意图</td><td>专题地图</td><td><span class="badge badge-chart">需先计算</span></td><td>☆</td></tr>
+            <tr><td>图18</td><td>缓冲区NDVI梯度折线图</td><td>统计图</td><td><span class="badge badge-chart">需先计算</span></td><td>☆</td></tr>
+            <tr><td>图19</td><td>DEM坡度分析图</td><td>专题地图</td><td><span class="badge badge-map">需DEM数据</span></td><td>☆</td></tr>
+            <tr><td>图20</td><td>坡度分级与矿点叠加图</td><td>专题地图</td><td><span class="badge badge-map">需DEM数据</span></td><td>☆</td></tr>
+            <tr><td>图21</td><td>全市矿山生态风险等级图</td><td>综合评价图</td><td><span class="badge badge-map">需综合建模</span></td><td>★ ★</td></tr>
+            <tr><td>图22</td><td>足洞矿区区位图</td><td>专题地图</td><td><span class="badge badge-data">数据就绪</span></td><td>☆</td></tr>
+            <tr><td>图23</td><td>足洞 1990 遥感影像</td><td>遥感图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图24</td><td>足洞 2000 遥感影像</td><td>遥感图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图25</td><td>足洞 2010 遥感影像</td><td>遥感图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图26</td><td>足洞 2024 遥感影像</td><td>遥感图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>★</td></tr>
+            <tr><td>图27</td><td>足洞矿区NDVI变化曲线</td><td>统计图</td><td><span class="badge badge-ready">TIF就绪</span></td><td>☆</td></tr>
+            <tr><td>图28</td><td>Before & After 修复对比</td><td>对比图</td><td><span class="badge badge-chart">需选样地</span></td><td>★</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📝 需要编写的文字清单<span class="card-en">Text Production List</span></h3>
+      <div class="checklist">
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content"><strong>第一章·第一节：</strong>数据概况框架（Word已有），需补充"世界钨都"背景、矿业经济地位<span class="check-type">50%完成</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content"><strong>第一章·第二节：</strong>五项指标方法论+结果解读（空间分布分析报告已完整）<span class="check-type">90%完成</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>第一章·第三-四节：</strong>矿种地质成因、空间分异规律、历史变化趋势<span class="check-type">需编写</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>第二章·第一-二节：</strong>钨矿开采史、非金属矿开采特点、环境影响对比<span class="check-type">需编写</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content"><strong>第二章·第三节（重点）：</strong>稀土四代工艺框架（Word已有），需扩充技术细节和环境量化数据<span class="check-type">40%完成</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>第三章·第二节：</strong>NDVI变化驱动力分析、2020骤降原因、2024反弹解读<span class="check-type">需编写</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>第三章·第三-五节：</strong>缓冲区梯度规律、地形影响机理、生态风险方法说明、修复建议<span class="check-type">需编写</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>第四章：</strong>足洞矿区详细历史、遥感变化解读、修复措施与效果、示范意义<span class="check-type">需编写</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content"><strong>总结与展望：</strong>框架已有（5条结论+2类建议），需扩充具体数据支撑<span class="check-type">50%完成</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content"><strong>创新点：</strong>5个创新点框架（Word已有）<span class="check-type">80%完成</span></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(196,84,74,0.2);">
+      <h3>⚠️ 需要补充的数据<span class="card-en">Missing Data</span></h3>
+      <div class="checklist">
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>DEM数据：</strong>ASTER GDEM或SRTM 30m分辨率DEM（可从EarthExplorer或地理空间数据云免费下载）<span class="check-type">外部获取</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>历史矿山数据：</strong>如无法获取历年矿业权数据，建议调整策略用NDVI遥感间接反映矿山活动变化<span class="check-type">可能不可得</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>足洞矿区边界：</strong>需要足洞稀土矿区的精确边界shapefile或高分辨率影像<span class="check-type">需获取</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">○</span><div class="check-content"><strong>地质构造图：</strong>赣州市区域地质图（构造线、岩体分布），用于解释矿场空间分布<span class="check-type">外部获取</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 总结与展望 ===== -->
+<section id="summary">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-num">∞</div>
+      <div class="section-title-group">
+        <h2>总结与展望</h2>
+        <p>Summary & Outlook</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>五大核心结论 (Word文档框架)</h3>
+      <div class="checklist">
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">① 全市474个矿场呈现显著空间集聚格局（四项指标交叉验证）<span class="check-type">数据支撑充分</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">② 不同矿种形成差异化采矿工艺体系（钨=井工、非金属=露天、稀土=原地浸矿）<span class="check-type">框架已有</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">③ GIS遥感揭示矿山周边存在显著生态梯度：距矿越近NDVI越低<span class="check-type">待缓冲区分析验证</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">④ 离子型稀土生态影响范围最广、恢复周期最长，但近年已呈改善趋势<span class="check-type">待NDVI时序验证</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">⑤ 绿色矿山政策推动下，2024年全市NDVI均值创30年新高<span class="check-type">NDVI数据已支撑</span></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>五项创新点 (Word文档框架)</h3>
+      <div class="checklist">
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">创新一：构建了赣州市474个矿场全国矿产数据库，实现多矿种统一管理与空间分析<span class="check-type">数据已建成</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">创新二：将GIS空间分析、DEM、水系、NDVI时序遥感融合，构建矿山生态扰动综合评价体系<span class="check-type">方法已建立</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">创新三：从不同矿种采矿工艺出发，揭示矿种→采矿方式→生态影响之间的关系<span class="check-type">框架已有</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">创新四：以足洞稀土矿为典型案例，实现宏观分析与微观案例的结合<span class="check-type">框架已有</span></div></div>
+        <div class="check-item done"><span class="check-icon done">✓</span><div class="check-content">创新五：采用StoryMap叙事方式组织GIS成果，增强地图故事的可读性与传播力<span class="check-type">本HTML即此创新</span></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>建议的下一步工作</h3>
+      <div class="checklist">
+        <div class="check-item todo"><span class="check-icon todo">1</span><div class="check-content"><strong>立即可做：</strong>打开ArcGIS Pro，加载所有就绪的shp/TIF数据，逐张出图（图1-4/12-16/23-26）<span class="check-type">数据就绪，纯制图工作</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">2</span><div class="check-content"><strong>本周可做：</strong>下载DEM数据，完成坡度分析和缓冲区NDVI提取脚本<span class="check-type">1-2天工作量</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">3</span><div class="check-content"><strong>需设计：</strong>制作信息图（图6-9/图11），建议用PPT或AI精心绘制<span class="check-type">设计类工作</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">4</span><div class="check-content"><strong>需写作：</strong>填补各章节的说明文字（见上方文字清单），建议每节300-500字<span class="check-type">文案工作</span></div></div>
+        <div class="check-item todo"><span class="check-icon todo">5</span><div class="check-content"><strong>终稿整合：</strong>所有图+文字就绪后，制作最终StoryMap展示页面或参赛PPT<span class="check-type">最终集成</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>岭藏矿珍 — 赣州市矿山开发与生态演变地图故事 &nbsp;|&nbsp; 制作流程总览</p>
+  <p style="margin-top:6px;">
+    数据：<span>全国矿产地分布数据 (2025)</span> ·
+    遥感：<span>Landsat 5/8</span> ·
+    方法：<span>NNI · Moran's I · LISA · Gi* · NDVI时序 · 缓冲区 · DEM</span>
+  </p>
+  <p style="margin-top:6px;color:var(--text-muted);">
+    本页是制作流程总览，最终成品将替换地图占位符为实际出图
+  </p>
+</footer>
+
+<script>
+// Smooth scroll for nav links
+document.querySelectorAll('.top-nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Highlight active nav on scroll
+const sections = [...document.querySelectorAll('section[id]')];
+const navLinks = document.querySelectorAll('.top-nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+
+</body>
+</html>
