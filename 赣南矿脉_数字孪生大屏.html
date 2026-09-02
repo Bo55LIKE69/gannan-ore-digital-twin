@@ -220,7 +220,14 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .proc-foot{display:flex;justify-content:space-between;align-items:center;
   font-size:10px;color:var(--dim2)}
-.proc-go{color:var(--gold);font-weight:600}
+  .proc-go{color:var(--gold);font-weight:600}
+
+/* 工艺画廊可收起 */
+  .sec-t{cursor:pointer;user-select:none}
+  .collapse-arrow{margin-left:auto;font-size:12px;color:var(--dim);
+    transition:transform .25s;display:inline-block;padding-left:8px}
+  .sec.collapsed .collapse-arrow{transform:rotate(-90deg)}
+  .sec.collapsed #procList{display:none;margin:0}
 
 /* 弹窗 */
 .popup{position:absolute;z-index:200;background:var(--panel);border:1px solid rgba(201,148,74,.5);
@@ -377,7 +384,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 <!-- 右面板 -->
 <div class="panel" id="rightPanel">
   <div class="sec" id="procSec">
-    <div class="sec-t">稀土开采工艺 <span class="sub">点击飞行 · 四代演进</span></div>
+    <div class="sec-t" id="procSecT">稀土开采工艺 <span class="sub">点击飞行 · 四代演进</span><span class="collapse-arrow">▾</span></div>
     <div id="procList"></div>
   </div>
 
@@ -1349,8 +1356,10 @@ var PROCS = [
   { g:4, img:'工艺图/无铵绿色原地浸矿.png', n:'无铵绿色', y:'近年',   r:'82~88%', c:'#5aa06a',
     d:'无铵浸矿剂 + 废液闭环回收，绿色工艺、外排水达Ⅲ类。' }
 ];
-var PROC_CAM = [114.98, 24.92, 42000, -44, 8];   // 定南—龙南稀土矿区概览
 
+// 四代工艺代表性稀土矿区坐标（取自真实稀土矿点：龙南/寻乌/安远/兴国）
+var PROC_LL = { 1:[114.7048, 24.9722], 2:[115.6672, 25.0110],
+                3:[115.5006, 25.2902], 4:[115.4506, 26.6334] };
 
 function buildProcGallery(){
   var html = '';
@@ -1371,11 +1380,28 @@ function buildProcGallery(){
   for (var i = 0; i < rows.length; i++){
     rows[i].addEventListener('click', function(){
       var g = parseInt(this.getAttribute('data-g'), 10);
-      var cs = (D.cases || []).filter(function(x){ return x.gen === g; });
-      if (cs.length) flyToCase((D.cases || []).indexOf(cs[0]));
-      else flyTo(PROC_CAM[0], PROC_CAM[1], PROC_CAM[2], PROC_CAM[3], PROC_CAM[4], 2.6);
+      var p = PROCS.filter(function(x){ return x.g === g; })[0];
+      if (p) flyToProc(p);
     });
   }
+}
+
+/* 工艺卡精准导航：直接飞到该代代表性稀土矿点，不再回退概览 */
+function flyToProc(p){
+  var ll = PROC_LL[p.g];
+  if (!ll) return;
+  flyTo(ll[0], ll[1], 12000, -30, 0, 2.2);
+  setTimeout(function(){ showProcPopup(p); }, 1500);
+}
+function showProcPopup(p){
+  var ll = PROC_LL[p.g];
+  $('ppTitle').textContent = p.n + '（第' + p.g + '代）';
+  $('ppTag').textContent = p.y + ' · 回收率 ' + p.r;
+  $('ppDesc').textContent = p.d + ' 代表性矿区：' + ll[0].toFixed(3) + '°E, ' + ll[1].toFixed(3) + '°N。';
+  var pp = $('popup');
+  pp.style.left = (window.innerWidth / 2 - 170) + 'px';
+  pp.style.top  = (window.innerHeight / 2 - 110) + 'px';
+  pp.classList.add('show');
 }
 
 function initView(){
@@ -1811,6 +1837,12 @@ function bindUI(){
       $('leftPanel').classList.toggle('hidden');
       $('rightPanel').classList.toggle('hidden');
     }
+  });
+
+  // 工艺画廊折叠
+  var pst = document.getElementById('procSecT');
+  if (pst) pst.addEventListener('click', function(){
+    document.getElementById('procSec').classList.toggle('collapsed');
   });
 
   setTimeout(function(){ $('hint').classList.add('show'); }, 3200);
