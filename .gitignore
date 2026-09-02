@@ -1,0 +1,16 @@
+# 原始数据（体积过大，不入库；按需从原始渠道获取）
+数据/
+第三章/
+结果输出/
+文档/
+
+# 本地缓存与验证产物
+.verify/
+.workbuddy/
+.temp/
+__pycache__/
+*.pyc
+
+# 系统
+.DS_Store
+Thumbs.db

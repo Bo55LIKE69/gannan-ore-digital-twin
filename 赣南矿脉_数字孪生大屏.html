@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赣南矿脉 · 三维故事</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=JetBrains+Mono:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 13L7 3l3 6 2-3 2 7z' fill='%23d4a96a'/%3E%3C/svg%3E">
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+<link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<script src="dash_data.js"></script>
+<script src="dem_terrain_data.js"></script>
+<script src="hotspot_data.js"></script>
+<script src="point_score.js"></script>
+<script src="analysis_layers.js"></script>
+<style>
+:root{
+  --bg:#05070c;
+  --panel:rgba(11,16,24,.82);
+  --panel-2:rgba(18,25,36,.7);
+  --gold:#c9944a;
+  --gold-soft:rgba(201,148,74,.16);
+  --copper:#c0703a;
+  --teal:#5f9e8c;
+  --red:#e2544a;
+  --green:#5aa06a;
+  --blue:#5a86bd;
+  --text:#dde2e8;
+  --dim:#828b9a;
+  --dim2:#5c6574;
+  --border:rgba(201,148,74,.16);
+  --border-2:rgba(255,255,255,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+#cesium{position:absolute;inset:0}
+.cesium-widget,.cesium-widget canvas{background:#05070c!important}
+/* 去掉 Cesium 自带版权/水印与所有控件残留 */
+.cesium-widget-credits,.cesium-viewer-bottom,.cesium-credit-textContainer,
+.cesium-credit-logoContainer,.cesium-credit-lightbox,.cesium-credit-expand-link{
+  display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;
+}
+#creditSink{position:absolute;left:-99999px;top:-99999px;width:1px;height:1px;overflow:hidden;opacity:0}
+
+/* 背景氛围 */
+.vignette{position:absolute;inset:0;pointer-events:none;z-index:5;
+  background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)}
+.scanline{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:.35;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+
+/* ===== 顶栏 ===== */
+.topbar{position:absolute;top:0;left:0;right:0;height:62px;z-index:60;
+  display:flex;align-items:center;padding:0 22px;gap:18px;
+  background:linear-gradient(180deg,rgba(5,7,12,.94),rgba(5,7,12,.55) 70%,transparent);
+  border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:baseline;gap:12px}
+.brand .zh{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;letter-spacing:.08em;
+  background:linear-gradient(180deg,#f0d9a8,#c9944a 60%,#8d6a30);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .en{font-size:10.5px;letter-spacing:.28em;color:var(--dim2);text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace}
+.spacer{flex:1}
+.tstats{display:flex;align-items:center;gap:0}
+.tstat{padding:0 16px;text-align:right;border-left:1px solid var(--border)}
+.tstat:last-child{border-right:none}
+.tstat .v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;color:var(--gold);
+  line-height:1.15;letter-spacing:.01em}
+.tstat .l{font-size:10.5px;color:var(--dim2);letter-spacing:.14em;margin-top:1px}
+.src{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#454e5c;letter-spacing:.06em;
+  text-align:right;line-height:1.5;max-width:210px}
+
+/* ===== 通用面板 ===== */
+.panel{position:absolute;z-index:55;width:318px;top:78px;bottom:118px;
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  padding:16px 14px;overflow-y:auto;overflow-x:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+  transition:transform .38s cubic-bezier(.22,.61,.36,1),opacity .3s}
+#leftPanel{left:18px}
+#rightPanel{right:18px;width:336px}
+#leftPanel.hidden{transform:translateX(-360px);opacity:0;pointer-events:none}
+#rightPanel.hidden{transform:translateX(380px);opacity:0;pointer-events:none}
+.panel::before{content:'';position:absolute;top:0;left:14px;right:14px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,148,74,.5),transparent)}
+.sec{margin-bottom:20px}
+.sec-t{font-size:11.5px;font-weight:600;color:var(--gold);letter-spacing:.16em;margin-bottom:11px;
+  display:flex;align-items:center;gap:8px}
+.sec-t::before{content:'';width:3px;height:12px;background:var(--gold);border-radius:2px;
+  box-shadow:0 0 8px rgba(201,148,74,.7)}
+.sec-t .sub{margin-left:auto;font-size:9.5px;color:var(--dim2);letter-spacing:.06em;font-weight:400}
+
+/* 冷热点图例 */
+.hot-legend{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.hot-legend .hl{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--dim)}
+.hot-legend .hl i{width:22px;height:11px;border-radius:3px;flex-shrink:0;
+  box-shadow:0 0 6px rgba(0,0,0,.4)}
+.hot-note{font-size:9.5px;line-height:1.5;color:var(--dim2);letter-spacing:.03em;
+  border-top:1px solid var(--border);padding-top:7px}
+/* 矿产地分级图例 */
+.lv-legend{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.lv-legend .lv{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--dim);
+  padding:4px 7px;border-radius:7px;cursor:pointer;transition:all .2s}
+.lv-legend .lv:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.lv-legend .lv.off{opacity:.38}
+.lv-legend .lv .cone{width:0;height:0;flex-shrink:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;
+  border-bottom-width:15px;border-bottom-style:solid}
+.lv-legend .lv .nm{font-weight:500}
+.lv-legend .lv .ct{margin-left:auto;font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--dim2)}
+
+/* 控制条 */
+.ctl{margin-bottom:13px}
+.ctl-h{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;
+  color:var(--dim);margin-bottom:6px}
+.ctl-h .cv{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold) var(--p,50%),rgba(255,255,255,.09) var(--p,50%));
+  outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  background:#e6c88c;border:2px solid #1a1206;box-shadow:0 0 8px rgba(201,148,74,.8);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#e6c88c;
+  border:2px solid #1a1206;cursor:pointer}
+.sw-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;
+  padding:6px 0;color:var(--text)}
+.note{margin-top:6px;font-size:10px;line-height:1.6;color:var(--dim2);
+  border-left:2px solid rgba(201,148,74,.35);padding-left:7px}
+.sw{position:relative;width:34px;height:18px;border-radius:9px;background:rgba(255,255,255,.09);
+  cursor:pointer;transition:background .22s;flex-shrink:0;border:1px solid rgba(255,255,255,.05)}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:#6b7482;transition:all .22s}
+.sw.on{background:rgba(201,148,74,.3);border-color:rgba(201,148,74,.5)}
+.sw.on::after{left:18px;background:var(--gold);box-shadow:0 0 8px rgba(201,148,74,.9)}
+
+/* 高程色带 */
+.ramp{height:10px;border-radius:5px;margin:2px 0 5px;
+  background:linear-gradient(90deg,#0a1620 0%,#10303c 16%,#1a4a4c 34%,#2f5c47 54%,#6a7a45 72%,#a08f5c 87%,#e8dcc0 100%);
+  border:1px solid rgba(255,255,255,.07)}
+.ramp-lbl{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+  font-size:9.5px;color:var(--dim2)}
+
+/* 图例 */
+.leg{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:4.5px 0;cursor:pointer;
+  transition:opacity .18s;user-select:none}
+.leg:hover{background:rgba(201,148,74,.05)}
+.leg.off{opacity:.28}
+.leg .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
+.leg .nm{flex:1}
+.leg .ct{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim2)}
+.leg .pct{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim2);width:38px;text-align:right}
+
+/* 指标卡 */
+.mcard{background:var(--panel-2);border:1px solid var(--border-2);border-radius:7px;
+  padding:10px 12px;margin-bottom:7px;position:relative;overflow:hidden;transition:border-color .25s}
+.mcard:hover{border-color:var(--border)}
+.mcard .lb{font-size:10.5px;color:var(--dim);letter-spacing:.05em}
+.mcard .vl{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--text);
+  line-height:1.3}
+.mcard .ds{font-size:10px;color:var(--dim2);margin-top:1px}
+.mcard.hot .vl{color:var(--red)}
+.mcard.warm .vl{color:var(--copper)}
+.mcard.cool .vl{color:var(--blue)}
+.mcard.ok .vl{color:var(--green)}
+.mcard .bar{position:absolute;left:0;bottom:0;height:2px;background:var(--gold);opacity:.55}
+
+/* 排行 */
+.rank{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;border-radius:4px;
+  border-bottom:1px solid rgba(255,255,255,.035);transition:background .15s}
+.rank:hover{background:rgba(201,148,74,.07)}
+.rank .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim2);width:18px}
+.rank .nm{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank .tr{width:74px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex-shrink:0}
+.rank .fl{height:100%;border-radius:3px}
+.rank .c{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);width:26px;text-align:right}
+
+/* 县域详情 */
+.dcard{background:var(--panel-2);border:1px solid var(--border-2);border-radius:7px;padding:11px 12px;margin-bottom:8px}
+.dcard .h{font-size:13.5px;font-weight:600;color:var(--gold);margin-bottom:7px;display:flex;align-items:center}
+.dcard .h .tag{margin-left:auto;font-size:9.5px;padding:2px 6px;border-radius:3px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+.drow{display:flex;justify-content:space-between;font-size:11px;padding:2.5px 0}
+.drow .k{color:var(--dim)}
+.drow .v{font-family:'JetBrains Mono',monospace;color:var(--text)}
+.mbar{display:flex;align-items:center;gap:6px;font-size:10.5px;margin:3.5px 0}
+.mbar .mn{width:64px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbar .mt{flex:1;height:3.5px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.mbar .mf{height:100%;background:var(--copper);border-radius:2px}
+.mbar .mv{font-family:'JetBrains Mono',monospace;width:18px;text-align:right;color:var(--text)}
+
+/* 案例卡 */
+.ccard{background:var(--panel-2);border:1px solid var(--border-2);border-radius:7px;padding:10px 12px;
+  margin-bottom:7px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
+.ccard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .22s}
+.ccard:hover{border-color:rgba(201,148,74,.42);background:rgba(201,148,74,.06)}
+.ccard.on{border-color:var(--gold);background:rgba(201,148,74,.1)}
+.ccard.on::before{background:var(--gold)}
+.ccard .cn{font-size:12.5px;font-weight:600;color:var(--text)}
+.ccard .ct{font-size:10px;color:var(--copper);margin:2px 0 3px}
+.ccard .cd{font-size:10.5px;color:var(--dim2);line-height:1.55}
+
+/* 章节叙述卡 */
+.chapter{background:linear-gradient(160deg,rgba(201,148,74,.09),rgba(201,148,74,.02));
+  border:1px solid rgba(201,148,74,.24);border-radius:9px;padding:14px 15px;margin-bottom:14px;
+  position:relative;overflow:hidden}
+.chapter .idx{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.24em}
+.chapter .ttl{font-size:17px;font-weight:700;color:#f0e0c0;margin:5px 0 7px;letter-spacing:.03em}
+.chapter .body{font-size:11.5px;color:#9aa4b2;line-height:1.85;letter-spacing:.02em}
+.chapter .kv{display:flex;gap:16px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06)}
+.chapter .kv .i .v{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);font-weight:600}
+.chapter .kv .i .l{font-size:9.5px;color:var(--dim2);letter-spacing:.1em;margin-top:1px}
+
+/* ===== 章节标签（右面板顶部，替代底部故事条） ===== */
+.chtabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px}
+.chtab{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:14px;cursor:pointer;
+  border:1px solid var(--border);background:var(--panel-2);
+  transition:all .22s;opacity:.6;white-space:nowrap}
+.chtab:hover{opacity:1;border-color:rgba(201,148,74,.5)}
+.chtab .cn{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim2);
+  padding:0 4px;border-radius:6px;background:rgba(255,255,255,.06)}
+.chtab .nm{font-size:10.5px;color:var(--dim)}
+.chtab:hover .nm{color:var(--text)}
+.chtab.on{opacity:1;background:rgba(201,148,74,.16);border-color:var(--gold);
+  box-shadow:0 0 12px rgba(201,148,74,.22)}
+.chtab.on .cn{background:var(--gold);color:#1a1206;font-weight:600}
+.chtab.on .nm{color:#f0d9a8;font-weight:600}
+
+/* 弹窗 */
+.popup{position:absolute;z-index:200;background:var(--panel);border:1px solid rgba(201,148,74,.5);
+  border-radius:10px;padding:15px 17px;min-width:250px;max-width:330px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 20px 56px rgba(0,0,0,.62);display:none;animation:pop .3s cubic-bezier(.22,.61,.36,1)}
+.popup.show{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.popup .pt{font-size:14.5px;font-weight:600;color:var(--gold);margin-bottom:4px;padding-right:18px}
+.popup .pg{font-size:10.5px;color:var(--copper);margin-bottom:7px}
+.popup .pd{font-size:11.5px;color:#9aa4b2;line-height:1.8}
+.popup .pc{position:absolute;top:8px;right:11px;cursor:pointer;color:var(--dim2);font-size:15px;line-height:1}
+.popup .pc:hover{color:var(--text)}
+
+/* 加载 */
+.loader{position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  transition:opacity .7s}
+.loader.hide{opacity:0;pointer-events:none}
+.loader .ring{width:46px;height:46px;border:2px solid rgba(201,148,74,.14);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader .tt{font-size:14px;color:#c9cfd8;letter-spacing:.32em}
+.loader .mm{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim2);letter-spacing:.1em}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(201,148,74,.22);border-radius:2px}
+
+.hint{position:absolute;left:50%;transform:translateX(-50%);top:70px;z-index:58;
+  font-size:10.5px;color:var(--dim2);letter-spacing:.12em;pointer-events:none;
+  opacity:0;transition:opacity .5s}
+.hint.show{opacity:1}
+
+@media (max-width:1400px){
+  .panel{width:288px}#rightPanel{width:300px}
+  .tstat{padding:0 11px}
+}
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader">
+  <div class="ring"></div>
+  <div class="tt">赣 南 矿 脉</div>
+  <div class="mm" id="loadMsg">正在构建三维地形</div>
+</div>
+
+<div id="cesium"></div>
+<div class="vignette"></div>
+<div class="scanline"></div>
+<div id="creditSink"></div>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <div class="brand">
+    <span class="zh">赣南矿脉</span>
+    <span class="en">Ganzhou Ore Veins · 3D</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="tstats">
+    <div class="tstat"><div class="v" id="ts-pts">—</div><div class="l">矿点</div></div>
+    <div class="tstat"><div class="v" id="ts-cty">—</div><div class="l">县域</div></div>
+    <div class="tstat"><div class="v" id="ts-hot">—</div><div class="l">热点核心</div></div>
+    <div class="tstat"><div class="v" id="ts-nni">—</div><div class="l">NNI</div></div>
+    <div class="tstat"><div class="v" id="ts-moran">—</div><div class="l">Moran's I</div></div>
+  </div>
+  <div class="src">ASTER GDEM 30m · 山体阴影 315°/45°<br>赣州市矿产地数据库（474 处）</div>
+</div>
+
+<div class="hint" id="hint">1–6 切换章节 · H 隐藏面板 · 点击矿点查看详情</div>
+
+<!-- 左面板 -->
+<div class="panel" id="leftPanel">
+  <div class="sec">
+    <div class="sec-t">地形渲染 <span class="sub">DEM 30m</span></div>
+    <div class="ctl">
+      <div class="ctl-h"><span>垂直夸张</span><span class="cv" id="vExag">1.6×</span></div>
+      <input type="range" id="sExag" min="1" max="3" step="0.1" value="1.6">
+    </div>
+    <div class="ctl">
+      <div class="ctl-h"><span>晕渲强度</span><span class="cv" id="vHs">55%</span></div>
+      <input type="range" id="sHs" min="0" max="100" step="1" value="55">
+    </div>
+    <div class="ramp"></div>
+    <div class="ramp-lbl"><span id="rl0">—</span><span>海拔配色</span><span id="rl1">—</span></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">显示图层</div>
+    <div class="sw-row"><span>等高线</span><div class="sw on" id="swContour"></div></div>
+    <div class="sw-row"><span>县域面 / 边界</span><div class="sw on" id="swCounty"></div></div>
+    <div class="sw-row"><span>矿点光柱</span><div class="sw on" id="swPoints"></div></div>
+    <div class="sw-row"><span>名称标注</span><div class="sw on" id="swLabels"></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">矿点贴地 <span class="sub">吸附 DEM 表面</span></div>
+    <div class="ctl">
+      <div class="ctl-h"><span>整体离地抬升</span><span class="cv" id="vLift">0 m</span></div>
+      <input type="range" id="sLift" min="0" max="12000" step="250" value="0">
+    </div>
+    <div class="sw-row"><span>地表锚点（穿透遮挡）</span><div class="sw on" id="swPin"></div></div>
+    <div class="note">锚点始终贴在 DEM 表面并关闭深度测试，山体挡不住；抬升滑杆只抬光柱，锚点留地并以引线相连。</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">空间分析图层 <span class="sub">来自数据集</span></div>
+    <div class="sw-row"><span>矿点核密度</span><div class="sw" id="swAl_density"></div></div>
+    <div class="sw-row"><span>LISA 空间自相关</span><div class="sw" id="swAl_lisa"></div></div>
+    <div class="sw-row"><span>Gi* 冷热点(网格)</span><div class="sw" id="swAl_gistar_grid"></div></div>
+    <div class="sw-row"><span>县级矿山统计</span><div class="sw" id="swAl_county"></div></div>
+    <div class="sw-row"><span>矿点冷热点 (Gi*)</span><div class="sw on" id="swHotspot"></div></div>
+    <div class="hot-note" id="alNote">点击叠加到地形；默认仅显示核密度；冷热点按县域上色。</div>
+    <div id="alLegend" class="hot-legend"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">冷热点图例 <span class="sub">Gi* 显著性</span></div>
+    <div id="hotLegend" class="hot-legend"></div>
+    <div class="hot-note">基于 408 个矿点的网格密度 Getis-Ord Gi*（距离带 42 km）</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">矿种构成 <span class="sub">点击筛选</span></div>
+    <div id="legend"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">空间统计</div>
+    <div class="mcard">
+      <div class="lb">最邻近指数 NNI</div><div class="vl" id="mNNI">—</div>
+      <div class="ds">Z = <span id="mNNIZ">—</span> · 显著聚集</div>
+      <div class="bar" style="width:41%"></div>
+    </div>
+    <div class="mcard">
+      <div class="lb">全局莫兰指数 Moran's I</div><div class="vl" id="mMI">—</div>
+      <div class="ds">Z = <span id="mMIZ">—</span> · 正空间自相关</div>
+      <div class="bar" style="width:53%"></div>
+    </div>
+    <div class="mcard warm">
+      <div class="lb">泰森多边形变异系数 CV</div><div class="vl" id="mCV">—</div>
+      <div class="ds">远超 64% 阈值</div>
+      <div class="bar" style="width:88%"></div>
+    </div>
+    <div class="mcard hot">
+      <div class="lb">Gi* 热点核心</div><div class="vl" id="mHot">—</div>
+      <div class="ds">西热东冷格局</div>
+      <div class="bar" style="width:70%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 右面板 -->
+<div class="panel" id="rightPanel">
+  <div class="chtabs" id="chTabs"></div>
+  <div class="chapter">
+    <div class="idx" id="chIdx">CHAPTER 00</div>
+    <div class="ttl" id="chTtl">—</div>
+    <div class="body" id="chBody">—</div>
+    <div class="kv" id="chKv"></div>
+  </div>
+
+  <div class="sec" id="genSec" style="display:none">
+    <div class="sec-t">稀土工艺代际 <span class="sub">点击定位</span></div>
+    <div id="genList"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">县级矿点排行 <span class="sub">点击飞行</span></div>
+    <div id="rankList"></div>
+  </div>
+
+  <div class="sec" id="ctyDetail" style="display:none">
+    <div class="sec-t">县域详情</div>
+    <div id="detailContent"></div>
+  </div>
+
+</div>
+
+<div class="popup" id="popup">
+  <span class="pc" id="ppClose">×</span>
+  <div class="pt" id="ppTitle"></div>
+  <div class="pg" id="ppTag"></div>
+  <div class="pd" id="ppDesc"></div>
+</div>
+
+<script>
+/* =========================================================
+   0. 基础
+   ========================================================= */
+var $ = function(id){ return document.getElementById(id); };
+var D = window.DASH_DATA || {};
+var DM = window.DEM_DATA || null;
+var viewer = null, terrainPrim = null, terrainApp = null, terrainUniforms = null;
+var countyPrims = null;
+var hotspotPrims = [];
+var EXAG = 1.6;
+var LIFT = 0;                 // 矿点整体离地抬升（m），只作用于矿点/案例，锚点留地
+var pinEnts = [], tetherEnts = [];   // 地表锚点 / 锚点引线
+var SINK = 180;               // 光柱底部扎入地表的深度，保证"钉"在 DEM 上
+
+var CAT_COLORS = {
+  tungsten:'#e0a040', ferrous:'#8a7060', precious:'#e0c050', rare_earth:'#e2544a',
+  rare:'#b878dc', nonmetal:'#5f9e8c', nonferrous:'#7a9ab0', other:'#5f6878'
+};
+var CAT_NAMES = {
+  tungsten:'钨锡多金属', ferrous:'黑色金属', precious:'贵金属', rare_earth:'稀土金属',
+  rare:'稀有金属', nonmetal:'非金属', nonferrous:'有色及贵金属', other:'其他'
+};
+var HOT_STYLE = {
+  '热点':   {c:'rgba(226,84,74,.42)', b:'#ff5a4e', t:'#ff8a80', w:3.0},
+  '次热点': {c:'rgba(201,112,58,.30)', b:'#e0a070', t:'#e8b088', w:2.0},
+  '不显著': {c:'rgba(120,130,145,.10)', b:'rgba(201,148,74,.45)', t:'rgba(221,226,232,.72)', w:1.3},
+  '次冷点': {c:'rgba(90,134,189,.20)', b:'rgba(120,160,210,.7)', t:'rgba(160,190,225,.8)', w:1.3},
+  '冷点':   {c:'rgba(90,134,189,.28)', b:'rgba(110,150,210,.85)', t:'rgba(160,190,225,.85)', w:1.6}
+};
+
+/* =========================================================
+   1. DEM 解码与采样
+   ========================================================= */
+var GW = 0, GH = 0, _enc = null, _mb = null;
+
+function b64ToBytes(b64){
+  var s = atob(b64), n = s.length, a = new Uint8Array(n);
+  for (var i = 0; i < n; i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+function initDem(){
+  GW = DM.width; GH = DM.height;
+  _enc = new Uint16Array(b64ToBytes(DM.heights).buffer);
+  _mb  = b64ToBytes(DM.mask);
+}
+function maskAt(i, j){
+  var k = j * GW + i;
+  return (_mb[k >> 3] >> (k & 7)) & 1;
+}
+function rawH(i, j){ return _enc[j * GW + i] * DM.scale + DM.minH; }
+
+function sampleRaw(lon, lat){
+  var fx = (lon - DM.west)  / (DM.east  - DM.west)  * (GW - 1);
+  var fy = (DM.north - lat) / (DM.north - DM.south) * (GH - 1);
+  if (fx < 0 || fx > GW - 1 || fy < 0 || fy > GH - 1) return null;
+  var i0 = Math.floor(fx), j0 = Math.floor(fy);
+  var i1 = Math.min(i0 + 1, GW - 1), j1 = Math.min(j0 + 1, GH - 1);
+  var dx = fx - i0, dy = fy - j0;
+  var acc = 0, wsum = 0;
+  var cs = [[i0,j0,(1-dx)*(1-dy)],[i1,j0,dx*(1-dy)],[i0,j1,(1-dx)*dy],[i1,j1,dx*dy]];
+  for (var c = 0; c < 4; c++){
+    if (maskAt(cs[c][0], cs[c][1])){ acc += rawH(cs[c][0], cs[c][1]) * cs[c][2]; wsum += cs[c][2]; }
+  }
+  if (wsum > 0.01) return acc / wsum;
+  for (var r = 1; r < 30; r++){
+    for (var a = -r; a <= r; a++){
+      for (var b = -r; b <= r; b++){
+        if (Math.abs(a) !== r && Math.abs(b) !== r) continue;
+        var i2 = Math.min(Math.max(i0 + a, 0), GW - 1), j2 = Math.min(Math.max(j0 + b, 0), GH - 1);
+        if (maskAt(i2, j2)) return rawH(i2, j2);
+      }
+    }
+  }
+  return DM.minH;
+}
+/* 夸张后地表高程 */
+function surfaceH(lon, lat, extra){
+  var h = sampleRaw(lon, lat);
+  if (h === null) h = DM.minH;
+  return DM.minH + (h - DM.minH) * EXAG + (extra || 0);
+}
+function surfCart(lon, lat, extra){
+  return Cesium.Cartesian3.fromDegrees(lon, lat, surfaceH(lon, lat, extra || 0));
+}
+function geoCenter(ring){
+  var x = 0, y = 0, n = ring.length;
+  for (var i = 0; i < n; i++){ x += ring[i][0]; y += ring[i][1]; }
+  return [x / n, y / n];
+}
+function ringOf(g){
+  if (!g) return null;
+  if (g.type === 'MultiPolygon') return g.coordinates[0][0];
+  if (g.type === 'Polygon') return g.coordinates[0];
+  return null;
+}
+
+/* =========================================================
+   2. 三维地形网格
+   ========================================================= */
+function buildTerrainGeometry(){
+  var count = 0, i, j, k;
+  for (k = 0; k < GW * GH; k++) if ((_mb[k >> 3] >> (k & 7)) & 1) count++;
+
+  var vid = new Int32Array(GW * GH).fill(-1);
+  var pos = new Float64Array(count * 3);
+  var st  = new Float32Array(count * 2);
+  var hgt = new Float32Array(count);
+  var n = 0, tmp = new Cesium.Cartesian3();
+
+  for (j = 0; j < GH; j++){
+    var lat = DM.north - (DM.north - DM.south) * j / (GH - 1);
+    for (i = 0; i < GW; i++){
+      if (!maskAt(i, j)) continue;
+      var lon = DM.west + (DM.east - DM.west) * i / (GW - 1);
+      var h = rawH(i, j);
+      Cesium.Cartesian3.fromDegrees(lon, lat, h, Cesium.Ellipsoid.WGS84, tmp);
+      pos[n*3] = tmp.x; pos[n*3+1] = tmp.y; pos[n*3+2] = tmp.z;
+      st[n*2] = i / (GW - 1);
+      st[n*2+1] = 1 - j / (GH - 1);
+      hgt[n] = h;
+      vid[j*GW+i] = n; n++;
+    }
+  }
+
+  /* Pass 1: 标记所有有效四边形 */
+  var QW = GW - 1, QH = GH - 1;
+  var qok = new Uint8Array(QW * QH);
+  var nq = 0;
+  for (j = 0; j < QH; j++){
+    for (i = 0; i < QW; i++){
+      if (vid[j*GW+i] < 0 || vid[j*GW+i+1] < 0 ||
+              vid[(j+1)*GW+i] < 0 || vid[(j+1)*GW+i+1] < 0) continue;
+      qok[j*QW+i] = 1; nq++;
+    }
+  }
+  /* Pass 2: 边界边（邻居都已计算）） */
+  var nbe = 0;
+  for (j = 0; j < QH; j++){
+    for (i = 0; i < QW; i++){
+      if (!qok[j*QW+i]) continue;
+      if (j === 0     || !qok[(j-1)*QW+i]) nbe++;
+      if (j === QH-1  || !qok[(j+1)*QW+i]) nbe++;
+      if (i === 0     || !qok[j*QW+i-1])   nbe++;
+      if (i === QW-1  || !qok[j*QW+i+1])   nbe++;
+    }
+  }
+
+  var nVert = count + nbe * 2;
+  var P = new Float64Array(nVert * 3);
+  var S = new Float32Array(nVert * 2);
+  var H = new Float32Array(nVert);
+  P.set(pos); S.set(st); H.set(hgt);
+  var vp = count;
+  var idx = new Uint32Array(nq * 6 + nbe * 6);
+  var ip = 0;
+
+  var SKIRT = -4000;
+  function addSkirt(u, v){
+    // u,v 为顶点索引；底边复制两份并下沉
+    var lonU = 0, latU = 0; // 由已有的世界坐标反算不方便，改用球面近似：直接沿径向缩放到 SKIRT 高度
+    var p = new Cesium.Cartesian3(P[u*3], P[u*3+1], P[u*3+2]);
+    var q = new Cesium.Cartesian3(P[v*3], P[v*3+1], P[v*3+2]);
+    var cu = Cesium.Cartographic.fromCartesian(p);
+    var cv = Cesium.Cartographic.fromCartesian(q);
+    var bu = Cesium.Cartesian3.fromDegrees(Cesium.Math.toDegrees(cu.longitude), Cesium.Math.toDegrees(cu.latitude), SKIRT);
+    var bv = Cesium.Cartesian3.fromDegrees(Cesium.Math.toDegrees(cv.longitude), Cesium.Math.toDegrees(cv.latitude), SKIRT);
+    var iu = vp++, iv = vp++;
+    P[iu*3]=bu.x; P[iu*3+1]=bu.y; P[iu*3+2]=bu.z; S[iu*2]=S[u*2]; S[iu*2+1]=S[u*2+1]; H[iu]=DM.minH;
+    P[iv*3]=bv.x; P[iv*3+1]=bv.y; P[iv*3+2]=bv.z; S[iv*2]=S[v*2]; S[iv*2+1]=S[v*2+1]; H[iv]=DM.minH;
+    idx[ip++]=u; idx[ip++]=iu; idx[ip++]=iv;
+    idx[ip++]=u; idx[ip++]=iv; idx[ip++]=v;
+  }
+
+  for (j = 0; j < QH; j++){
+    for (i = 0; i < QW; i++){
+      if (!qok[j*QW+i]) continue;
+      var a2 = vid[j*GW+i], b2 = vid[j*GW+i+1], c2 = vid[(j+1)*GW+i+1], d2 = vid[(j+1)*GW+i];
+      idx[ip++]=a2; idx[ip++]=d2; idx[ip++]=c2;
+      idx[ip++]=a2; idx[ip++]=c2; idx[ip++]=b2;
+      if (j === 0    || !qok[(j-1)*QW+i]) addSkirt(b2, a2);   // 北
+      if (j === QH-1 || !qok[(j+1)*QW+i]) addSkirt(d2, c2);   // 南
+      if (i === 0    || !qok[j*QW+i-1])   addSkirt(a2, d2);   // 西
+      if (i === QW-1 || !qok[j*QW+i+1])   addSkirt(c2, b2);   // 东
+    }
+  }
+
+  var bs = Cesium.BoundingSphere.fromVertices(P);
+  var geom = new Cesium.Geometry({
+    attributes: {
+      position: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.DOUBLE, componentsPerAttribute: 3, values: P }),
+      st: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 2, values: S }),
+      height: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 1, values: H }),
+      batchId: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.FLOAT, componentsPerAttribute: 1,
+        values: new Float32Array(nVert) })
+    },
+    indices: idx,
+    primitiveType: Cesium.PrimitiveType.TRIANGLES,
+    boundingSphere: bs
+  });
+  return { geometry: geom, verts: nVert, tris: ip / 3 };
+}
+
+var TERRAIN_VS = [
+  'in vec3 position3DHigh;',
+  'in vec3 position3DLow;',
+  'in vec2 st;',
+  'in float height;',
+  'in float batchId;',
+  'uniform float u_exag;',
+  'uniform float u_hmin;',
+  'out vec2 v_st;',
+  'out float v_h;',
+  'out float v_dist;',
+  'void main() {',
+  '    vec3 pw = position3DHigh + position3DLow;',
+  '    vec3 up = normalize(pw);',
+  '    vec3 p  = pw + up * (height - u_hmin) * (u_exag - 1.0);',
+  '    v_st = st;',
+  '    v_h  = height;',
+  '    vec4 clip = czm_viewProjection * vec4(p, 1.0);',
+  '    v_dist = clip.w;',
+  '    gl_Position = clip;',
+  '}'
+].join('\n');
+
+var TERRAIN_FS = [
+  'uniform sampler2D u_hillshade;',
+  'uniform float u_hmin, u_hmax, u_hs, u_contour, u_px, u_alpha;',
+  'uniform float u_fogNear, u_fogFar;',
+  'uniform vec3  u_fogColor;',
+  'in vec2 v_st;',
+  'in float v_h;',
+  'in float v_dist;',
+  'vec3 ramp(float t) {',
+  '    vec3 c0 = vec3(0.122, 0.059, 0.043);',
+  '    vec3 c1 = vec3(0.227, 0.116, 0.069);',
+  '    vec3 c2 = vec3(0.384, 0.213, 0.117);',
+  '    vec3 c3 = vec3(0.557, 0.354, 0.176);',
+  '    vec3 c4 = vec3(0.725, 0.545, 0.318);',
+  '    vec3 c5 = vec3(0.855, 0.702, 0.470);',
+  '    vec3 c6 = vec3(0.953, 0.902, 0.775);',
+  '    vec3 c = mix(c0, c1, smoothstep(0.00, 0.16, t));',
+  '    c = mix(c, c2, smoothstep(0.16, 0.34, t));',
+  '    c = mix(c, c3, smoothstep(0.34, 0.54, t));',
+  '    c = mix(c, c4, smoothstep(0.54, 0.72, t));',
+  '    c = mix(c, c5, smoothstep(0.72, 0.87, t));',
+  '    c = mix(c, c6, smoothstep(0.87, 1.00, t));',
+  '    return c;',
+  '}',
+  'void main() {',
+  '    float t = clamp((v_h - u_hmin) / max(u_hmax - u_hmin, 1.0), 0.0, 1.0);',
+  '    vec3 col = ramp(t);',
+  '    float hs = texture(u_hillshade, v_st).r;',
+  '    col *= mix(1.0 - u_hs, 1.0 + u_hs * 0.85, hs);',
+  '    if (u_contour > 0.5) {',
+  '        float mpp = max(v_dist * u_px, 0.6);',
+  '        float d2 = abs(fract(v_h / 200.0 + 0.5) - 0.5) * 200.0;',
+  '        float l2 = 1.0 - smoothstep(mpp * 0.7, mpp * 1.8, d2);',
+  '        float d1 = abs(fract(v_h / 1000.0 + 0.5) - 0.5) * 1000.0;',
+  '        float l1 = 1.0 - smoothstep(mpp * 0.9, mpp * 2.2, d1);',
+  '        // 200m 次等高线：浅金提亮，可见但不抢眼',
+  '        col = mix(col, col * 1.32 + vec3(0.05, 0.04, 0.02), l2 * 0.55);',
+  '        // 1000m 主等高线：明显暗褐描边，强对比',
+  '        col = mix(col, vec3(0.16, 0.09, 0.05), l1 * 0.72);',
+  '    }',
+  '    float fog = clamp((v_dist - u_fogNear) / max(u_fogFar - u_fogNear, 1.0), 0.0, 1.0);',
+  '    col = mix(col, u_fogColor, fog * 0.88);',
+  '    out_FragColor = vec4(col, u_alpha);',
+  '}'
+].join('\n');
+
+function makePlaceholderTexture(ctx){
+  return new Cesium.Texture({
+    context: ctx,
+    source: { width: 1, height: 1, arrayBufferView: new Uint8Array([170, 170, 170, 255]) },
+    pixelFormat: Cesium.PixelFormat.RGBA,
+    pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
+    sampler: new Cesium.Sampler({
+      wrapS: Cesium.TextureWrap.CLAMP_TO_EDGE,
+      wrapT: Cesium.TextureWrap.CLAMP_TO_EDGE,
+      minificationFilter: Cesium.TextureMinificationFilter.LINEAR,
+      magnificationFilter: Cesium.TextureMagnificationFilter.LINEAR
+    })
+  });
+}
+
+var curHs = null;
+var _uHs = 0.55, _uPx = 0.0004, _uFogNear = 200000, _uFogFar = 900000;
+function addTerrain(){
+  var built = buildTerrainGeometry();
+  var ph = makePlaceholderTexture(viewer.scene.context);
+  curHs = ph;
+  // 注意：Cesium 的 Appearance 基类构造函数不保存 options.uniforms，
+  // 且 getUniformFunction 会再包一层 function(){ return uniforms[name]; }，
+  // 所以这里必须给「普通值」，并在构造后手动挂 appearance.uniforms。
+  terrainUniforms = {
+    u_hillshade: ph,
+    u_exag: EXAG,
+    u_hmin: DM.minH,
+    u_hmax: DM.maxH,
+    u_hs: _uHs,
+    u_contour: LAYER.contour ? 1.0 : 0.0,
+    u_px: _uPx,
+    u_alpha: 1.0,
+    u_fogNear: _uFogNear,
+    u_fogFar: _uFogFar,
+    u_fogColor: new Cesium.Cartesian3(0.058, 0.050, 0.043)
+  };
+  terrainApp = new Cesium.Appearance({
+    translucent: false,
+    closed: false,
+    vertexShaderSource: TERRAIN_VS,
+    fragmentShaderSource: TERRAIN_FS,
+    renderState: { depthTest: { enabled: true }, depthMask: true }
+  });
+  terrainApp.uniforms = terrainUniforms;
+  terrainPrim = new Cesium.Primitive({
+    geometryInstances: new Cesium.GeometryInstance({ geometry: built.geometry, id: 'terrain' }),
+    appearance: terrainApp,
+    asynchronous: false,
+    compressVertices: false,
+    allowPicking: false,
+    releaseGeometryInstances: true
+  });
+  viewer.scene.primitives.add(terrainPrim);
+  $('loadMsg').textContent = '顶点 ' + built.verts.toLocaleString() + ' · 三角面 ' + built.tris.toLocaleString();
+
+  // 山体阴影纹理（dataURI，无需服务器）
+  var img = new Image();
+  img.onload = function(){
+    var t = new Cesium.Texture({
+      context: viewer.scene.context,
+      source: img,
+      flipY: true,
+      sampler: new Cesium.Sampler({
+        wrapS: Cesium.TextureWrap.CLAMP_TO_EDGE,
+        wrapT: Cesium.TextureWrap.CLAMP_TO_EDGE,
+        minificationFilter: Cesium.TextureMinificationFilter.LINEAR,
+        magnificationFilter: Cesium.TextureMagnificationFilter.LINEAR
+      })
+    });
+    curHs = t;
+    if (terrainUniforms) terrainUniforms.u_hillshade = t;
+  };
+  img.src = DM.hillshade;
+
+  // 每帧更新与相机相关的 uniform
+  viewer.scene.preRender.addEventListener(function(){
+    if (!terrainUniforms) return;
+    var ch = viewer.canvas.clientHeight || 900;
+    var fov = viewer.camera.frustum.fov;
+    if (fov) terrainUniforms.u_px = 2 * Math.tan(fov * 0.5) / ch;
+    var camH = viewer.camera.positionCartographic.height;
+    var far = Math.max(420000, camH * 5.5);
+    terrainUniforms.u_fogFar = far;
+    terrainUniforms.u_fogNear = far * 0.34;
+  });
+}
+
+/* =========================================================
+   3. 县域面 / 边界
+   ========================================================= */
+var countyFillPrims = [], countyLinePrims = [];
+
+function clearCountyPrims(){
+  var i;
+  for (i = 0; i < countyFillPrims.length; i++) viewer.scene.primitives.remove(countyFillPrims[i]);
+  for (i = 0; i < countyLinePrims.length; i++) viewer.scene.primitives.remove(countyLinePrims[i]);
+  countyFillPrims = []; countyLinePrims = [];
+}
+
+function countyRings(g){
+  var polys = [];
+  if (!g) return polys;
+  if (g.type === 'MultiPolygon') { for (var i = 0; i < g.coordinates.length; i++) polys.push(g.coordinates[i][0]); }
+  else if (g.type === 'Polygon') polys.push(g.coordinates[0]);
+  return polys;
+}
+
+function buildCountyPrims(){
+  clearCountyPrims();
+  var counties = D.counties || [];
+  for (var ci = 0; ci < counties.length; ci++){
+    var c = counties[ci];
+    var rings = countyRings(c.geometry);
+    if (!rings.length) continue;
+    // 县域底图：中性暖灰（冷热点着色交给 swHotspot 图层，避免两层红叠加）
+    var col = Cesium.Color.fromCssColorString('rgba(190,176,150,0.10)');
+
+    // 面
+    var outer = [];
+    for (var p = 0; p < rings[0].length; p++){
+      outer.push(surfCart(rings[0][p][0], rings[0][p][1], 40));
+    }
+    var hier = new Cesium.PolygonHierarchy(outer);
+    var pf = new Cesium.Primitive({
+      geometryInstances: new Cesium.GeometryInstance({
+        geometry: new Cesium.PolygonGeometry({
+          polygonHierarchy: hier, perPositionHeight: true, vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(col) }
+      }),
+      appearance: new Cesium.PerInstanceColorAppearance({ translucent: true, closed: false }),
+      asynchronous: false, compressVertices: false
+    });
+    pf._countyIdx = ci;
+    viewer.scene.primitives.add(pf);
+    countyFillPrims.push(pf);
+
+    // 边界
+    for (var r = 0; r < rings.length; r++){
+      var ring = rings[r];
+      var step = Math.max(1, Math.floor(ring.length / 900));
+      var pts = [];
+      for (var q = 0; q < ring.length; q += step) pts.push(surfCart(ring[q][0], ring[q][1], 70));
+      if (pts.length < 3) continue;
+      pts.push(pts[0].clone());
+      var pl = new Cesium.Primitive({
+        geometryInstances: new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineGeometry({
+            positions: pts, width: 1.6, arcType: Cesium.ArcType.NONE,
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT
+          }),
+          attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('rgba(226,210,178,0.55)')) }
+        }),
+        appearance: new Cesium.PolylineColorAppearance({ translucent: true }),
+        asynchronous: false, compressVertices: false
+      });
+      viewer.scene.primitives.add(pl);
+      countyLinePrims.push(pl);
+    }
+  }
+}
+
+/* =========================================================
+   3.5 矿点冷热点图层 (Getis-Ord Gi*)
+   ========================================================= */
+function clearHotspot(){
+  for (var i = 0; i < hotspotPrims.length; i++) viewer.scene.primitives.remove(hotspotPrims[i]);
+  hotspotPrims = [];
+}
+function buildHotspotLayer(){
+  clearHotspot();
+  var HD = window.HOTSPOT_DATA;
+  if (!HD || !HD.counties) return;
+  // 按县域行政边界上色（无方格），cls 来自 Getis-Ord Gi* 相对分级
+  // 注意：HD 县名是拼音、D.counties 是中文，语言不一致 —— 改用「几何质心最近」匹配，避免依赖名称
+  var counties = D.counties || [];
+  for (var ci = 0; ci < counties.length; ci++){
+    var c = counties[ci];
+    var rings = countyRings(c.geometry);
+    if (!rings.length) continue;
+    var sx = 0, sy = 0, nn = 0;
+    for (var q0 = 0; q0 < rings[0].length; q0++){ sx += rings[0][q0][0]; sy += rings[0][q0][1]; nn++; }
+    if (!nn) continue;
+    var cx = sx / nn, cy = sy / nn;
+    var hc = null, bd = 1e18;
+    for (var k = 0; k < HD.counties.length; k++){
+      var h = HD.counties[k];
+      var d = (h.lon - cx) * (h.lon - cx) + (h.lat - cy) * (h.lat - cy);
+      if (d < bd){ bd = d; hc = h; }
+    }
+    if (!hc) continue;
+    var cls = hc.cls || '不显著';
+    var sty = HOT_STYLE[cls] || HOT_STYLE['不显著'];
+    // 面（抬升高于县域底图，避免 z-fighting）
+    var outer = [];
+    for (var p = 0; p < rings[0].length; p++) outer.push(surfCart(rings[0][p][0], rings[0][p][1], 160));
+    var pf = new Cesium.Primitive({
+      geometryInstances: new Cesium.GeometryInstance({
+        geometry: new Cesium.PolygonGeometry({
+          polygonHierarchy: new Cesium.PolygonHierarchy(outer),
+          perPositionHeight: true, vertexFormat: Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString(sty.c)) }
+      }),
+      appearance: new Cesium.PerInstanceColorAppearance({ translucent: true, closed: false }),
+      asynchronous: false, compressVertices: false
+    });
+    viewer.scene.primitives.add(pf);
+    hotspotPrims.push(pf);
+    // 边界（按冷热等级描边）
+    for (var r = 0; r < rings.length; r++){
+      var ring = rings[r];
+      var step = Math.max(1, Math.floor(ring.length / 900));
+      var pts = [];
+      for (var q = 0; q < ring.length; q += step) pts.push(surfCart(ring[q][0], ring[q][1], 185));
+      if (pts.length < 3) continue;
+      pts.push(pts[0].clone());
+      var pl = new Cesium.Primitive({
+        geometryInstances: new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineGeometry({
+            positions: pts, width: 2.2, arcType: Cesium.ArcType.NONE,
+            vertexFormat: Cesium.PolylineColorAppearance.VERTEX_FORMAT
+          }),
+          attributes: { color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString(sty.b)) }
+        }),
+        appearance: new Cesium.PolylineColorAppearance({ translucent: true }),
+        asynchronous: false, compressVertices: false
+      });
+      viewer.scene.primitives.add(pl);
+      hotspotPrims.push(pl);
+    }
+  }
+}
+// 左面板：矿产地重要性分级图例（点击可只保留该等级）
+function buildHotLegend(){
+  var el = $('hotLegend'); if (!el) return;
+  var order = ['热点', '次热点', '不显著', '次冷点', '冷点'];
+  var html = '';
+  for (var i = 0; i < order.length; i++){
+    var cls = order[i], sty = HOT_STYLE[cls];
+    html += '<div class="hl"><i style="background:' + sty.b + '"></i>' +
+      '<span>' + cls + '</span></div>';
+  }
+  el.innerHTML = html;
+}
+
+/* =========================================================
+   4. 矿点 / 案例
+   ========================================================= */
+var pointEnts = [], elevEnts = [], labelEnts = [];
+var activeCats = {};
+
+// 统一视觉参数：所有矿区一个样式（不再区分重点 / 普通）
+var UNI_STYLE = { r: 300, h: 2400, a: 0.80 };
+
+// 矿产地数据源：优先用后端评分结果（按坐标聚合 + 分级），缺失时回退到原始点表
+function pointSource(){
+  var PS = window.POINT_SCORE;
+  if (PS && PS.pts && PS.pts.length) return PS.pts;
+  var raw = D.points || [], out = [];
+  for (var i = 0; i < raw.length; i++){
+    out.push({ lon: raw[i][0], lat: raw[i][1], cats: [raw[i][2]],
+               dom: raw[i][2], county: raw[i][3], score: 0, lv: 0,
+               hs: '不显著', gi: 0 });
+  }
+  return out;
+}
+
+function addPoints(){
+  var pts = pointSource();
+  pointEnts = [];
+  for (var i = 0; i < pts.length; i++){
+    var p = pts[i];
+    var col = Cesium.Color.fromCssColorString(CAT_COLORS[p.dom] || CAT_COLORS.other);
+    var st = UNI_STYLE;
+    var h = st.h + (p.score || 0) * 120;
+    var base = surfaceH(p.lon, p.lat, 0);
+    var e = viewer.entities.add({
+      id: 'pt' + i,
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + h / 2 - SINK),
+      cylinder: {
+        length: h, topRadius: 0, bottomRadius: st.r,
+        material: col.withAlpha(st.a), outline: false
+      }
+    });
+    e._cat = p.dom; e._cats = p.cats; e._lon = p.lon; e._lat = p.lat;
+    e._h = h / 2 - SINK; e._idx = i; e._lv = p.lv; e._score = p.score;
+    e._county = p.county; e._hs = p.hs; e._gi = p.gi; e._useLift = true;
+    pointEnts.push(e);
+    elevEnts.push(e);
+
+    // 地表锚点：关闭深度测试，永远压在地形之上，任何视角都可见 —— 即每个矿区的标识
+    var pin = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 60),
+      point: {
+        pixelSize: 8,
+        color: col.withAlpha(0.98),
+        outlineColor: Cesium.Color.fromCssColorString('#070a11').withAlpha(0.9),
+        outlineWidth: 2,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 750000)
+      }
+    });
+    pin._cat = p.dom; pin._lon = p.lon; pin._lat = p.lat; pin._h = 60;
+    pin._idx = i; pin._pin = true; pin._useLift = false;
+    pinEnts.push(pin);
+    elevEnts.push(pin);
+
+    // 锚点引线：抬升滑杆拉起光柱后，用它把光柱和地表锚点连起来
+    var th = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base),
+      polyline: {
+        positions: [
+          Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base),
+          Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base)
+        ],
+        width: 1.1,
+        material: col.withAlpha(0.42),
+        show: false
+      }
+    });
+    th._cat = p.dom; th._lon = p.lon; th._lat = p.lat; th._tether = true;
+    tetherEnts.push(th);
+
+    // 每个矿区统一加名称标注（距离缩放：近看才显，避免远景堆叠）
+    var lb = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 200),
+      label: {
+        text: p.county + ' · ' + (CAT_NAMES[p.dom] || ''),
+        font: '600 10px "Noto Serif SC"',
+        fillColor: Cesium.Color.fromCssColorString('#ffe6bc'),
+        showBackground: true,
+        backgroundColor: Cesium.Color.fromCssColorString('rgba(8,12,20,.72)'),
+        backgroundPadding: new Cesium.Cartesian2(4, 2),
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        scaleByDistance: new Cesium.NearFarScalar(90000, 1.0, 650000, 0.4),
+        translucencyByDistance: new Cesium.NearFarScalar(300000, 1.0, 650000, 0.25)
+      }
+    });
+    lb._lon = p.lon; lb._lat = p.lat; lb._h = 200; lb._useLift = false;
+    labelEnts.push(lb);
+  }
+}
+
+function addCountyLabels(){
+  var counties = D.counties || [];
+  for (var i = 0; i < counties.length; i++){
+    var c = counties[i];
+    var ring = ringOf(c.geometry);
+    if (!ring) continue;
+    var ctr = geoCenter(ring);
+    var sty = HOT_STYLE[c.cls] || HOT_STYLE['不显著'];
+    var lb = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(ctr[0], ctr[1], surfaceH(ctr[0], ctr[1], 3200)),
+      label: {
+        text: c.name + '  ' + c.n,
+        font: (c.cls === '热点' ? '600 14px "Noto Serif SC"' : '300 12.5px "Noto Serif SC"'),
+        fillColor: Cesium.Color.fromCssColorString(sty.t),
+        showBackground: c.cls === '热点',
+        backgroundColor: Cesium.Color.fromCssColorString('rgba(28,10,8,.6)'),
+        backgroundPadding: new Cesium.Cartesian2(6, 3),
+        verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(20000, 420000),
+        scaleByDistance: new Cesium.NearFarScalar(60000, 1.0, 420000, 0.7)
+      }
+    });
+    lb._lon = ctr[0]; lb._lat = ctr[1]; lb._h = 3200;
+    elevEnts.push(lb); labelEnts.push(lb);
+  }
+}
+
+/* =========================================================
+   5. 夸张系数联动
+   ========================================================= */
+function refreshHeights(){
+  applyLift();
+  buildCountyPrims();
+  rebuildAlLayers();
+  applyLayerVis();
+}
+
+/* 矿点贴地：光柱/标签按 LIFT 抬升，锚点始终留在 DEM 表面，引线连接两者 */
+function applyLift(){
+  var i, e, z;
+  for (i = 0; i < elevEnts.length; i++){
+    e = elevEnts[i];
+    z = surfaceH(e._lon, e._lat, e._h) + (e._useLift ? LIFT : 0);
+    e.position = Cesium.Cartesian3.fromDegrees(e._lon, e._lat, z);
+  }
+  for (i = 0; i < tetherEnts.length; i++){
+    e = tetherEnts[i];
+    var g = surfaceH(e._lon, e._lat, 0);
+    e.polyline.positions = [
+      Cesium.Cartesian3.fromDegrees(e._lon, e._lat, g),
+      Cesium.Cartesian3.fromDegrees(e._lon, e._lat, g + LIFT)
+    ];
+    e.show = LIFT > 1 && LAYER.points && LAYER.pin;
+  }
+}
+
+/* =========================================================
+   6. Cesium 初始化
+   ========================================================= */
+function initCesium(){
+  viewer = new Cesium.Viewer('cesium', {
+    imageryProvider: false,
+    baseLayerPicker: false, geocoder: false, homeButton: false,
+    sceneModePicker: false, navigationHelpButton: false,
+    animation: false, timeline: false, fullscreenButton: false,
+    selectionIndicator: false, infoBox: false,
+    navigationInstructionsInitiallyVisible: false,
+    scene3DOnly: true,
+    creditContainer: $('creditSink')   // 版权/水印移出可视区
+  });
+
+  var sc = viewer.scene;
+  sc.backgroundColor = Cesium.Color.fromCssColorString('#05070c');
+  sc.globe.baseColor = Cesium.Color.fromCssColorString('#05080f');
+  sc.globe.showGroundAtmosphere = false;
+  sc.globe.enableLighting = false;
+  sc.skyBox.show = false;
+  sc.skyAtmosphere.show = false;
+  sc.fog.enabled = false;
+  sc.screenSpaceCameraController.enableTilt = true;
+  sc.screenSpaceCameraController.minimumZoomDistance = 800;
+  sc.screenSpaceCameraController.maximumZoomDistance = 900000;
+  // 暴露给调试/冒烟测试
+  window.viewer = viewer;
+  sc.renderError.addEventListener(function(err){
+    window.__lastRenderErr = (err && (err.message || err.toString())) || 'render error';
+  });
+  // 兜底：移除一切 Cesium 自带版权容器
+  try { viewer.cesiumWidget.creditDisplay.container.style.display = 'none'; } catch (e) {}
+  try { viewer.cesiumWidget.creditDisplay._container.style.display = 'none'; } catch (e) {}
+  var cs = document.querySelectorAll('.cesium-widget-credits,.cesium-viewer-bottom');
+  for (var i = 0; i < cs.length; i++) cs[i].style.display = 'none';
+
+  var handler = new Cesium.ScreenSpaceEventHandler(sc.canvas);
+  handler.setInputAction(function(click){
+    var picked = sc.pick(click.position);
+    if (Cesium.defined(picked) && picked.id){
+      // 矿点：Cesium 拾取实体时 picked.id 是 Entity 对象（不是字符串）
+      if (typeof picked.id === 'object' && picked.id._idx !== undefined){
+        showPointPopup(picked.id._idx); return;
+      }
+    }
+    var cart = viewer.camera.pickEllipsoid(click.position, sc.globe.ellipsoid);
+    if (cart){
+      var cg = Cesium.Cartographic.fromCartesian(cart);
+      checkCountyClick(Cesium.Math.toDegrees(cg.longitude), Cesium.Math.toDegrees(cg.latitude));
+    }
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
+// 参数语义：lon,lat = 看向的中心点；range = 相机离远点的距离；pitch, heading 朝向
+function flyTo(lon, lat, range, pitch, heading, dur){
+  viewer.camera.flyToBoundingSphere(
+    new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(lon, lat, 0), 1),
+    {
+      duration: dur === undefined ? 2.4 : dur,
+      offset: new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(heading || 0),
+        Cesium.Math.toRadians(pitch === undefined ? -50 : pitch),
+        range || 60000
+      )
+    }
+  );
+}
+
+/* =========================================================
+   7. 面板内容
+   ========================================================= */
+function buildLegend(){
+  var stat = D.catStat || {}, total = 0, k;
+  for (k in stat) total += stat[k];
+  var html = '';
+  var order = ['tungsten','ferrous','nonferrous','precious','rare','rare_earth','nonmetal','other'];
+  order.forEach(function(cat){
+    if (!CAT_NAMES[cat]) return;
+    var c = stat[cat] || 0;
+    if (!c) return;
+    activeCats[cat] = true;
+    html += '<div class="leg" id="leg_' + cat + '" data-cat="' + cat + '">' +
+      '<span class="dot" style="background:' + CAT_COLORS[cat] + ';color:' + CAT_COLORS[cat] + '"></span>' +
+      '<span class="nm">' + CAT_NAMES[cat] + '</span>' +
+      '<span class="ct">' + c + '</span>' +
+      '<span class="pct">' + (c / total * 100).toFixed(1) + '%</span></div>';
+  });
+  $('legend').innerHTML = html;
+  var els = document.querySelectorAll('.leg');
+  for (var i = 0; i < els.length; i++){
+    els[i].addEventListener('click', function(){
+      var cat = this.getAttribute('data-cat');
+      activeCats[cat] = !activeCats[cat];
+      this.classList.toggle('off', !activeCats[cat]);
+      applyLayerVis();
+    });
+  }
+}
+
+function buildRank(){
+  var counties = (D.counties || []).slice();
+  counties.sort(function(a, b){ return b.n - a.n; });
+  var maxN = counties.length ? counties[0].n : 1;
+  var html = '';
+  counties.forEach(function(c, i){
+    var sty = HOT_STYLE[c.cls] || HOT_STYLE['不显著'];
+    html += '<div class="rank" data-i="' + i + '">' +
+      '<span class="n">' + (i + 1) + '</span>' +
+      '<span class="nm">' + c.name + '</span>' +
+      '<span class="tr"><span class="fl" style="width:' + (c.n / maxN * 100) + '%;background:' + sty.b + '"></span></span>' +
+      '<span class="c">' + c.n + '</span></div>';
+  });
+  $('rankList').innerHTML = html;
+  var rows = document.querySelectorAll('.rank');
+  for (var i = 0; i < rows.length; i++){
+    rows[i].addEventListener('click', function(){
+      var idx = parseInt(this.getAttribute('data-i'), 10);
+      var sorted = (D.counties || []).slice().sort(function(a, b){ return b.n - a.n; });
+      var c = sorted[idx];
+      if (!c) return;
+      var ctr = geoCenter(ringOf(c.geometry));
+      flyTo(ctr[0], ctr[1], 62000, -58, 0, 1.5);
+      showCountyDetail(c.name);
+    });
+  }
+}
+
+function showCountyDetail(name){
+  var counties = D.counties || [], c = null;
+  for (var i = 0; i < counties.length; i++) if (counties[i].name === name) c = counties[i];
+  if (!c) return;
+  var sty = HOT_STYLE[c.cls] || HOT_STYLE['不显著'];
+  var detail = c.detail || {}, maxD = 0, k;
+  for (k in detail) if (detail[k] > maxD) maxD = detail[k];
+  var bars = '';
+  Object.keys(detail).sort(function(a, b){ return detail[b] - detail[a]; }).slice(0, 6).forEach(function(kk){
+    bars += '<div class="mbar"><span class="mn">' + kk + '</span>' +
+      '<span class="mt"><span class="mf" style="width:' + (maxD ? detail[kk] / maxD * 100 : 0) + '%"></span></span>' +
+      '<span class="mv">' + detail[kk] + '</span></div>';
+  });
+  $('detailContent').innerHTML =
+    '<div class="dcard"><div class="h">' + c.name +
+    '<span class="tag" style="background:' + sty.c + ';color:' + sty.t + '">' + c.cls + '</span></div>' +
+    '<div class="drow"><span class="k">矿点总数</span><span class="v">' + c.n + '</span></div>' +
+    '<div class="drow"><span class="k">矿种数</span><span class="v">' + c.types + '</span></div>' +
+    '<div class="drow"><span class="k">主要矿种</span><span class="v">' + c.top + '（' + c.topn + '）</span></div>' +
+    '<div class="drow"><span class="k">Gi* Z 值</span><span class="v">' + c.z + '</span></div></div>' +
+    '<div class="dcard"><div class="h">矿种构成</div>' + bars + '</div>';
+  $('ctyDetail').style.display = 'block';
+  $('rightPanel').scrollTop = $('ctyDetail').offsetTop - 40;
+}
+
+function nearestCounty(lon, lat){
+  var counties = D.counties || [], best = null, bd = 1e9;
+  for (var i = 0; i < counties.length; i++){
+    var ring = ringOf(counties[i].geometry);
+    if (!ring) continue;
+    var ctr = geoCenter(ring);
+    var d = Math.sqrt(Math.pow((lon - ctr[0]) * Math.cos(lat * Math.PI / 180), 2) + Math.pow(lat - ctr[1], 2));
+    if (d < bd){ bd = d; best = counties[i]; }
+  }
+  return { county: best, dist: bd };
+}
+function checkCountyClick(lon, lat){
+  var r = nearestCounty(lon, lat);
+  if (r.county && r.dist < 0.35) showCountyDetail(r.county.name);
+}
+
+function showPointPopup(idx){
+  var src = pointSource();
+  var p = src[idx];
+  if (!p) return;
+  var lon = p.lon, lat = p.lat, cats = p.cats || [p.dom];
+  var elev = sampleRaw(lon, lat);
+  var r = nearestCounty(lon, lat);
+  var inCz = r.county && r.dist < 0.35;
+  var names = cats.map(function(c){ return CAT_NAMES[c] || '其他'; }).join(' + ');
+  $('ppTitle').textContent = (inCz ? r.county.name : p.county || '赣南') + ' · ' + names;
+  $('ppTag').textContent = '矿区 · 评分 ' + (p.score || 0).toFixed(2);
+  var desc = '坐标 ' + lon.toFixed(4) + '°E、' + lat.toFixed(4) + '°N；' +
+    '地表高程 ' + (elev === null ? '—' : Math.round(elev) + ' m') + '。';
+  if (cats.length > 1) desc += ' 同址共伴生 ' + cats.length + ' 种矿产。';
+  if (p.hs && p.hs !== '不显著') desc += ' 位于 Gi* ' + p.hs + '（z = ' + (p.gi || 0).toFixed(2) + '）。';
+  else if (p.hs) desc += ' 局部集聚不显著（z = ' + (p.gi || 0).toFixed(2) + '）。';
+  $('ppDesc').textContent = desc;
+  var el = $('popup');
+  el.style.left = (window.innerWidth / 2 - 165) + 'px';
+  el.style.top = (window.innerHeight / 2 - 110) + 'px';
+  el.classList.add('show');
+}
+
+function flyToCase(idx){
+  var c = (D.cases || [])[idx];
+  if (!c) return;
+  flyTo(c.lon, c.lat, 17000, -42, 0, 1.6);
+  setTimeout(function(){ showCasePopup(idx); }, 1700);
+}
+
+function showCasePopup(idx){
+  var c = (D.cases || [])[idx];
+  if (!c) return;
+  $('ppTitle').textContent = c.name;
+  $('ppTag').textContent = c.tag + ' · ' + (c.county || '');
+  $('ppDesc').textContent = c.desc;
+  var p = $('popup');
+  p.style.left = (window.innerWidth / 2 - 165) + 'px';
+  p.style.top = (window.innerHeight / 2 - 110) + 'px';
+  p.classList.add('show');
+}
+
+function buildGenList(){
+  var gens = [
+    { g: 1, n: '池浸', y: '1970s', r: '30~38%', c: '#e2544a' },
+    { g: 2, n: '堆浸', y: '1980s末', r: '45~55%', c: '#c0703a' },
+    { g: 3, n: '原地浸矿', y: '1990s', r: '70~78%', c: '#c9944a' },
+    { g: 4, n: '无铵绿色', y: '近年', r: '82~88%', c: '#5aa06a' }
+  ];
+  var html = '';
+  gens.forEach(function(x){
+    var cases = (D.cases || []).filter(function(c){ return c.gen === x.g; });
+    html += '<div class="rank" data-g="' + x.g + '">' +
+      '<span class="dot" style="width:8px;height:8px;border-radius:50%;background:' + x.c + ';box-shadow:0 0 7px ' + x.c + '"></span>' +
+      '<span class="nm">' + x.n + '<span style="color:#5c6574;font-size:10px"> · ' + x.y + '</span></span>' +
+      '<span class="c" style="width:auto;font-size:10px;color:#828b9a">' + x.r + '</span></div>';
+  });
+  $('genList').innerHTML = html;
+  var rows = document.querySelectorAll('#genList .rank');
+  for (var i = 0; i < rows.length; i++){
+    rows[i].addEventListener('click', function(){
+      var g = parseInt(this.getAttribute('data-g'), 10);
+      var c = (D.cases || []).filter(function(x){ return x.gen === g; })[0];
+      if (c) flyToCase((D.cases || []).indexOf(c));
+    });
+  }
+}
+
+function fillStats(){
+  var s = D.stats || {};
+  $('ts-pts').textContent = s.totalPoints || '—';
+  $('ts-cty').textContent = s.nCounties || '—';
+  $('ts-hot').textContent = (s.hotspots || []).join('·') || '—';
+  $('ts-nni').textContent = s.nni || '—';
+  $('ts-moran').textContent = s.moranI || '—';
+  $('mNNI').textContent = s.nni || '—';
+  $('mNNIZ').textContent = s.nniZ || '—';
+  $('mMI').textContent = s.moranI || '—';
+  $('mMIZ').textContent = s.moranZ || '—';
+  $('mCV').textContent = (s.cv || '—') + '%';
+  $('mHot').textContent = (s.hotspots || []).join(' · ') || '—';
+  if (DM){
+    $('rl0').textContent = Math.round(DM.minH) + ' m';
+    $('rl1').textContent = Math.round(DM.maxH) + ' m';
+  }
+}
+
+/* =========================================================
+   8. 故事章节
+   ========================================================= */
+var CHAPTERS = [
+  {
+    t: '序章 · 岭表之地',
+    b: '赣南地处南岭东段，全境丘陵与山地交错，海拔自 89 米的河谷盆地抬升至 2009 米的齐云山。' +
+       '这套起伏的地壳褶皱，决定了风化壳离子吸附型稀土与石英脉型钨锡的赋存格局——山，是矿的前提。',
+    kv: [['89–2009', '海拔区间 m'], ['30 m', 'DEM 分辨率'], ['1024²', '地形格网']],
+    cam: [115.05, 25.80, 265000, -52, -18],
+    vis: { points: 1, county: 0 }
+  },
+  {
+    t: '第一章 · 矿脉格局',
+    b: '474 处矿产地散布于 18 个县域。钨锡多金属以 270 处占据绝对主导，构成"世界钨都"的骨架；' +
+       '黑色金属、有色及贵金属沿 NE 向构造带断续出露，稀土则高度集中于南部的定南—龙南一带。',
+    kv: [['474', '矿产地 / 处'], ['18', '县域 / 个'], ['57.0%', '钨锡占比']],
+    cam: [115.05, 25.80, 175000, -56, -14],
+    vis: { points: 1, county: 1 }
+  },
+  {
+    t: '第二章 · 集聚之谜',
+    b: 'NNI 仅 0.59（Z = −17.06），远低于 1 的随机阈值；Moran\'s I 达 0.53（Z = 18.04）——' +
+       '矿点在空间上既强烈集聚，又显著正相关。泰森多边形变异系数 140.17%，是 64% 均匀分布阈值的两倍有余。',
+    kv: [['0.5905', 'NNI'], ['0.5314', "Moran's I"], ['140.17%', '泰森 CV']],
+    cam: [115.05, 25.80, 150000, -62, -10],
+    vis: { points: 1, county: 1 }
+  },
+  {
+    t: '第三章 · 钨都脊梁',
+    b: 'Gi* 热点分析把答案指向西部：崇义、大余构成核心热点区，与西华山—漂塘—盘古山钨锡成矿带完全重合。' +
+       '这套"西热东冷"的格局，是燕山期花岗岩侵入与构造裂隙共同书写的结果。',
+    kv: [['崇义·大余', 'Gi* 热点核心'], ['270', '钨锡矿点'], ['西热东冷', '空间格局']],
+    cam: [114.36, 25.58, 58000, -46, 22],
+    vis: { points: 1, county: 1 }
+  },
+  {
+    t: '第四章 · 稀土四十年',
+    b: '从池浸的全坡面铲山，到堆浸、原地浸矿，再到无铵绿色工艺——四代技术把回收率从 30% 推到 88%，' +
+       '却也留下了"地表完好、内脏慢性中毒"的隐性创伤：闭矿 12 年后，土壤氨氮仍为本底值的 12~40 倍。',
+    kv: [['4 代', '开采工艺'], ['30→88%', '回收率'], ['12~40×', '土壤氨氮残留']],
+    cam: [114.98, 24.92, 42000, -44, 8],
+    vis: { points: 1, cases: 1, county: 1 },
+    gen: true
+  },
+  {
+    t: '尾声 · 绿色重生',
+    b: '累计 92.7 km² 废弃矿山完成治理。第四代无铵工艺把每吨稀土的植被损毁压缩到 2~3 m²，' +
+       '废液闭环回收、外排水质达地表水 Ⅲ 类。山体正在重新长回它的形状。',
+    kv: [['92.7', '治理面积 km²'], ['2~3', '植被损毁 m²/t'], ['Ⅲ 类', '外排水质']],
+    cam: [115.00, 25.65, 215000, -50, -12],
+    vis: { points: 1, county: 1 }
+  }
+];
+
+var curCh = -1;
+
+function buildSteps(){
+  var html = '';
+  CHAPTERS.forEach(function(c, i){
+    var parts = c.t.split(' · ');
+    var ord = parts[0] || ('第' + (i + 1) + '章');
+    var nm = parts[1] || c.t;
+    html += '<div class="chtab" data-i="' + i + '" title="' + (c.t + '：' + c.b.slice(0, 40) + '…') + '">' +
+      '<span class="cn">' + ord + '</span>' +
+      '<span class="nm">' + nm + '</span></div>';
+  });
+  $('chTabs').innerHTML = html;
+  var els = document.querySelectorAll('.chtab');
+  for (var i = 0; i < els.length; i++){
+    els[i].addEventListener('click', function(){ gotoChapter(parseInt(this.getAttribute('data-i'), 10)); });
+  }
+}
+
+function gotoChapter(i){
+  if (i < 0 || i >= CHAPTERS.length) return;
+  curCh = i;
+  var c = CHAPTERS[i];
+  var els = document.querySelectorAll('.chtab');
+  for (var k = 0; k < els.length; k++) els[k].classList.toggle('on', k === i);
+
+  $('chIdx').textContent = 'CHAPTER ' + (i < 10 ? '0' + i : i);
+  $('chTtl').textContent = c.t;
+  $('chBody').textContent = c.b;
+  var kv = '';
+  c.kv.forEach(function(x){ kv += '<div class="i"><div class="v">' + x[0] + '</div><div class="l">' + x[1] + '</div></div>'; });
+  $('chKv').innerHTML = kv;
+  $('genSec').style.display = c.gen ? 'block' : 'none';
+  $('rightPanel').scrollTop = 0;
+
+  flyTo(c.cam[0], c.cam[1], c.cam[2], c.cam[3], c.cam[4], 2.6);
+
+  // 图层
+  LAYER.points = !!c.vis.points;
+  LAYER.county = !!c.vis.county;
+  syncSwitches();
+  applyLayerVis();
+  if (i !== 4) $('popup').classList.remove('show');
+}
+
+/* =========================================================
+   8.5 空间分析图层（来自数据集：核密度 / 泰森 / LISA / 最近邻 / Gi* / 按矿种大类 / 县级）
+   ========================================================= */
+// 分类配色：cluster=LISA, hotspot_cl=Gi*, 大类=矿种大类
+window.AL_CAT = {
+  cluster: {
+    '高-高集聚 (HH)': 'rgba(226,59,59,0.60)',
+    '低-低集聚 (LL)': 'rgba(59,111,226,0.60)',
+    '高-低集聚 (HL)': 'rgba(240,144,47,0.62)',
+    '低-高集聚 (LH)': 'rgba(47,182,192,0.62)',
+    '不显著 (NS)':    'rgba(138,143,153,0.06)'
+  },
+  hotspot_cl: {
+    '热点':   'rgba(226,59,59,0.60)',
+    '次热点': 'rgba(240,144,47,0.60)',
+    '不显著': 'rgba(138,143,153,0.06)',
+    '次冷点': 'rgba(95,168,224,0.55)',
+    '冷点':   'rgba(47,111,226,0.60)'
+  },
+  大类: {
+    '有色金属矿产': 'rgba(232,146,58,0.92)',
+    '稀有金属矿产': 'rgba(155,107,214,0.92)',
+    '稀土金属矿产': 'rgba(63,174,107,0.92)',
+    '贵金属矿产':   'rgba(255,210,63,0.95)',
+    '黑色金属矿产': 'rgba(122,130,144,0.92)',
+    '非金属矿产':   'rgba(176,123,74,0.92)'
+  }
+};
+
+// 连续配色：冷蓝 -> 黄 -> 红（密度/强度低->高）
+function seqRamp(t){
+  t = Math.max(0, Math.min(1, t));
+  var stops = [[0.0,[59,111,226]],[0.5,[255,210,63]],[1.0,[226,59,59]]];
+  var a = (t > 0.5) ? stops[1] : stops[0];
+  var b = (t > 0.5) ? stops[2] : stops[1];
+  var k = (t > 0.5) ? (t - 0.5) / 0.5 : t / 0.5;
+  var c = [0,1,2].map(function(i){ return Math.round(a[1][i] + (b[1][i] - a[1][i]) * k); });
+  return Cesium.Color.fromBytes(c[0], c[1], c[2], 255);
+}
+
+var alCache = {}, alOn = {}, alRange = {};
+
+function alColor(meta, props){
+  var cf = meta.colorBy;
+  if (meta.ramp === 'cat'){
+    var m = (window.AL_CAT && window.AL_CAT[cf]) || {};
+    return Cesium.Color.fromCssColorString(m[props[cf]] || 'rgba(154,163,178,0.6)');
+  }
+  var v = parseFloat(props[cf]);
+  if (!isFinite(v)) return Cesium.Color.fromCssColorString('rgba(204,204,204,0.25)');
+  if (v <= 0) return new Cesium.Color(0, 0, 0, 0);   // 密度0 / 无值：透明
+  var rg = alRange[cf] || { mn: 0, mx: 1 };
+  var t = (rg.mx > rg.mn) ? (v - rg.mn) / (rg.mx - rg.mn) : 0;
+  // 低密度更透，高密度才显，避免整层盖住地形
+  return seqRamp(t).withAlpha(0.08 + 0.28 * t);
+}
+
+/* ------------------------------------------------------------------
+   分析图层贴地：自定义 DEM 不是 terrainProvider，GroundPrimitive 会贴在
+   椭球面上、被山体完全埋掉。因此改为「自适应细分 + 顶点按 DEM 高程抬升」
+   的三角网，逐 cell 着色，合并为单个 Geometry（一次 draw call）。
+   ------------------------------------------------------------------ */
+var AL_LIFT     = 70;        // 分析面离地抬升(米)，避免与地形 z-fighting
+var AL_MESH_MAX = 90000;     // 单图层细分单元上限（超出则整体降密度）
+var M_PER_DEG   = 111320;
+var _alScale    = 1;
+var _alCart     = new Cesium.Cartesian3();
+
+var AL_VS = [
+  'in vec3 position;',
+  'in vec4 color;',
+  'in float batchId;',
+  'out vec4 v_color;',
+  'void main(){',
+  '  v_color = color;',
+  '  gl_Position = czm_modelViewProjection * vec4(position, 1.0);',
+  '}'
+].join('\n');
+var AL_FS = [
+  'in vec4 v_color;',
+  'void main(){',
+  '  out_FragColor = v_color;',
+  '}'
+].join('\n');
+
+/* 抽样统计顶点离地高度，用于验证贴合 DEM（挂在 prim 上，避免 geometry 被释放后取不到） */
+function alMeshStat(posArr){
+  var C = Cesium, total = posArr.length / 3, i;
+  if (!total) return null;
+  var step = Math.max(1, Math.floor(total / 400));
+  var dMin = 1e9, dMax = -1e9, dSum = 0, n = 0;
+  for (i = 0; i < total; i += step){
+    var cg = C.Cartographic.fromCartesian(new C.Cartesian3(posArr[i * 3], posArr[i * 3 + 1], posArr[i * 3 + 2]));
+    if (!cg) continue;
+    var d = cg.height - surfaceH(C.Math.toDegrees(cg.longitude), C.Math.toDegrees(cg.latitude), 0);
+    if (d < dMin) dMin = d;
+    if (d > dMax) dMax = d;
+    dSum += d; n++;
+  }
+  return { verts: total, dMin: +dMin.toFixed(2), dMax: +dMax.toFixed(2), dAvg: +(dSum / n).toFixed(2) };
+}
+
+function alAppearance(){
+  return new Cesium.Appearance({
+    translucent: true, closed: false,
+    vertexShaderSource: AL_VS, fragmentShaderSource: AL_FS,
+    renderState: {
+      blending: Cesium.BlendingState.ALPHA_BLEND,
+      depthTest: { enabled: true },
+      depthMask: false,
+      cull: { enabled: false }
+    }
+  });
+}
+
+/* 射线法：点是否在环内 */
+function pointInRing(x, y, ring){
+  var inside = false;
+  for (var i = 0, j = ring.length - 1; i < ring.length; j = i++){
+    var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function ringBBox(ring){
+  var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (var i = 0; i < ring.length; i++){
+    var a = ring[i][0], b = ring[i][1];
+    if (a < x0) x0 = a; if (a > x1) x1 = a;
+    if (b < y0) y0 = b; if (b > y1) y1 = b;
+  }
+  return { x0: x0, y0: y0, sx: x1 - x0, sy: y1 - y0 };
+}
+/* 细分度：单元目标 ~900m，下限 2 上限 20 */
+function ringSub(bb, scale){
+  var n = Math.round(Math.max(bb.sx, bb.sy) * M_PER_DEG / 900 * (scale || 1));
+  if (n < 2) n = 2; if (n > 20) n = 20;
+  var ny = Math.round(n * bb.sy / bb.sx);
+  if (ny < 2) ny = 2; if (ny > 20) ny = 20;
+  return { nx: n, ny: ny };
+}
+function estCells(ring){
+  var bb = ringBBox(ring);
+  if (!(bb.sx > 0) || !(bb.sy > 0)) return 0;
+  var sb = ringSub(bb, 1);
+  return sb.nx * sb.ny;
+}
+function alPushV(VP, VC, lon, lat, h, col){
+  var c = Cesium.Cartesian3.fromDegrees(lon, lat, h, Cesium.Ellipsoid.WGS84, _alCart);
+  VP.push(c.x, c.y, c.z);
+  VC.push(col.red, col.green, col.blue, col.alpha);
+}
+/* 把一个环细分为贴合 DEM 的三角网（非共享顶点，逐 cell 同色） */
+function tessRing(ring, col, VP, VC, IDX){
+  var bb = ringBBox(ring), i, j;
+  if (!(bb.sx > 0) || !(bb.sy > 0)) return 0;
+  var sb = ringSub(bb, _alScale);
+  var nx = sb.nx, ny = sb.ny, gx = nx + 1, gy = ny + 1;
+  var hs = new Float64Array(gx * gy);
+  for (j = 0; j < gy; j++){
+    var lat = bb.y0 + bb.sy * j / ny;
+    for (i = 0; i < gx; i++) hs[j * gx + i] = surfaceH(bb.x0 + bb.sx * i / nx, lat, AL_LIFT);
+  }
+  var cnt = 0;
+  for (j = 0; j < ny; j++){
+    var cy = bb.y0 + bb.sy * (j + 0.5) / ny;
+    for (i = 0; i < nx; i++){
+      var cx = bb.x0 + bb.sx * (i + 0.5) / nx;
+      if (!pointInRing(cx, cy, ring)) continue;
+      var i00 = j * gx + i, i10 = i00 + 1, i01 = i00 + gx, i11 = i01 + 1;
+      var v = VP.length / 3;
+      alPushV(VP, VC, bb.x0 + bb.sx * i / nx,       bb.y0 + bb.sy * j / ny,       hs[i00], col);
+      alPushV(VP, VC, bb.x0 + bb.sx * (i + 1) / nx, bb.y0 + bb.sy * j / ny,       hs[i10], col);
+      alPushV(VP, VC, bb.x0 + bb.sx * (i + 1) / nx, bb.y0 + bb.sy * (j + 1) / ny, hs[i11], col);
+      alPushV(VP, VC, bb.x0 + bb.sx * i / nx,       bb.y0 + bb.sy * (j + 1) / ny, hs[i01], col);
+      IDX.push(v, v + 1, v + 2, v, v + 2, v + 3);
+      cnt++;
+    }
+  }
+  return cnt;
+}
+
+function buildAlPoly(key, gj, meta){
+  var cf = meta.colorBy;
+  alRange[cf] = { mn: 1e18, mx: -1e18 };
+  if (meta.ramp === 'seq'){
+    gj.features.forEach(function(ft){
+      var v = parseFloat(ft.properties[cf]);
+      if (isFinite(v) && v > 0){ alRange[cf].mn = Math.min(alRange[cf].mn, v); alRange[cf].mx = Math.max(alRange[cf].mx, v); }
+    });
+  }
+  /* 1. 收集需要三角化的环（透明/无值直接跳过） */
+  var jobs = [], i, m, r;
+  for (i = 0; i < gj.features.length; i++){
+    var ft = gj.features[i], geom = ft.geometry; if (!geom) continue;
+    var color = alColor(meta, ft.properties);
+    if (!color || color.alpha <= 0.002) continue;
+    var rs = [];
+    if (geom.type === 'Polygon') rs.push(geom.coordinates[0]);
+    else if (geom.type === 'MultiPolygon'){ for (m = 0; m < geom.coordinates.length; m++) rs.push(geom.coordinates[m][0]); }
+    for (r = 0; r < rs.length; r++){
+      if (rs[r] && rs[r].length >= 3) jobs.push({ ring: rs[r], color: color });
+    }
+  }
+  if (!jobs.length) return null;
+  /* 2. 总量保护：预估单元数，超限则整体降密度 */
+  var est = 0;
+  for (i = 0; i < jobs.length; i++) est += estCells(jobs[i].ring);
+  _alScale = (est > AL_MESH_MAX) ? Math.sqrt(AL_MESH_MAX / est) : 1;
+  /* 3. 三角化为一个大 mesh */
+  var VP = [], VC = [], IDX = [];
+  for (i = 0; i < jobs.length; i++) tessRing(jobs[i].ring, jobs[i].color, VP, VC, IDX);
+  if (!IDX.length) return null;
+  var posArr = new Float32Array(VP), colArr = new Float32Array(VC);
+  var geo = new Cesium.Geometry({
+    attributes: {
+      position: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.FLOAT,
+        componentsPerAttribute: 3, values: posArr }),
+      color: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.FLOAT,
+        componentsPerAttribute: 4, values: colArr }),
+      /* Cesium 拾取通道会引用 batchId，缺失会导致顶点着色器编译失败 */
+      batchId: new Cesium.GeometryAttribute({
+        componentDatatype: Cesium.ComponentDatatype.FLOAT,
+        componentsPerAttribute: 1, values: new Float32Array(VP.length / 3) })
+    },
+    indices: new Uint32Array(IDX),
+    primitiveType: Cesium.PrimitiveType.TRIANGLES,
+    boundingSphere: Cesium.BoundingSphere.fromVertices(posArr)
+  });
+  var prim = new Cesium.Primitive({
+    geometryInstances: new Cesium.GeometryInstance({ geometry: geo }),
+    appearance: alAppearance(),
+    asynchronous: false, compressVertices: false, allowPicking: false
+  });
+  prim._alStat = alMeshStat(posArr);
+  viewer.scene.primitives.add(prim);
+  return prim;
+}
+
+/* 夸张系数/地形变化后重建分析图层（顶点高程写死在 mesh 里） */
+function rebuildAlLayers(){
+  var keys = Object.keys(alCache);
+  for (var i = 0; i < keys.length; i++){
+    var k = keys[i], obj = alCache[k];
+    if (!obj) continue;
+    var on = alOn[k];
+    try { viewer.scene.primitives.remove(obj); } catch (e) {}
+    try { if (obj.isDestroyed && !obj.isDestroyed() && obj.destroy) obj.destroy(); } catch (e2) {}
+    delete alCache[k];
+    if (on){ var n = buildAlLayer(k); if (n) n.show = true; }
+  }
+}
+
+function buildAlPoint(key, gj, meta){
+  var cf = meta.colorBy;
+  alRange[cf] = { mn: 1e18, mx: -1e18 };
+  if (meta.ramp === 'seq'){
+    gj.features.forEach(function(ft){
+      var v = parseFloat(ft.properties[cf]);
+      if (isFinite(v) && v > 0){ alRange[cf].mn = Math.min(alRange[cf].mn, v); alRange[cf].mx = Math.max(alRange[cf].mx, v); }
+    });
+  }
+  var coll = new Cesium.PointPrimitiveCollection({});
+  viewer.scene.primitives.add(coll);
+  for (var i = 0; i < gj.features.length; i++){
+    var ft = gj.features[i], g = ft.geometry; if (!g || g.type !== 'Point') continue;
+    var c = g.coordinates, lon = c[0], lat = c[1];
+    var base = surfaceH(lon, lat, 0);
+    var color = alColor(meta, ft.properties);
+    coll.add({
+      position: Cesium.Cartesian3.fromDegrees(lon, lat, base + 50),
+      color: color, pixelSize: (key === 'bycat' ? 6 : 5),
+      outlineColor: Cesium.Color.WHITE.withAlpha(0.5), outlineWidth: 1,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY
+    });
+  }
+  return coll;
+}
+
+function buildAlLayer(key){
+  if (alCache[key]) return alCache[key];
+  var gj = window.AL && window.AL[key]; if (!gj) return null;
+  var meta = window.AL_META[key];
+  var obj = (meta.kind === 'poly') ? buildAlPoly(key, gj, meta) : buildAlPoint(key, gj, meta);
+  alCache[key] = obj; return obj;
+}
+
+function alShow(key){
+  var on = !alOn[key]; alOn[key] = on;
+  var obj = buildAlLayer(key);
+  if (obj) obj.show = on;
+  buildAlLegend(key, on);
+  var sw = document.getElementById('swAl_' + key);
+  if (sw) sw.classList.toggle('on', on);
+}
+
+function buildAlLegend(key, on){
+  var el = document.getElementById('alLegend'); if (!el) return;
+  if (!on){ el.innerHTML = ''; return; }
+  var meta = window.AL_META[key];
+  if (meta.ramp === 'cat'){
+    var m = (window.AL_CAT && window.AL_CAT[meta.colorBy]) || {};
+    var html = '';
+    for (var k in m) html += '<div class="hl"><i style="background:' + m[k] + '"></i><span>' + k + '</span></div>';
+    el.innerHTML = html;
+  } else {
+    var rg = alRange[meta.colorBy] || { mn: 0, mx: 1 };
+    el.innerHTML = '<div class="hl" style="width:100%;display:flex;align-items:center">' +
+      '<span style="color:#9fb4d8">低</span>' +
+      '<i style="flex:1;height:8px;margin:0 6px;border-radius:4px;background:linear-gradient(90deg,rgb(59,111,226),rgb(255,210,63),rgb(226,59,59))"></i>' +
+      '<span style="color:#f0a05a">高</span>' +
+      '<span style="margin-left:6px;color:#7e8794">(' + rg.mn.toFixed(1) + '–' + rg.mx.toFixed(1) + ')</span></div>';
+  }
+}
+
+/* =========================================================
+   9. 图层开关
+   ========================================================= */
+var LAYER = { county: false, points: true, labels: true,
+              contour: true, hotspot: true, pin: true };
+
+function syncSwitches(){
+  $('swCounty').classList.toggle('on', LAYER.county);
+  $('swPoints').classList.toggle('on', LAYER.points);
+  $('swLabels').classList.toggle('on', LAYER.labels);
+  $('swContour').classList.toggle('on', LAYER.contour);
+  $('swHotspot').classList.toggle('on', LAYER.hotspot);
+  $('swPin').classList.toggle('on', LAYER.pin);
+}
+function applyLayerVis(){
+  var i;
+  for (i = 0; i < countyFillPrims.length; i++) countyFillPrims[i].show = LAYER.county;
+  for (i = 0; i < countyLinePrims.length; i++) countyLinePrims[i].show = LAYER.county;
+  for (i = 0; i < pointEnts.length; i++) pointEnts[i].show = LAYER.points && activeCats[pointEnts[i]._cat] !== false;
+  for (i = 0; i < pinEnts.length; i++) pinEnts[i].show = LAYER.pin && LAYER.points && activeCats[pinEnts[i]._cat] !== false;
+  for (i = 0; i < tetherEnts.length; i++) tetherEnts[i].show = LAYER.pin && LAYER.points && LIFT > 1 && activeCats[tetherEnts[i]._cat] !== false;
+  for (i = 0; i < labelEnts.length; i++) labelEnts[i].show = LAYER.labels;
+  for (i = 0; i < hotspotPrims.length; i++) hotspotPrims[i].show = LAYER.hotspot;
+  if (terrainUniforms) terrainUniforms.u_contour = LAYER.contour ? 1.0 : 0.0;
+}
+
+/* =========================================================
+   10. 事件绑定
+   ========================================================= */
+function bindUI(){
+  $('ppClose').onclick = function(){ $('popup').classList.remove('show'); };
+
+  function rng(el, cb){
+    function upd(){
+      var p = (el.value - el.min) / (el.max - el.min) * 100;
+      el.style.setProperty('--p', p + '%');
+      cb(parseFloat(el.value));
+    }
+    el.addEventListener('input', upd);
+    upd();
+  }
+  var exagT = null;
+  rng($('sExag'), function(v){
+    $('vExag').textContent = v.toFixed(1) + '×';
+    clearTimeout(exagT);
+    exagT = setTimeout(function(){
+      if (Math.abs(v - EXAG) < 0.001) return;
+      EXAG = v;
+      if (terrainUniforms) terrainUniforms.u_exag = v;
+      refreshHeights();
+    }, 220);
+  });
+  rng($('sHs'), function(v){
+    $('vHs').textContent = v.toFixed(0) + '%';
+    _uHs = v / 100;
+    if (terrainUniforms) terrainUniforms.u_hs = _uHs;
+  });
+
+  // 矿点整体离地抬升：只抬光柱，锚点留在 DEM 表面
+  var liftRaf = null;
+  rng($('sLift'), function(v){
+    LIFT = v;
+    $('vLift').textContent = v >= 1000 ? (v / 1000).toFixed(2) + ' km' : v.toFixed(0) + ' m';
+    if (liftRaf) cancelAnimationFrame(liftRaf);
+    liftRaf = requestAnimationFrame(function(){ liftRaf = null; applyLift(); });
+  });
+
+  function sw(id, key){
+    $(id).addEventListener('click', function(){
+      LAYER[key] = !LAYER[key];
+      this.classList.toggle('on', LAYER[key]);
+      applyLayerVis();
+    });
+  }
+  sw('swContour', 'contour'); sw('swCounty', 'county');
+  sw('swPoints', 'points');
+  sw('swLabels', 'labels');   sw('swHotspot', 'hotspot');
+  sw('swPin', 'pin');
+  // 空间分析图层：每个图层独立开关，叠加到地形
+  // 隐藏效果不明显的图层（最近邻 / 泰森 / Gi*矿点 / 按矿种大类）——
+  // 它们的色块或单点会被矿点光柱完全遮住，留着只会让面板臃肿
+  var AL_HIDDEN = { voronoi: 1, nn: 1, gistar_point: 1, bycat: 1 };
+  var AL_KEYS = (window.AL_META)
+    ? Object.keys(window.AL_META).filter(function(k){ return !AL_HIDDEN[k]; })
+    : [];
+  for (var ak = 0; ak < AL_KEYS.length; ak++){
+    (function(k){
+      var el = document.getElementById('swAl_' + k);
+      if (el) el.addEventListener('click', function(){ alShow(k); });
+    })(AL_KEYS[ak]);
+  }
+
+  window.addEventListener('keydown', function(e){
+    if (e.key >= '1' && e.key <= '6'){
+      var n = parseInt(e.key, 10) - 1;
+      if (n < CHAPTERS.length) gotoChapter(n);
+    }
+    else if (e.key === 'h' || e.key === 'H'){
+      $('leftPanel').classList.toggle('hidden');
+      $('rightPanel').classList.toggle('hidden');
+    }
+  });
+
+  setTimeout(function(){ $('hint').classList.add('show'); }, 3200);
+  setTimeout(function(){ $('hint').classList.remove('show'); }, 9200);
+}
+
+/* =========================================================
+   11. 启动
+   ========================================================= */
+function startApp(){
+  if (!DM){ $('loadMsg').textContent = '缺少 dem_terrain_data.js'; return; }
+  initDem();
+  initCesium();
+  addTerrain();
+  buildCountyPrims();
+  addPoints();
+  addCountyLabels();
+  buildHotspotLayer();
+  buildHotLegend();
+  buildLegend();
+  buildRank();
+  buildGenList();
+  buildSteps();
+  fillStats();
+  bindUI();
+  syncSwitches();
+  try { if (window.AL) alShow('density'); } catch (e) { console.warn('density 默认开启失败', e); }
+  gotoChapter(0);
+  setTimeout(function(){ $('loader').classList.add('hide'); }, 900);
+}
+
+window.addEventListener('load', function(){
+  var t = setInterval(function(){
+    if (typeof Cesium !== 'undefined' && Cesium.Viewer && window.DEM_DATA){
+      clearInterval(t);
+      setTimeout(startApp, 30);
+    }
+  }, 80);
+});
+</script>
+</body>
+</html>
