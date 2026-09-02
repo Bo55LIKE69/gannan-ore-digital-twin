@@ -967,7 +967,7 @@ function buildHotLegend(){
 /* =========================================================
    4. 矿点 / 案例
    ========================================================= */
-var pointEnts = [], elevEnts = [], labelEnts = [];
+var pointEnts = [], elevEnts = [], labelEnts = [], markerEnts = [];
 var activeCats = {};
 
 // 统一视觉参数：所有矿区一个样式（不再区分重点 / 普通）
@@ -1003,14 +1003,6 @@ function addPoints(){
         material: col.withAlpha(st.a), outline: true,
         outlineColor: Cesium.Color.fromCssColorString('#ffe6bc').withAlpha(0.85),
         outlineWidth: 2
-      },
-      point: {
-        pixelSize: 11,
-        color: col.withAlpha(0.95),
-        outlineColor: Cesium.Color.fromCssColorString('#ffe6bc').withAlpha(0.9),
-        outlineWidth: 2,
-        scaleByDistance: new Cesium.NearFarScalar(5000, 1.7, 900000, 0.55),
-        translucencyByDistance: new Cesium.NearFarScalar(1200000, 1.0, 2400000, 0.25)
       }
     });
     e._cat = p.dom; e._cats = p.cats; e._lon = p.lon; e._lat = p.lat;
@@ -1022,7 +1014,7 @@ function addPoints(){
 
     // 每个矿区统一加名称标注（距离缩放：近看才显，避免远景堆叠）
     var lb = viewer.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 200),
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 30),
       label: {
         text: p.county + ' · ' + (CAT_NAMES[p.dom] || ''),
         font: '600 10px "Noto Serif SC"',
@@ -1035,8 +1027,24 @@ function addPoints(){
         translucencyByDistance: new Cesium.NearFarScalar(300000, 1.0, 650000, 0.25)
       }
     });
-    lb._lon = p.lon; lb._lat = p.lat; lb._h = 200;
+    lb._lon = p.lon; lb._lat = p.lat; lb._h = 30;
     labelEnts.push(lb);
+
+    // 屏幕空间点标：独立贴地 entity, 避免悬在光柱中部; 穿透遮挡保证全览可见
+    var pe = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, base + 6),
+      point: {
+        pixelSize: 11,
+        color: col.withAlpha(0.95),
+        outlineColor: Cesium.Color.fromCssColorString('#ffe6bc').withAlpha(0.9),
+        outlineWidth: 2,
+        scaleByDistance: new Cesium.NearFarScalar(5000, 1.7, 900000, 0.55),
+        translucencyByDistance: new Cesium.NearFarScalar(1200000, 1.0, 2400000, 0.25),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
+      }
+    });
+    pe._idx = i; pe._lon = p.lon; pe._lat = p.lat; pe._cat = p.dom; pe._h = 6;
+    markerEnts.push(pe);
   }
 }
 
@@ -1138,6 +1146,7 @@ function initCesium(){
         showPointPopup(picked.id._idx); return;
       }
     }
+    hidePopup();   // 点空白处收起矿点/工艺窗格
     var cart = viewer.camera.pickEllipsoid(click.position, sc.globe.ellipsoid);
     if (cart){
       var cg = Cesium.Cartographic.fromCartesian(cart);
@@ -1357,6 +1366,8 @@ var PROCS = [
     d:'无铵浸矿剂 + 废液闭环回收，绿色工艺、外排水达Ⅲ类。' }
 ];
 
+function hidePopup(){ var pp = $('popup'); if (pp) pp.classList.remove('show'); }
+
 // 四代工艺代表性稀土矿区坐标（取自真实稀土矿点：龙南/寻乌/安远/兴国）
 var PROC_LL = { 1:[114.7048, 24.9722], 2:[115.6672, 25.0110],
                 3:[115.5006, 25.2902], 4:[115.4506, 26.6334] };
@@ -1388,6 +1399,7 @@ function buildProcGallery(){
 
 /* 工艺卡精准导航：直接飞到该代代表性稀土矿点，不再回退概览 */
 function flyToProc(p){
+  hidePopup();
   var ll = PROC_LL[p.g];
   if (!ll) return;
   flyTo(ll[0], ll[1], 12000, -30, 0, 2.2);
@@ -1763,6 +1775,7 @@ function applyLayerVis(){
   for (i = 0; i < countyFillPrims.length; i++) countyFillPrims[i].show = LAYER.county;
   for (i = 0; i < countyLinePrims.length; i++) countyLinePrims[i].show = LAYER.county;
   for (i = 0; i < pointEnts.length; i++) pointEnts[i].show = LAYER.points && activeCats[pointEnts[i]._cat] !== false;
+  for (i = 0; i < markerEnts.length; i++) markerEnts[i].show = LAYER.points && activeCats[markerEnts[i]._cat] !== false;
   for (i = 0; i < labelEnts.length; i++) labelEnts[i].show = LAYER.labels;
   for (i = 0; i < hotspotPrims.length; i++) hotspotPrims[i].show = LAYER.hotspot;
   if (terrainUniforms) terrainUniforms.u_contour = LAYER.contour ? 1.0 : 0.0;
@@ -1838,6 +1851,9 @@ function bindUI(){
       $('rightPanel').classList.toggle('hidden');
     }
   });
+
+  // 相机开始飞行即收起弹窗, 避免导航后窗格残留
+  viewer.camera.moveStart.addEventListener(function(){ hidePopup(); });
 
   // 工艺画廊折叠
   var pst = document.getElementById('procSecT');
