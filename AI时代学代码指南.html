@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 时代，你该怎么学代码 · 给"看得懂但写不出"的你</title>
+<style>
+:root{
+  --bg:#f6f7f9; --bg2:#ffffff; --bg3:#eef1f6; --line:#dfe4ec;
+  --tx:#1b2331; --tx2:#4b5567; --tx3:#8a93a6;
+  --gold:#9a6b12; --blue:#1f6feb; --green:#17794a; --red:#c0392b; --purple:#7c4dcd;
+  --mono:'JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--tx);
+  font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;
+  font-size:15px; line-height:1.78; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1060px; margin:0 auto; padding:48px 32px 100px}
+
+header{border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:36px}
+h1{font-size:29px; margin:0 0 10px; letter-spacing:.4px; line-height:1.4}
+h1 .accent{color:var(--gold)}
+.sub{color:var(--tx2); font-size:14.5px; margin:0}
+.meta{color:var(--tx3); font-size:12.5px; margin-top:14px; font-family:var(--mono)}
+
+.toc{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:18px 24px; margin-bottom:40px}
+.toc h3{margin:0 0 12px; font-size:13px; color:var(--tx3); letter-spacing:2px; font-weight:600}
+.toc ol{margin:0; padding-left:20px; columns:2; column-gap:36px}
+.toc li{margin:5px 0; font-size:14px}
+.toc a{color:var(--blue); text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+h2{
+  font-size:22px; margin:52px 0 18px; padding-bottom:10px;
+  border-bottom:2px solid var(--line); color:var(--tx);
+}
+h2 .num{color:var(--gold); font-family:var(--mono); margin-right:10px; font-size:19px}
+h3{font-size:17px; margin:30px 0 12px; color:var(--tx)}
+h4{font-size:15px; margin:20px 0 8px; color:var(--tx2); font-weight:600}
+p{margin:12px 0}
+ul,ol{margin:12px 0; padding-left:24px}
+li{margin:6px 0}
+strong{color:#0f1729; font-weight:650}
+code{
+  font-family:var(--mono); font-size:13px; background:var(--bg3);
+  padding:2px 6px; border-radius:4px; color:var(--gold); border:1px solid var(--line);
+}
+a{color:var(--blue)}
+
+table{width:100%; border-collapse:collapse; margin:18px 0; font-size:13.5px}
+th{
+  background:var(--bg3); color:var(--tx2); text-align:left;
+  padding:10px 12px; border:1px solid var(--line); font-weight:600; font-size:12.5px;
+  letter-spacing:.5px;
+}
+td{padding:10px 12px; border:1px solid var(--line); vertical-align:top}
+tbody tr:nth-child(even){background:rgba(15,23,41,.028)}
+tbody tr:hover{background:rgba(31,111,235,.07)}
+
+pre{
+  background:#fbfcfe; border:1px solid var(--line); border-radius:8px;
+  padding:16px 18px; overflow-x:auto; margin:14px 0; line-height:1.62;
+}
+pre code{background:none; border:none; padding:0; font-size:12.5px; color:#2b3240; display:block; white-space:pre}
+.src{
+  font-family:var(--mono); font-size:11.5px; color:var(--tx3);
+  background:var(--bg3); padding:3px 9px; border-radius:4px 4px 0 0;
+  border:1px solid var(--line); border-bottom:none; display:inline-block;
+  margin-bottom:-1px; position:relative; top:1px;
+}
+pre + .src{margin-top:14px; border-radius:0 0 4px 4px; top:-15px; margin-bottom:0}
+.kw{color:#8250df} .fn{color:#0550ae} .str{color:#0a7d34} .num{color:#b8500a}
+.cm{color:#8a93a6; font-style:italic}
+
+.card{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:20px 24px; margin:20px 0}
+.card.warn{border-left:3px solid var(--red)}
+.card.tip{border-left:3px solid var(--green)}
+.card.key{border-left:3px solid var(--gold)}
+.card.info{border-left:3px solid var(--blue)}
+.card h4{margin-top:0}
+.card p:last-child{margin-bottom:0}
+
+.callout{
+  border-left:3px solid var(--gold); background:rgba(154,107,18,.06);
+  padding:14px 18px; margin:18px 0; border-radius:0 8px 8px 0; font-size:14.5px;
+}
+.callout.warn{border-left-color:var(--red); background:rgba(192,57,43,.06)}
+.callout.ok{border-left-color:var(--green); background:rgba(23,121,74,.06)}
+.callout.info{border-left-color:var(--blue); background:rgba(31,111,235,.06)}
+.callout strong{display:block; margin-bottom:6px}
+
+/* 大引言 */
+.big{
+  font-size:17px; line-height:1.8; color:var(--tx);
+  border-left:4px solid var(--gold); padding:6px 0 6px 20px; margin:26px 0;
+}
+.big em{color:var(--gold); font-style:normal; font-weight:650}
+
+/* 对比两栏 */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0}
+.box{background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:16px 18px}
+.box h4{margin:0 0 8px; font-size:14px}
+.box.yes{border-color:rgba(23,121,74,.32)}
+.box.no{border-color:rgba(192,57,43,.32)}
+.box.yes h4{color:var(--green)}
+.box.no h4{color:var(--red)}
+.box p, .box ul{margin:6px 0; font-size:13.5px; color:var(--tx2)}
+
+/* 步骤时间线 */
+.path{border-left:2px solid var(--line); padding-left:26px; margin:22px 0}
+.step{position:relative; margin-bottom:26px}
+.step::before{
+  content:''; position:absolute; left:-32px; top:7px; width:11px; height:11px;
+  border-radius:50%; background:var(--gold); border:2px solid var(--bg);
+}
+.step h4{margin:0 0 6px; color:var(--gold); font-size:15.5px}
+.step .dur{font-family:var(--mono); font-size:11.5px; color:var(--tx3); margin-left:8px}
+.step p{margin:6px 0; font-size:14px; color:var(--tx2)}
+.step ul{font-size:14px; color:var(--tx2)}
+
+/* 任务清单 */
+.chk{list-style:none; padding-left:0; margin:14px 0}
+.chk li{
+  position:relative; padding-left:28px; margin:10px 0; font-size:14px;
+}
+.chk li::before{
+  content:''; position:absolute; left:0; top:5px; width:15px; height:15px;
+  border:1.5px solid var(--tx3); border-radius:3px; background:var(--bg2);
+}
+.chk strong{display:block; font-size:14.5px}
+.chk span{color:var(--tx2); font-size:13.5px}
+
+.tag{
+  display:inline-block; font-size:11.5px; font-family:var(--mono);
+  padding:2px 8px; border-radius:10px; margin-right:6px;
+  background:var(--bg3); color:var(--tx2); border:1px solid var(--line);
+}
+.tag.rec{background:rgba(23,121,74,.10); color:var(--green); border-color:rgba(23,121,74,.3)}
+.tag.no{background:rgba(192,57,43,.08); color:var(--red); border-color:rgba(192,57,43,.3)}
+
+footer{margin-top:70px; padding-top:24px; border-top:1px solid var(--line); color:var(--tx3); font-size:12.5px}
+
+@media (max-width:820px){
+  .grid2{grid-template-columns:1fr}
+  .toc ol{columns:1}
+  .wrap{padding:32px 18px 80px}
+}
+@media print{
+  body{background:#fff; color:#111}
+  .toc{page-break-inside:avoid}
+  h2{page-break-after:avoid} pre{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>AI 时代，你该怎么<span class="accent">学代码</span></h1>
+  <p class="sub">写给"看得懂但写不出、用了 AI 又心虚"的你 —— 一份只讲可操作动作、不讲鸡汤的行动手册</p>
+  <p class="meta">2026-09-03 · 基于赣南稀土数字孪生项目的真实经历整理 · 阅读约 20 分钟</p>
+</header>
+
+<nav class="toc">
+  <h3>目 录</h3>
+  <ol>
+    <li><a href="#s1">先把焦虑拆开：你到底在怕什么</a></li>
+    <li><a href="#s2">三个真相：AI 强在哪、你强在哪</a></li>
+    <li><a href="#s3">能力模型：读懂 &gt; 会写</a></li>
+    <li><a href="#s4">只读训练法：不写一行也能涨功力</a></li>
+    <li><a href="#s5">六个可直接复制的提问模板</a></li>
+    <li><a href="#s6">判断力训练：怎么练"看出 AI 在胡说"</a></li>
+    <li><a href="#s7">90 天路线图（每周 6–8 小时）</a></li>
+    <li><a href="#s8">六道练习题：直接用你自己的项目</a></li>
+    <li><a href="#s9">误区与红线</a></li>
+    <li><a href="#s10">焦虑的机械化处理 + 今天就能做的 3 件事</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1"><span class="num">01</span>先把焦虑拆开：你到底在怕什么</h2>
+
+<p>你说的是两句话：<em>"学那么久还没有 AI 写的好"</em>，和 <em>"不学又看不懂 AI 在写什么"</em>。这两句看起来矛盾，其实指向的是两件完全不同的事，要分开处理。</p>
+
+<div class="grid2">
+  <div class="box no">
+    <h4>怕的是「产出速度」</h4>
+    <p>AI 三分钟写完的页面，你三天写不完。<b>这个赛道你永远赢不了，也不该去赢。</b>它背后是几千张显卡和整个 GitHub 的语料，你比的是打字和记忆，那是从一开始就把自己放在错误的赛道上。</p>
+  </div>
+  <div class="box yes">
+    <h4>怕的是「失去判断权」</h4>
+    <p>AI 给你一坨代码，你不知道它对不对、改哪儿会炸、出了问题找谁。<b>这个能力只能靠学习获得，而且 AI 越强，它越值钱。</b>这是你真正该投入的方向。</p>
+  </div>
+</div>
+
+<p class="big">焦虑的本质不是"我不如 AI"，而是 <em>"我没有验收标准"</em>。当你无法判断产出好坏时，你只能把评价权交给别人——以前是老师，现在是 AI。评价权不在自己手里，人就会慌。</p>
+
+<p>所以这份文档的全部内容，都在回答一个问题：<strong>怎么把评价权拿回来。</strong></p>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2"><span class="num">02</span>三个真相：AI 强在哪、你强在哪</h2>
+
+<h3>真相一：AI 写得快，是因为它"背"过，不是因为它"想"过</h3>
+<p>你这次做稀土大屏，AI 能写出 Cesium 自定义 Primitive、能写 GLSL 顶点着色器，不是因为它理解渲染管线，而是因为全世界有成千上万人写过类似代码，它把这些模式的<b>统计规律</b>学会了。这意味着：</p>
+<ul>
+  <li><strong>常规套路它极强</strong>——增删改查、样式调整、常见报错，闭眼用。</li>
+  <li><strong>你的具体场景它一无所知</strong>——"terrainTopH 为什么要复刻地形顶面""为什么 AL_LIFT 必须是 70 米"这类知识，全部来自你这次踩坑的过程，AI 没有，也编不出来。</li>
+  <li>这正好解释了那句矛盾的感受：<strong>它写得比你好，但它不懂你的项目。</strong>而你懂。这就是你的位置。</li>
+</ul>
+
+<h3>真相二：AI 时代，代码从"资产"变成了"消耗品"</h3>
+<p>以前会写 = 值钱，因为代码稀缺。现在生成代码的成本趋近于零，稀缺的变成了另外三件事：</p>
+
+<table>
+  <thead><tr><th style="width:18%">稀缺能力</th><th style="width:32%">具体是什么</th><th>为什么 AI 干不了</th></tr></thead>
+  <tbody>
+    <tr><td><b>知道要做什么</b></td><td>把模糊需求拆成可执行的、有优先级的技术任务</td><td>AI 不知道你的业务目标、你的数据长什么样、老板真正在意什么</td></tr>
+    <tr><td><b>知道做对了没有</b></td><td>验收：跑通、看结果、判断"这是不是我要的"</td><td>AI 无法运行你的页面、看不到你的浏览器、不知道 408 个点是否贴地</td></tr>
+    <tr><td><b>知道哪儿错了</b></td><td>排错：定位问题边界、缩小范围、给出最小复现</td><td>AI 只能看到你喂给它的一段文本，看不到真实运行现场</td></tr>
+  </tbody>
+</table>
+
+<div class="callout info">
+  <strong>一句话版本</strong>
+  AI 是施工队，你是甲方 + 监理 + 消防员。施工队效率再高，也得有人告诉它盖什么、验收盖得对不对、着火了往哪扑。这三件事，一件都绕不过"懂"。
+</div>
+
+<h3>真相三："看不懂"是阶段，不是缺陷</h3>
+<p>你现在的状态是：能跑通、能改参数、能描述想要的效果，但读代码吃力。这在任何一门技能的学习曲线上，都叫"中级前夜"，是最正常的一段。真正危险的是另外两种状态：<strong>完全不看 AI 写了什么</strong>（永远停在原地），和<strong>死磕着非要自己从头写</strong>（在错误的赛道上耗死）。你现在是第三种：看了、想懂、但吃力——这正是要往前走的那一步。</p>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3"><span class="num">03</span>能力模型：读懂 &gt; 会写</h2>
+
+<p>把"会写代码"这件事拆开，你会发现它由四种能力组成，而它们的性价比完全不同：</p>
+
+<table>
+  <thead><tr><th style="width:14%">能力</th><th style="width:26%">能做到什么</th><th style="width:14%">性价比</th><th>怎么练</th></tr></thead>
+  <tbody>
+    <tr><td><b>读懂</b> <span class="tag rec">最值</span></td><td>拿到一段代码，能说出它分几块、每块干什么、数据怎么流动</td><td>★★★★★</td><td>三遍注释法（见第 4 节）</td></tr>
+    <tr><td><b>会改</b> <span class="tag rec">最值</span></td><td>在已有代码上做最小改动，且知道改动影响范围</td><td>★★★★★</td><td>每次只要 diff，不要整文件</td></tr>
+    <tr><td><b>会拆</b></td><td>把需求拆成 AI 能一次做对的小任务，并排序</td><td>★★★★☆</td><td>先自己写方案，再让 AI 实现</td></tr>
+    <tr><td><b>会验</b></td><td>写冒烟测试、看日志、判断"通过/没通过"</td><td>★★★★☆</td><td>Playwright 跑一遍断言（你项目里已有）</td></tr>
+    <tr><td><b>手写</b> <span class="tag no">最不值</span></td><td>从空白文件凭记忆敲出完整实现</td><td>★★☆☆☆</td><td>日常不必练，仅在"手抄复述"时作为记忆手段</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>把"手写能力"从你的目标里划掉</strong>
+  你的目标是<em>能独立交付东西</em>，不是<em>能默写 API</em>。默写得再熟，也熟不过补全工具。把手写训练的时间全部挪到"读懂 + 会改 + 会拆 + 会验"上，同样一小时，收益高几倍。
+</div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4"><span class="num">04</span>只读训练法：不写一行也能涨功力</h2>
+
+<p>下面三个方法都不需要你从零写代码，但每一个都会实打实地提升"读懂"能力。<strong>建议每天 30 分钟，比周末猛学 5 小时有效得多。</strong></p>
+
+<h3>方法一：三遍注释法（读代码的主力方法）</h3>
+<p>选你自己项目里的一段代码（推荐 30–80 行），分三遍处理，每遍只做一件事：</p>
+<div class="path">
+  <div class="step">
+    <h4>第一遍：结构<span class="dur">10 分钟</span></h4>
+    <p>不问细节，只回答"这段代码分几段、每段负责什么"。用中文写在注释里：<code>// 这一段：读取 DEM 栅格 → 采样成三角网</code>。卡住就跳过，别纠缠。</p>
+  </div>
+  <div class="step">
+    <h4>第二遍：输入输出<span class="dur">12 分钟</span></h4>
+    <p>对每个函数，写清楚：<b>进来的是什么、出去的是什么、中间做了什么变换</b>。写不出来就说明找到了自己的盲区，这正是要记下来的地方。</p>
+  </div>
+  <div class="step">
+    <h4>第三遍：为什么<span class="dur">8 分钟</span></h4>
+    <p>只问三个问题：<b>① 为什么这么写而不是那么写？② 边界情况怎么处理？③ 如果需求变一点，我要改哪几行？</b>第三问最重要——它直接对应"会改"。</p>
+  </div>
+</div>
+<p>三遍之后，把你的注释贴给 AI，让它挑错并补充你漏掉的。重点不是"AI 讲得对"，而是<strong>你先有了一个答案，再和它的对照</strong>——这个对照产生的落差，就是真实的进步量。</p>
+
+<h3>方法二：反向讲解法（费曼 + AI 判卷）</h3>
+<p>读完一段后，用自己的话讲给 AI 听，然后让它判卷：</p>
+<div class="src">复制即可用</div>
+<pre><code>我读了下面这段代码，我的理解是：
+【此处写你的解释，越口语越好】
+
+请做三件事：
+1. 指出我理解错的地方，并给出正确说法
+2. 指出我漏掉的关键点（按重要性排序）
+3. 就我的理解水平，出 2 个能暴露我盲区的小问题，不要直接给答案</code></pre>
+<p>第 3 点最关键：<strong>让 AI 出题，你先答，再让它评。</strong>答错的题，就是你下一步要补的。</p>
+
+<h3>方法三：抄写 — 复述法（针对"手写吃力"）</h3>
+<p>手写吃力的根源通常是"脑子里没有代码块的结构感"，而不是记不住单词。做法：</p>
+<ol>
+  <li>挑一段 40 行左右的关键代码（比如你项目里的 <code>terrainTopH</code>）；</li>
+  <li>合上屏幕，用纸笔或空编辑器<b>凭理解重写</b>，允许卡住；</li>
+  <li>卡住的地方做标记，回头对照——<b>卡住的位置就是你知识结构里的洞</b>；</li>
+  <li>补上洞，隔两天再来一遍，直到能一次写完框架。</li>
+</ol>
+<p>注意：这不是要你练打字速度，而是用"写不出来"这个痛感来<b>定位盲区</b>。每周一次、每次一段就够。</p>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5"><span class="num">05</span>六个可直接复制的提问模板</h2>
+
+<p>AI 输出质量的天花板，取决于你输入的<b>约束</b>质量。下面六个模板覆盖 90% 的日常场景，方括号里换成你的内容即可。</p>
+
+<h3>① 解释优先模式 —— 防止 AI 直接甩一大坨你读不懂的代码</h3>
+<div class="src">默认加在所有需求后面</div>
+<pre><code>【你的需求】
+
+要求：先不要写完整代码。
+1. 先用 5 行以内说清你的实现思路和要改哪几个地方
+2. 标出这个方案的风险点和对我现有功能的影响
+3. 我确认后你再动手，且只给需要改动的片段（diff），不要重写整个文件</code></pre>
+
+<h3>② 最小改动模式 —— 保护已有功能不被顺手改坏</h3>
+<div class="src">改已有代码时必用</div>
+<pre><code>我要改【具体目标】。
+
+当前相关代码在【文件:行号】，现状是【描述】。
+请只输出最小改动：
+- 用 diff 或"把第 X 行改成 Y"的形式
+- 不要重构、不要优化无关代码、不要改命名风格
+- 改完说明：这次改动可能影响哪些已有功能</code></pre>
+
+<h3>③ 排错模式 —— 你项目里最常用</h3>
+<div class="src">报错时贴这个</div>
+<pre><code>问题：【现象一句话】
+期望：【本来应该怎样】
+实际：【实际怎样】
+
+环境：【浏览器/版本/依赖版本】
+报错原文：
+【完整报错，不要截断】
+
+最小复现步骤：
+1. ...
+2. ...
+
+我已经试过：【A、B、C】，结果是【...】
+请先帮我定位可能的原因（列 2–3 个，按可能性排序），并说明每个原因的验证方法，我验证后再谈修复。</code></pre>
+<div class="callout ok">
+  <strong>为什么必须写"我已经试过"</strong>
+  这一栏能挡掉 80% 的无效建议（AI 最爱让你重试你已经试过的东西），同时逼你先自己走一步——这一步本身就是排错训练。
+</div>
+
+<h3>④ 方案对比模式 —— 用来建立你自己的技术判断</h3>
+<div class="src">做选型时用（你问后端方案时就用这个）</div>
+<pre><code>背景：【你的场景、数据规模、现有环境、约束（如无 Docker / 机器配置）】
+
+请给 2–3 个方案，每个方案包含：
+- 核心思路（一段话）
+- 我的场景下最可能踩的坑
+- 大概的学习/搭建成本
+- 什么情况下应该换别的方案
+
+最后给一个明确的推荐并说明理由。不要只罗列优缺点不做判断。</code></pre>
+
+<h3>⑤ 出题模式 —— 检验你是不是真懂了</h3>
+<div class="src">学完一个知识点后立刻用</div>
+<pre><code>我刚学了【知识点】，我的理解是：【你的说法】。
+
+请出 5 道题检验我，难度递增：
+- 前 2 题：概念辨析
+- 中间 2 题：读代码/改代码（给一小段，问我改哪里）
+- 最后 1 题：把知识迁移到我实际项目【项目描述】上
+
+我逐题作答，你逐题批改并给出补充。不要提前给答案。</code></pre>
+
+<h3>⑥ 埋雷模式 —— 训练"看出 AI 在胡说"</h3>
+<div class="src">每周玩一次，效果极好</div>
+<pre><code>请写一段【某功能】的代码，并在里面故意埋 3 个 bug：
+- 1 个逻辑错误（能跑但结果不对）
+- 1 个边界情况没处理
+- 1 个性能或兼容性隐患
+
+只给代码，不要告诉我 bug 在哪。我找完把答案告诉你，你来评判我找得对不对、漏了什么。</code></pre>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6"><span class="num">06</span>判断力训练：怎么练出"看出 AI 在胡说"</h2>
+
+<p>AI 会一本正经地编造 API、编造参数、给出能跑但语义错误的代码。<strong>识别这些，是 AI 时代最硬的能力。</strong>四种练法：</p>
+
+<h3>练法一：预测 — 对照（每天都能做）</h3>
+<p>向 AI 提需求之前，<b>先花 2 分钟在纸上写下你自己的方案</b>，哪怕只有三行：改哪几个地方、大概怎么改、你觉得难点在哪。然后再看 AI 的答案，对比并记录：</p>
+<ul>
+  <li><strong>它想到的、我没想到的</strong> → 记进"我没想到的清单"（见第 10 节）；</li>
+  <li><strong>我想到的、它没做的</strong> → 说明你抓到了它遗漏的上下文，追问它；</li>
+  <li><strong>我们想得不一样</strong> → 让它说明它方案的取舍理由，这是最值钱的学习素材。</li>
+</ul>
+
+<h3>练法二：读 diff 而不是读全文件</h3>
+<p>每次 AI 改完代码，<b>强制自己先读改动点再运行</b>。问自己三句：这行改动的目的是什么？它会影响到哪里？如果错了，现象会是什么？——第三句是排错能力的种子：你提前预判了故障表现，真出问题时就能一眼认出来。</p>
+
+<h3>练法三：断言式验收</h3>
+<p>把"看着差不多"换成可量化的断言。你项目里已经这么做了（冒烟脚本断言 408 个点全部渲染、导航偏差小于阈值），把它变成习惯：</p>
+<div class="src">每次功能改完，写 3 条断言</div>
+<pre><code>通过标准（必须全部满足，否则视为未完成）：
+1. 页面无控制台报错（红色 error 数量为 0）
+2. 切换 DEM 配色后，4 套色带都能正常显示，图例同步更新
+3. 点击任意矿点，弹窗出现且光标贴在地表（不悬空、不穿透）</code></pre>
+<p>写这三条的时候，你其实已经在做架构师的工作：定义"完成"。</p>
+
+<h3>练法四：故意破坏</h3>
+<p>挑一个能跑的功能，手动改坏它（比如把 <code>AL_LIFT</code> 从 70 改成 0、把地形抬升系数改成 1.0），观察现象，再解释原因，最后让 AI 评判你的解释。<strong>亲手制造过一次故障，比读十遍解释都记得牢。</strong>而且面试时"我踩过这个坑"远比"我学过这个"有说服力。</p>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7"><span class="num">07</span>90 天路线图（每周 6–8 小时）</h2>
+
+<p>按你现在的处境（大三、课业在身、作息偏晚、已有一个能跑的完整项目）定制。<strong>原则：单线队列，不要同时开多条战线。</strong>每周达标即可，超额不加任务。</p>
+
+<div class="path">
+  <div class="step">
+    <h4>第 1–3 周｜读懂自己的项目<span class="dur">每天 30 分钟</span></h4>
+    <p>目标：能给别人讲清这个大屏是怎么跑起来的。</p>
+    <ul>
+      <li>每天读 30–60 行自家代码，用三遍注释法，注释直接写进文件（用 git 提交，看得见积累）</li>
+      <li>顺序：数据生成脚本 → <code>dem_terrain_data.js</code> → 地形 Primitive → 矿点渲染 → 交互逻辑</li>
+      <li><b>验收：</b>能不看代码说出"从 DEM 栅格到屏幕上这座山"的完整链路</li>
+    </ul>
+  </div>
+  <div class="step">
+    <h4>第 4–6 周｜最小改动训练<span class="dur">每周 2 次，每次 1.5 小时</span></h4>
+    <p>目标：敢改，且改完心里有底。</p>
+    <ul>
+      <li>只做小改动：加一个图层开关、改配色、改文案、调参数（每次改动用最小改动模式向 AI 要 diff）</li>
+      <li>每次改完写 3 条断言并手动验收（练法三）</li>
+      <li><b>验收：</b>连续 6 次改动，都能说清"我改了哪几行、影响了什么"</li>
+    </ul>
+  </div>
+  <div class="step">
+    <h4>第 7–9 周｜独立拆需求<span class="dur">每周 2 次，每次 2 小时</span></h4>
+    <p>目标：从"提想法"升级到"提方案"。</p>
+    <ul>
+      <li>每次先自己写方案（改哪几个文件、分几步、风险在哪），再让 AI 实现，对照差异</li>
+      <li>做 2 个完整小功能（第 8 节的练习题 2 和 4）</li>
+      <li><b>验收：</b>AI 对你方案的修改意见少于 3 处，且你能判断每条意见该不该采纳</li>
+    </ul>
+  </div>
+  <div class="step">
+    <h4>第 10–12 周｜验收与排错<span class="dur">每周 2 次，每次 2 小时</span></h4>
+    <p>目标：出问题时不慌，能自己缩小范围。</p>
+    <ul>
+      <li>用埋雷模式做 4 次练习；用故意破坏法做 2 次</li>
+      <li>补齐一个自动化冒烟脚本（覆盖：图层切换、导航、弹窗、配色）</li>
+      <li><b>验收：</b>遇到报错，能在 15 分钟内把问题缩小到"某个文件某几行"，再去找 AI</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>作息务实建议</strong>
+  不要定"每天两小时"的计划。按你现在凌晨入睡的节奏，<b>固定成"睡前 30 分钟只读不写"</b>——读代码不需要高精力状态，躺床上用平板也能读。把需要动手的改动集中在周末白天。习惯靠的是触发条件稳定，不靠时长。
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="s8"><span class="num">08</span>六道练习题：直接用你自己的项目</h2>
+
+<p>通用教程的问题是你没有体感。下面六道题全部基于你已经做完的稀土项目，做完就是能力，且能直接写进简历。</p>
+
+<ul class="chk">
+  <li><strong>练习 1｜给自己的代码写注释</strong>
+    <span>挑 <code>terrainTopH</code> 和顶点着色器抬升那两段，用三遍注释法写完整注释并提交。验收：三天后回看，不看代码能解释为什么点会悬空 375 米。</span></li>
+  <li><strong>练习 2｜加一个"矿点排行榜"面板</strong>
+    <span>先自己写方案（数据从哪来、怎么排序、怎么联动相机、点空白时怎么关闭），再让 AI 实现。验收：导航到某点时，面板高亮对应行。</span></li>
+  <li><strong>练习 3｜埋雷排雷</strong>
+    <span>让 AI 写一段矿点聚合（cluster）代码并埋 3 个 bug，你来找。验收：至少找出 2 个，并说清判断依据。</span></li>
+  <li><strong>练习 4｜给数据加字段</strong>
+    <span>给 <code>point_score.js</code> 加一个"矿种类型"字段（从现有字段推导或查资料补全），并在弹窗与图例中体现。验收：图例与点颜色一致，无遗漏无报错。</span></li>
+  <li><strong>练习 5｜写一个冒烟脚本</strong>
+    <span>用 Playwright 断言：控制台零报错、408 个点全部渲染、4 套 DEM 配色都能切换、工艺卡导航落点偏差小于阈值。验收：脚本能一键跑并输出 PASS/FAIL。</span></li>
+  <li><strong>练习 6｜数据资产化的第一步</strong>
+    <span>把 <code>point_score.js</code> 的 408 条数据真正写进一张数据库表（对应后端方案的阶段 0），并用一句 SQL 查出"评分前 10 的矿点及其所属县"。验收：查询结果与前端显示一致。</span></li>
+</ul>
+
+<div class="callout ok">
+  <strong>练习 6 是分水岭</strong>
+  做完它，你就从"做前端页面的人"变成"做系统的人"。这也是后端方案里"阶段 0 数据资产化"的起点——建议把它作为 90 天计划的收尾项目。
+</div>
+
+<!-- ============ 9 ============ -->
+<h2 id="s9"><span class="num">09</span>误区与红线</h2>
+
+<table>
+  <thead><tr><th style="width:26%">误区</th><th style="width:30%">为什么有害</th><th>正确做法</th></tr></thead>
+  <tbody>
+    <tr><td><b>抄完不看直接跑</b></td><td>零积累。三个月后和今天一模一样，焦虑只会加重</td><td>强制读 diff，用三问句（目的 / 影响 / 故障表现）</td></tr>
+    <tr><td><b>一次让 AI 做十件事</b></td><td>任何一件错了都定位不了，最后整体推翻重来</td><td>单线队列：一次一个目标，通过验收再进下一个</td></tr>
+    <tr><td><b>不敢追问"为什么"</b></td><td>你以为问了显得笨，其实这是唯一能积累判断力的动作</td><td>每个方案至少追问 3 次：为什么这么做 / 不这么做到底会怎样 / 还有别的路径吗</td></tr>
+    <tr><td><b>背 API、抄单词表</b></td><td>记了也拼不过补全，还挤占真正该练的时间</td><td>记"模式"和"什么时候该用它"，拼写交给工具</td></tr>
+    <tr><td><b>等学完再动手做项目</b></td><td>没有上下文的知识记不住，也用不上</td><td>永远项目驱动：需要什么学什么，学完立刻用上</td></tr>
+    <tr><td><b>AI 说错了 = 我不行</b></td><td>把别人的错误算到自己头上，是焦虑的主要来源</td><td>AI 出错是常态。<b>你能发现它错了，恰恰是你值钱的地方</b></td></tr>
+    <tr><td><b>和 AI 比速度</b></td><td>错误赛道，永远输，越比越丧</td><td>只和三个月前的自己比，用"没想到的清单"量化进步</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>一条红线：不要让 AI 替你做判断</strong>
+  可以让它写代码、改 bug、解释概念、出方案；不要问它"我该学哪个方向""我这样会不会找不到工作"——它没有你的处境信息，只会给出正确但无用的套话。<b>方向问题，找有真实经验的真人聊。</b>
+</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="s10"><span class="num">10</span>焦虑的机械化处理 + 今天就能做的 3 件事</h2>
+
+<h3>把焦虑换成一个可打勾的东西</h3>
+<p>焦虑来自"模糊的损失感"，它怕的是具体。三个马上能用的替换：</p>
+<ul>
+  <li>把<em>"我学不会"</em> 换成 <em>"这周我要读懂 3 段代码，读完打勾"</em>；</li>
+  <li>把<em>"我不如 AI"</em> 换成 <em>"今天 AI 写出了 1 个我没想到的点，我记下来了"</em>；</li>
+  <li>把<em>"看不懂"</em> 换成 <em>"我卡在第 X 行，具体不懂的是 Y"</em>——一旦能精确描述卡点，问题就已经解决一半。</li>
+</ul>
+
+<h3>建一个"我没想到的清单"</h3>
+<p>这是全程最重要的一个工具。每次 AI 给出了你没想到的做法，记一条，格式固定：</p>
+<div class="src">notion / 备忘录 / 一个 txt 都行</div>
+<pre><code>09-03 | 矿点贴地 | 我没想到的：marker 要放在"地形顶面 + 偏移"，
+       而不是 DEM 原始高程 + 偏移；因为着色器里还有一层夸张抬升。
+       → 教训：任何"算坐标"的地方，都要先确认坐标系是不是最终显示坐标系。</code></pre>
+<p>这个清单有三个作用：<strong>①</strong> 让进步变得可见（焦虑最怕的就是看不见进步）；<strong>②</strong> 三个月后回看，你会发现自己的盲区在系统性收窄；<strong>③</strong> 面试时这是最好的素材——"我记录了自己踩过的 60 个坑"。</p>
+
+<h3>今天就能做的 3 件事</h3>
+<ol>
+  <li><strong>建清单文件</strong>（2 分钟）：新建 <code>我没想到的清单.md</code>，写下今天这一条。</li>
+  <li><strong>读 30 分钟代码</strong>：打开 <code>赣南矿脉_数字孪生大屏.html</code>，找到 <code>terrainTopH</code>，用三遍注释法写注释，git 提交一次。</li>
+  <li><strong>改一个最小的地方</strong>：把某个面板的标题文案或配色改成你要的样子，用最小改动模式向 AI 要 diff，自己读一遍再应用，然后写 3 条验收断言。</li>
+</ol>
+
+<p class="big">最后一句，不是鼓励，是事实：<em>AI 不会替你承担"这个项目能不能交付"的责任</em>。这个责任永远在人身上，而承担责任所需要的能力——知道要做什么、做对了没有、错了在哪——只能来自你自己的实践积累。你现在走的路，方向是对的。</p>
+
+<footer>
+  基于「赣南稀土矿脉三维数字孪生可视化平台」的真实开发过程整理 · 配套文档：《技术复盘与学习指南》《后端与数据库演进方案》<br>
+  2026-09-03 · 谢泓铎 · GIS 实验室
+</footer>
+
+</div>
+</body>
+</html>

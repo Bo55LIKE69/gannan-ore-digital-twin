@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赣南矿脉数字孪生 · 技术复盘与学习指南</title>
+<style>
+:root{
+  --bg:#f6f7f9; --bg2:#ffffff; --bg3:#eef1f6; --line:#dfe4ec;
+  --tx:#1b2331; --tx2:#4b5567; --tx3:#8a93a6;
+  --gold:#9a6b12; --blue:#1f6feb; --green:#17794a; --red:#c0392b; --purple:#7c4dcd;
+  --mono:'JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--tx);
+  font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;
+  font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:48px 32px 100px}
+
+/* 头部 */
+header{border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:36px}
+h1{font-size:30px; margin:0 0 10px; letter-spacing:.5px}
+h1 .accent{color:var(--gold)}
+.sub{color:var(--tx2); font-size:14px; margin:0}
+.meta{color:var(--tx3); font-size:12.5px; margin-top:14px; font-family:var(--mono)}
+
+/* 目录 */
+.toc{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:18px 24px; margin-bottom:40px}
+.toc h3{margin:0 0 12px; font-size:13px; color:var(--tx3); letter-spacing:2px; font-weight:600}
+.toc ol{margin:0; padding-left:20px; columns:2; column-gap:36px}
+.toc li{margin:5px 0; font-size:14px}
+.toc a{color:var(--blue); text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+h2{
+  font-size:22px; margin:52px 0 18px; padding-bottom:10px;
+  border-bottom:2px solid var(--line); color:var(--tx);
+}
+h2 .num{color:var(--gold); font-family:var(--mono); margin-right:10px; font-size:19px}
+h3{font-size:17px; margin:30px 0 12px; color:var(--tx)}
+h4{font-size:15px; margin:20px 0 8px; color:var(--tx2); font-weight:600}
+p{margin:12px 0}
+ul,ol{margin:12px 0; padding-left:24px}
+li{margin:6px 0}
+strong{color:#0f1729; font-weight:650}
+code{
+  font-family:var(--mono); font-size:13px; background:var(--bg3);
+  padding:2px 6px; border-radius:4px; color:var(--gold); border:1px solid var(--line);
+}
+a{color:var(--blue)}
+
+/* 表格 */
+table{width:100%; border-collapse:collapse; margin:18px 0; font-size:13.5px}
+th{
+  background:var(--bg3); color:var(--tx2); text-align:left;
+  padding:10px 12px; border:1px solid var(--line); font-weight:600; font-size:12.5px;
+  letter-spacing:.5px;
+}
+td{padding:10px 12px; border:1px solid var(--line); vertical-align:top}
+tbody tr:nth-child(even){background:rgba(15,23,41,.028)}
+tbody tr:hover{background:rgba(31,111,235,.07)}
+
+/* 优先级标签 */
+.p0,.p1,.p2{
+  display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700;
+  padding:2px 7px; border-radius:4px; letter-spacing:.5px; vertical-align:middle;
+}
+.p0{background:rgba(230,115,107,.16); color:var(--red); border:1px solid rgba(230,115,107,.4)}
+.p1{background:rgba(224,178,94,.14); color:var(--gold); border:1px solid rgba(224,178,94,.35)}
+.p2{background:rgba(111,122,140,.16); color:var(--tx3); border:1px solid rgba(111,122,140,.35)}
+
+/* 卡片 */
+.card{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:20px 24px; margin:20px 0}
+.card.warn{border-left:3px solid var(--red)}
+.card.tip{border-left:3px solid var(--green)}
+.card.key{border-left:3px solid var(--gold)}
+.card h4{margin-top:0}
+.card p:last-child{margin-bottom:0}
+
+/* 代码块 */
+pre{
+  background:#fbfcfe; border:1px solid var(--line); border-radius:8px;
+  padding:16px 18px; overflow-x:auto; margin:14px 0; line-height:1.62;
+}
+pre code{background:none; border:none; padding:0; font-size:12.5px; color:#2b3240; display:block}
+.src{
+  font-family:var(--mono); font-size:11.5px; color:var(--tx3);
+  background:var(--bg3); padding:3px 9px; border-radius:4px 4px 0 0;
+  border:1px solid var(--line); border-bottom:none; display:inline-block;
+  margin-bottom:-1px; position:relative; top:1px;
+}
+pre + .src{margin-top:14px; border-radius:0 0 4px 4px; top:-15px; margin-bottom:0}
+.kw{color:#8250df} .fn{color:#0550ae} .str{color:#0a7d34} .num{color:#b8500a}
+.cm{color:#8a93a6; font-style:italic} .gl{color:#9a6700} .ty{color:#9a6700}
+
+/* 行号徽标 */
+.loc{
+  font-family:var(--mono); font-size:11.5px; color:var(--tx3);
+  background:var(--bg3); padding:2px 7px; border-radius:3px; border:1px solid var(--line);
+  margin-left:6px; white-space:nowrap;
+}
+
+/* 学习路径 */
+.path{border-left:2px solid var(--line); padding-left:26px; margin:22px 0}
+.step{position:relative; margin-bottom:26px}
+.step::before{
+  content:''; position:absolute; left:-32px; top:7px; width:11px; height:11px;
+  border-radius:50%; background:var(--gold); border:2px solid var(--bg);
+}
+.step h4{margin:0 0 6px; color:var(--gold); font-size:15.5px}
+.step .dur{font-family:var(--mono); font-size:11.5px; color:var(--tx3); margin-left:8px}
+.step p{margin:6px 0; font-size:14px; color:var(--tx2)}
+.step ul{font-size:14px; color:var(--tx2)}
+
+/* 简历块 */
+.cv{background:var(--bg3); border:1px solid var(--line); border-radius:8px; padding:18px 22px; margin:16px 0}
+.cv .role{color:var(--gold); font-weight:600; font-size:14px; margin-bottom:10px}
+.cv ul{margin:8px 0 0; font-size:14px}
+
+footer{margin-top:70px; padding-top:24px; border-top:1px solid var(--line); color:var(--tx3); font-size:12.5px}
+
+@media print{
+  body{background:#fff; color:#111}
+  .toc{page-break-inside:avoid}
+  h2{page-break-after:avoid} pre{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>赣南矿脉数字孪生 · <span class="accent">技术复盘与学习指南</span></h1>
+  <p class="sub">从"做完了"到"讲得清"——把这个项目里真正值钱的技术拆出来，按优先级排好</p>
+  <p class="meta">生成日期 2026-09-03 · 主交付 赣南矿脉_数字孪生大屏.html (1922 行) · 预处理脚本 35 个 · 数据文件 5 个</p>
+</header>
+
+<div class="toc">
+  <h3>目 录</h3>
+  <ol>
+    <li><a href="#s1">先搞清楚这个项目到底是什么</a></li>
+    <li><a href="#s2">四层技术栈全景</a></li>
+    <li><a href="#s3">优先级排序：什么必学、什么知道就行</a></li>
+    <li><a href="#s4">必读代码清单（带行号）</a></li>
+    <li><a href="#s5">五个核心知识点拆解</a></li>
+    <li><a href="#s6">Cesium 三大坑（踩过的才值钱）</a></li>
+    <li><a href="#s7">学习路径建议</a></li>
+    <li><a href="#s8">简历话术 & 面试应答</a></li>
+    <li><a href="#s9">技术债与可延展方向</a></li>
+    <li><a href="#s10">文件速查表</a></li>
+  </ol>
+</div>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1"><span class="num">01</span>先搞清楚这个项目到底是什么</h2>
+
+<p>很多人做完项目说不清自己在做什么。你先把这个定义背下来：</p>
+
+<div class="card key">
+  <h4>一句话定义</h4>
+  <p>这是一个 <strong>零后端、单文件、可离线运行的三维地质数据可视化前端</strong>，加一套 <strong>离线空间分析预处理管线</strong>。数据全部在构建期由 Python 算好并编码成 JS 文件，浏览器端只负责解码、建网格、着色、交互。</p>
+</div>
+
+<p>理解了这个定义，你就明白为什么项目里没有 Node、没有数据库、没有 API——这是<strong>刻意的架构选择</strong>，不是偷懒。它带来的好处是部署成本为零（一个 HTML 丢到任何静态服务器就能跑），代价是所有分析必须在构建期完成，无法实时查询。</p>
+
+<h3>数据流向（记住这条链）</h3>
+<pre><code>原始 DEM (.hgt/.tif)  ──┐
+矿点/县界 (SHP)       ──┼─→  Python 预处理脚本  ──→  *.js (window.XXX 全局挂载)
+遥感影像 (STAC COG)   ──┘         (离线算完)              ↓
+                                                   浏览器端解码
+                                                        ↓
+                                              Cesium 自建 Primitive
+                                                        ↓
+                                                GLSL 着色器上色</code></pre>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2"><span class="num">02</span>四层技术栈全景</h2>
+
+<table>
+<thead><tr><th style="width:13%">层</th><th style="width:24%">技术</th><th>本项目中的具体位置</th><th style="width:11%">优先级</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>数据生产</strong></td>
+  <td>Python + rasterio<br>numpy / scipy</td>
+  <td><code>脚本/build_dem_terrain.py</code> 读 DEM、重采样成 1024×1024 规则网格、生成山体阴影、二进制编码<br><code>脚本/build_point_score.py</code> 矿点打分与分级</td>
+  <td><span class="p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>空间分析</strong></td>
+  <td>shapely / geopandas<br>pyshp / scipy.spatial<br>sklearn.neighbors</td>
+  <td><code>脚本/spatial_analysis.py</code> Getis-Ord Gi* 冷热点、NNI 最近邻、泰森多边形<br><code>脚本/hotspot_analysis.py</code> 渔网格核密度、LISA</td>
+  <td><span class="p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>数据编码</strong></td>
+  <td>base64 / 位打包<br>uint16 定点量化</td>
+  <td><code>dem_terrain_data.js</code>（4.1 MB）：高程 uint16 定点量化 + 掩膜位打包 + 山体阴影转 JPEG data URI</td>
+  <td><span class="p1">P1</span></td>
+</tr>
+<tr>
+  <td><strong>三维渲染</strong></td>
+  <td>Cesium 1.114<br>WebGL / GLSL</td>
+  <td>主 HTML 620–722 行：自定义顶点/片元着色器<br>513–618 行：自建三角网 + skirt（裙边）</td>
+  <td><span class="p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>前端工程</strong></td>
+  <td>原生 JS（无框架）<br>单文件 HTML</td>
+  <td>1922 行单文件，手写状态机 <code>LAYER</code>、<code>bindUI()</code>、<code>applyLayerVis()</code></td>
+  <td><span class="p1">P1</span></td>
+</tr>
+<tr>
+  <td><strong>质量保障</strong></td>
+  <td>Playwright + headless Chrome</td>
+  <td><code>脚本/test_ui5.js</code> ~ <code>test_ui10.js</code>：渲染冒烟测试，验证零报错、元素状态、相机落点</td>
+  <td><span class="p1">P1</span></td>
+</tr>
+</tbody>
+</table>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3"><span class="num">03</span>优先级排序：什么必学、什么知道就行</h2>
+
+<p>你时间有限，战线不能再铺。按<strong>"通用性 × 简历含金量 × 迁移成本"</strong>三个维度排序：</p>
+
+<h3><span class="p0">P0</span> 必须真正掌握（学完能直接换工作用）</h3>
+<table>
+<thead><tr><th style="width:24%">技术点</th><th>为什么是 P0</th></tr></thead>
+<tbody>
+<tr><td><strong>GIS 空间分析算法</strong></td><td>Gi* 冷热点、NNI、核密度、泰森多边形——这是<strong>你作为 GIS 专业学生的护城河</strong>。纯程序员不会这个，会这个的又不会写代码。你两边都沾，这是最稀缺的组合。要求：能手推公式、能解释 z 得分和 p 值的含义、知道什么数据该用什么方法。</td></tr>
+<tr><td><strong>rasterio + numpy 栅格处理</strong></td><td>遥感/GIS 岗位的硬技能。重采样、重投影、窗口读取、nodata 处理、掩膜运算——这些是每天都在用的基本功。本项目 <code>build_dem_terrain.py</code> 就是一份完整的范例。</td>
+</tr>
+<tr><td><strong>WebGL / GLSL 着色器基础</strong></td><td>不需要你成为图形学专家，但要能<strong>读懂并改</strong>顶点/片元着色器。因为现在所有高性能地图库（Cesium、Mapbox GL、Deck.gl）底层都是它。会改 shader 的前端，薪资档位不一样。</td>
+</tr>
+</tbody>
+</table>
+
+<h3><span class="p1">P1</span> 值得搞懂原理（面试能聊）</h3>
+<table>
+<thead><tr><th style="width:24%">技术点</th><th>学到什么程度</th></tr></thead>
+<tbody>
+<tr><td><strong>二进制数据编码传输</strong></td><td>理解为什么高程要用 uint16 定点量化（4.1 MB → 可接受的加载量）、为什么掩膜要位打包（1 字节存 8 个格点）、为什么纹理走 JPEG data URI。这是"数据体积优化"的通用思路。</td></tr>
+<tr><td><strong>Cesium Primitive 渲染管线</strong></td><td>知道 Geometry / Appearance / Primitive 三层关系，知道 <code>position3DHigh</code>+<code>position3DLow</code> 双精度编码是什么、为什么需要。不用背 API，但要能讲清渲染流程。</td></tr>
+<tr><td><strong>shapely 矢量几何运算</strong></td><td>点在多边形内、缓冲区、并集、空间索引（<code>prep</code>）。项目里分析图层贴地就用到了自写的 <code>pointInRing</code>。</td></tr>
+<tr><td><strong>自动化冒烟测试</strong></td><td>Playwright 跑 headless Chrome 截图 + 断言。这个习惯本身比工具更值钱——它证明你有工程交付意识，不是写完就跑。</td></tr>
+</tbody>
+</table>
+
+<h3><span class="p2">P2</span> 知道有这回事就行</h3>
+<ul>
+  <li><strong>CSS 变量 / 面板布局</strong>：会用即可，不是核心竞争力</li>
+  <li><strong>Git 高级操作</strong>：会用 rebase、会解冲突就够，本项目踩的代理坑属于环境问题，不是知识</li>
+  <li><strong>STAC / COG 遥感数据协议</strong>：知道"云原生地理空间数据可以直接 HTTP 范围请求读取"这个概念，需要时再查（本项目 NDVI 用过，后来撤了）</li>
+</ul>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4"><span class="num">04</span>必读代码清单（带行号）</h2>
+
+<p>1922 行不用全读。下面这 <strong>8 段</strong> 是精华，建议逐个打开原文对照看。行号对应当前版本（commit c68acf4）。</p>
+
+<table>
+<thead><tr><th style="width:8%">序号</th><th style="width:26%">位置</th><th style="width:24%">做什么</th><th>你该学到什么</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>1</strong></td>
+  <td><code>build_dem_terrain.py</code><br><span class="loc">35–92 行</span></td>
+  <td>DEM 读取 → 重采样成 1024×1024 规则网格 → 生成有效掩膜</td>
+  <td><strong>分块读取大栅格</strong>的思路（不一次性 load 进内存），以及 nodata 的统计式处理</td>
+</tr>
+<tr>
+  <td><strong>2</strong></td>
+  <td><code>build_dem_terrain.py</code><br><span class="loc">165–167 行</span></td>
+  <td>高程定点量化 + base64 + 掩膜位打包</td>
+  <td><strong>数据体积优化三板斧</strong>：降精度、换进制、位压缩</td>
+</tr>
+<tr>
+  <td><strong>3</strong></td>
+  <td>主 HTML<br><span class="loc">444–483 行</span></td>
+  <td><code>sampleRaw()</code> 双线性插值采样 + 螺旋回退搜索</td>
+  <td><strong>栅格重采样的经典写法</strong>，以及"边界/空洞"的工程兜底策略</td>
+</tr>
+<tr>
+  <td><strong>4</strong></td>
+  <td>主 HTML<br><span class="loc">513–618 行</span></td>
+  <td><code>buildTerrainGeometry()</code> 从高程网格建三角网 + skirt 裙边</td>
+  <td><strong>规则网格 → GPU 顶点缓冲</strong>的完整流程；裙边是为了防止网格边缘漏光</td>
+</tr>
+<tr>
+  <td><strong>5</strong></td>
+  <td>主 HTML<br><span class="loc">620–641 行</span></td>
+  <td><code>TERRAIN_VS</code> 顶点着色器</td>
+  <td><strong>双精度位置编码</strong>、垂直夸张在 GPU 上怎么实现</td>
+</tr>
+<tr>
+  <td><strong>6</strong></td>
+  <td>主 HTML<br><span class="loc">643–722 行</span></td>
+  <td><code>TERRAIN_FS</code> 片元着色器</td>
+  <td><strong>色带函数、山体阴影叠加、屏幕空间等高线、距离雾</strong>——四个效果一气呵成</td>
+</tr>
+<tr>
+  <td><strong>7</strong></td>
+  <td>主 HTML<br><span class="loc">485–497 行</span></td>
+  <td><code>surfaceH()</code> / <code>terrainTopH()</code></td>
+  <td><strong>CPU 侧高度计算必须和 GPU 侧公式严格一致</strong>，否则元素会浮空或被埋（这是本项目最后修掉的 bug）</td>
+</tr>
+<tr>
+  <td><strong>8</strong></td>
+  <td><code>脚本/spatial_analysis.py</code><br><span class="loc">全文</span></td>
+  <td>Gi* 冷热点、NNI、泰森多边形</td>
+  <td><strong>空间统计方法的工程实现</strong>：公式 → 代码 → 显著性检验</td>
+</tr>
+</tbody>
+</table>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5"><span class="num">05</span>五个核心知识点拆解</h2>
+
+<h3>5.1 数据体积优化：为什么 4.1 MB 的 DEM 能塞进浏览器</h3>
+
+<p>原始 DEM 是 <code>.hgt</code> 栅格，直接转 JSON 会是几十 MB。项目用了三层压缩：</p>
+
+<div class="src">脚本/build_dem_terrain.py:165-167</div>
+<pre><code class="py">enc = np.round((np.nan_to_num(heights, nan=0.0) - hmin) * 10.0).astype(np.uint16)
+hb64 = base64.b64encode(enc.tobytes()).decode("ascii")
+mb64 = base64.b64encode(pack_bits(mask).tobytes()).decode("ascii")</code></pre>
+
+<table>
+<thead><tr><th style="width:26%">手段</th><th>原理</th><th>收益</th></tr></thead>
+<tbody>
+<tr><td><strong>定点量化</strong></td><td>高程减去最小值后 ×10 取整，存 uint16。0.1 m 精度对地形可视化完全够用</td><td>float64 → uint16，<strong>4 倍</strong></td></tr>
+<tr><td><strong>位打包掩膜</strong></td><td>有效性是 0/1，用 1 bit 存一个格点，1 字节存 8 个</td><td><strong>8 倍</strong></td></tr>
+<tr><td><strong>JPEG 纹理</strong></td><td>山体阴影是灰度图，转 JPEG data URI 内联</td><td>避免额外 HTTP 请求</td></tr>
+</tbody>
+</table>
+
+<div class="card tip">
+  <p><strong>通用价值</strong>：这套"降精度 → 改编码 → 位压缩"的思路，在任何"要把科学数据搬到前端"的场景都适用（气象场、污染扩散、人口栅格）。记住这个模式，比记住这几行代码重要。</p>
+</div>
+
+<h3>5.2 栅格重采样：双线性插值 + 螺旋回退</h3>
+
+<p>浏览器拿到的是 1024×1024 网格，但矿点/标注的经纬度是任意浮点数。需要插值取高程：</p>
+
+<div class="src">赣南矿脉_数字孪生大屏.html:460-483</div>
+<pre><code class="js">function sampleRaw(lon, lat){
+  var fx = (lon - DM.west)  / (DM.east  - DM.west)  * (GW - 1);
+  var fy = (DM.north - lat) / (DM.north - DM.south) * (GH - 1);
+  if (fx &lt; 0 || fx &gt; GW - 1 || fy &lt; 0 || fy &gt; GH - 1) return null;
+  var i0 = Math.floor(fx), j0 = Math.floor(fy);
+  var i1 = Math.min(i0 + 1, GW - 1), j1 = Math.min(j0 + 1, GH - 1);
+  var dx = fx - i0, dy = fy - j0;
+  var acc = 0, wsum = 0;
+  var cs = [[i0,j0,(1-dx)*(1-dy)],[i1,j0,dx*(1-dy)],[i0,j1,(1-dx)*dy],[i1,j1,dx*dy]];
+  for (var c = 0; c &lt; 4; c++){
+    if (maskAt(cs[c][0], cs[c][1])){ acc += rawH(cs[c][0], cs[c][1]) * cs[c][2]; wsum += cs[c][2]; }
+  }
+  if (wsum &gt; 0.01) return acc / wsum;
+  // 四邻都是空洞 → 螺旋向外搜第一个有效点
+  for (var r = 1; r &lt; 30; r++){ /* ... 环形扫描 ... */ }
+  return DM.minH;
+}</code></pre>
+
+<p><strong>两个关键点</strong>：① 权重只累加有效格点（<code>wsum</code> 动态归一化），避免 nodata 污染结果；② 四邻全空时螺旋外扩搜索兜底。这就是"算法 + 工程兜底"的完整思维——教科书只讲前半段，真正上线必须写后半段。</p>
+
+<h3>5.3 规则网格 → GPU 三角网</h3>
+
+<p>Cesium 自带的 <code>createWorldTerrain</code> 需要联网，且无法自定义着色。项目选择<strong>自建 Primitive</strong>：</p>
+
+<div class="src">赣南矿脉_数字孪生大屏.html:513-547（节选）</div>
+<pre><code class="js">function buildTerrainGeometry(){
+  // 先数有效格点，一次性分配定长 TypedArray（避免 push 扩容）
+  var count = 0;
+  for (k = 0; k &lt; GW * GH; k++) if ((_mb[k &gt;&gt; 3] &gt;&gt; (k &amp; 7)) &amp; 1) count++;
+
+  var vid = new Int32Array(GW * GH).fill(-1);   // 格点 → 顶点索引映射
+  var pos = new Float64Array(count * 3);
+  var st  = new Float32Array(count * 2);        // 纹理坐标
+  var hgt = new Float32Array(count);            // 高程（单独传，供 shader 夸张）
+
+  /* Pass 1: 标记所有有效四边形 —— 四角都有效才生成面 */
+  for (j = 0; j &lt; QH; j++) for (i = 0; i &lt; QW; i++){
+    if (vid[j*GW+i] &lt; 0 || vid[j*GW+i+1] &lt; 0 ||
+        vid[(j+1)*GW+i] &lt; 0 || vid[(j+1)*GW+i+1] &lt; 0) continue;
+    qok[j*QW+i] = 1; nq++;
+  }</code></pre>
+
+<div class="card key">
+  <p><strong>三个值得记住的设计</strong>：<br>
+  ① <code>vid</code> 索引表把二维格点映射成一维顶点数组，是栅格转矢量的标准手法；<br>
+  ② 高程 <code>hgt</code> <strong>单独作为顶点属性</strong>传给 shader，而不是直接算进 <code>position</code>——这样调整垂直夸张时不用重建几何；<br>
+  ③ 边缘生成 <code>skirt</code>（裙边，向下延伸 4000 m），堵住网格侧面的缝隙，避免从低角度看到"纸片"。</p>
+</div>
+
+<h3>5.4 着色器：地形是怎么被"画"出来的</h3>
+
+<p>顶点着色器只做一件事——按垂直夸张抬高顶点：</p>
+
+<div class="src">赣南矿脉_数字孪生大屏.html:631-640</div>
+<pre><code class="glsl">void main() {
+    vec3 pw = position3DHigh + position3DLow;   // 双精度拆分：高位+低位
+    vec3 up = normalize(pw);                     // 该点的"天顶"方向
+    vec3 p  = pw + up * (height - u_hmin) * (u_exag - 1.0);
+    v_st = st;   v_h  = height;
+    vec4 clip = czm_viewProjection * vec4(p, 1.0);
+    v_dist = clip.w;   // 传给片元着色器做距离雾/等高线宽度
+    gl_Position = clip;
+}</code></pre>
+
+<p>片元着色器叠了四层效果，顺序很讲究：</p>
+
+<div class="src">赣南矿脉_数字孪生大屏.html:697-721（节选）</div>
+<pre><code class="glsl">void main() {
+    float t = clamp((v_h - u_hmin) / max(u_hmax - u_hmin, 1.0), 0.0, 1.0);
+    vec3 col;   // ① 按 u_demPal 选色带（4 套配色用一个 float uniform 切换）
+    if (u_demPal &lt; 0.5) col = rampTerrain(t);
+    else if (u_demPal &lt; 1.5) col = rampElev(t);
+    else if (u_demPal &lt; 2.5) col = rampGray(t);
+    else col = rampGreen(t);
+
+    // ② 叠加山体阴影纹理（乘性混合，保留色相只改明暗）
+    float hs = texture(u_hillshade, v_st).r;
+    col *= mix(1.0 - u_hs, 1.0 + u_hs * 0.85, hs);
+
+    // ③ 屏幕空间等高线：宽度随距离自适应（mpp = meters per pixel）
+    if (u_contour &gt; 0.5) {
+        float mpp = max(v_dist * u_px, 0.6);
+        float d2 = abs(fract(v_h / 200.0 + 0.5) - 0.5) * 200.0;
+        float l2 = 1.0 - smoothstep(mpp * 0.7, mpp * 1.8, d2);
+        col = mix(col, col * 1.32 + vec3(0.05, 0.04, 0.02), l2 * 0.55);
+        /* 1000m 主等高线同理 */
+    }
+
+    // ④ 距离雾：远处融入天空色，制造纵深
+    float fog = clamp((v_dist - u_fogNear) / max(u_fogFar - u_fogNear, 1.0), 0.0, 1.0);
+    col = mix(col, u_fogColor, fog * 0.88);
+    out_FragColor = vec4(col, u_alpha);
+}</code></pre>
+
+<div class="card tip">
+  <p><strong>这里最值得学的是第 ③ 步</strong>：等高线不是预先生成的矢量，而是用 <code>fract(v_h / 200.0)</code> 在片元级别实时算的。而且线宽用 <code>mpp</code>（每像素代表多少米）做自适应——远处线不会糊成一片。这是<strong>屏幕空间算法</strong>的典型思路，在地图渲染里到处都是。</p>
+</div>
+
+<h3>5.5 高度一致性：CPU 和 GPU 必须算同一个数</h3>
+
+<p>这是本项目最后、也最隐蔽的一个 bug，值得单独记：</p>
+
+<div class="card warn">
+  <h4>问题现象</h4>
+  <p>矿点标记"浮"在空中，加 <code>disableDepthTestDistance</code> 强行穿透后，又看起来像贴在玻璃上。</p>
+  <h4>根因</h4>
+  <p>地形网格的几何高度是 <code>surfaceH(..., AL_LIFT=70)</code>，顶点着色器<strong>又额外抬了</strong> <code>(height - hmin) × (EXAG - 1)</code>。而矿点标记只放在 <code>surfaceH(..., 0) + 6</code>，比真实地形顶面低了 <strong>375 m</strong>——被埋在地形里了。</p>
+  <h4>解法</h4>
+  <p>写一个函数<strong>精确复刻 GPU 侧的计算</strong>：</p>
+</div>
+
+<div class="src">赣南矿脉_数字孪生大屏.html:493-497</div>
+<pre><code class="js">// 地形真实顶面椭球高：几何 height=surfaceH(...,AL_LIFT)，
+// 顶点着色器再抬 (H-DM.minH)*(EXAG-1)
+function terrainTopH(lon, lat){
+  var H = surfaceH(lon, lat, AL_LIFT);
+  return H + (H - DM.minH) * (EXAG - 1.0);
+}</code></pre>
+
+<p>然后在 <code>applyLift()</code> 里，垂直夸张滑块一变就重算所有标记高度，保证永远贴合。</p>
+
+<div class="card key">
+  <p><strong>通用教训</strong>：凡是用 shader 改了几何外观，<strong>CPU 侧所有依赖位置的逻辑（贴地、拾取、碰撞、标注）都必须同步这个变换</strong>。这类 bug 不报错、不崩，只是"看起来不对"，是最难查的一类。以后做 3D 项目，第一时间把这个对照关系写清楚。</p>
+</div>
+
+<!-- ============ 6 ============ -->
+<h2 id="s6"><span class="num">06</span>Cesium 三大坑（踩过的才值钱）</h2>
+
+<p>这三条是本项目实打实撞出来的，网上文档基本不写。面试时随口说一条，就能证明你是真做过而不是抄的。</p>
+
+<h3>坑 1：<code>Appearance</code> 基类不保存 <code>options.uniforms</code></h3>
+<p>你以为 <code>new Cesium.Appearance({ uniforms: {...} })</code> 会把 uniforms 存下来，<strong>不会</strong>。必须在创建后手动赋值：</p>
+<pre><code class="js">var app = new Cesium.Appearance({ /* ... */ });
+app.uniforms = { u_demPal: function(){ return 0.0; }, /* ... */ };  // 手动补</code></pre>
+
+<h3>坑 2：<code>getUniformFunction</code> 会再包一层</h3>
+<p>uniform 的值必须是<strong>普通值</strong>或<strong>返回值的函数</strong>。如果你传了函数，Cesium 会再包一层，导致 <code>mu.value</code> 变成函数对象而不是数值。表现为"改了 uniform 没反应"，且不报错。</p>
+
+<h3>坑 3：拾取通道会自动引用 <code>batchId</code></h3>
+<p>自定义几何的着色器里<strong>必须声明</strong> <code>in float batchId</code> 并提供对应的 Float32Array 属性（全 0 即可），否则 pick 通道编译失败。或者干脆 <code>allowPicking: false</code> 跳过拾取通道：</p>
+<pre><code class="js">'in float batchId;',   // 即使不用也要声明
+// 属性数组：new Float32Array(vertexCount)  // 全 0</code></pre>
+
+<!-- ============ 7 ============ -->
+<h2 id="s7"><span class="num">07</span>学习路径建议</h2>
+
+<p>按你"项目驱动、手写吃力、需要收敛"的特点排的。<strong>一次只走一条线</strong>，不要并行。</p>
+
+<div class="path">
+  <div class="step">
+    <h4>第一步：把空间分析算法补成"能讲"<span class="dur">1–2 周</span></h4>
+    <p>这是最高性价比的一步——你是 GIS 科班，补理论比补编程快。</p>
+    <ul>
+      <li>把 <code>脚本/spatial_analysis.py</code> 里每个方法对应的<strong>数学公式手写一遍</strong>（Gi* 统计量、NNI 比值、Moran's I）</li>
+      <li>能回答：z 得分多大算显著？p 值需要多重检验校正吗？为什么要用置换检验？</li>
+      <li>能回答：什么情况下该用核密度，什么情况下该用 Gi*？二者结论冲突时信谁？</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <h4>第二步：GLSL 着色器<span class="dur">1 周</span></h4>
+    <p>不需要系统学图形学，就对着本项目这两个 shader 改。</p>
+    <ul>
+      <li>目标：能自己加一套新的 DEM 配色（照抄 <code>rampGreen</code> 改改颜色值）</li>
+      <li>目标：能改等高线间距（把 200/1000 改成 100/500）</li>
+      <li>推荐资料：WebGL Fundamentals（在线教程，讲清管线），不用碰 OpenGL 大部头</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <h4>第三步：rasterio 栅格处理做成肌肉记忆<span class="dur">持续</span></h4>
+    <ul>
+      <li>照着 <code>build_dem_terrain.py</code> 独立写一个"任意 DEM → 前端可用数据包"的通用脚本</li>
+      <li>重点练：窗口读取（大文件不整读）、重投影、nodata 统计式填充</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <h4>第四步（可选）：补一个现代前端框架<span class="dur">有余力再做</span></h4>
+    <p>本项目是原生 JS 单文件。找工作时如果投前端/WebGIS 岗，Vue 或 React 至少要能写。但<strong>优先级低于前三步</strong>——算法和图形学是你的差异化优势，框架谁都能学。</p>
+  </div>
+</div>
+
+<div class="card warn">
+  <p><strong>提醒</strong>：你容易开局热情高、卡在调试。所以每一步都<strong>定一个可验收的最小产物</strong>——比如第一步的产出物就是"一份手写的公式推导笔记 + 三个方法的对比表"。做出来就算过，不要追求完美。</p>
+</div>
+
+<!-- ============ 8 ============ -->
+<h2 id="s8"><span class="num">08</span>简历话术 & 面试应答</h2>
+
+<div class="cv">
+  <div class="role">项目名（建议这么写）</div>
+  <p style="margin:0;font-size:14px">赣南稀土矿脉三维数字孪生可视化平台 · 独立完成</p>
+  <div class="role" style="margin-top:14px">技术栈</div>
+  <p style="margin:0;font-size:13.5px;color:var(--tx2)">Cesium.js · WebGL/GLSL · Python(rasterio/geopandas/shapely/scipy) · 空间统计分析 · Playwright</p>
+  <div class="role" style="margin-top:14px">要点（挑 3–4 条，按应聘岗位调整顺序）</div>
+  <ul>
+    <li>基于 Cesium 自建 Primitive 实现 DEM 三维地形渲染，通过自定义 GLSL 着色器实现多套高程配色、山体阴影叠加与屏幕空间自适应等高线</li>
+    <li>设计并实现离线数据管线：将原始 DEM 重采样为 1024×1024 规则网格，采用 uint16 定点量化 + 位打包压缩，数据体积降低约 <strong>12 倍</strong>至 4.1 MB，实现零后端单文件部署</li>
+    <li>运用 Getis-Ord Gi* 热点分析、最近邻指数(NNI)、核密度估计、泰森多边形等方法对 408 个矿点开展空间格局分析，并可视化为可交互图层</li>
+    <li>搭建 Playwright 自动化渲染冒烟测试，覆盖 10 轮 UI 迭代，保障零控制台报错</li>
+  </ul>
+</div>
+
+<h4>高频追问，提前准备好答案</h4>
+<table>
+<thead><tr><th style="width:34%">可能会被问</th><th>你该怎么答（要点）</th></tr></thead>
+<tbody>
+<tr><td>为什么不用 Cesium 自带地形？</td><td>需要联网、无法自定义着色、精度不可控。科研可视化要求离线可复现 + 可定制配色，所以自建。</td></tr>
+<tr><td>等高线为什么不用矢量数据？</td><td>矢量等高线是固定尺度的，缩放会失真。用 shader 在片元级实时计算，线宽按每像素米数自适应，任何缩放级别都清晰且零数据体积。</td></tr>
+<tr><td>数据压缩会损失精度吗？</td><td>会，但可控。0.1 m 量化误差对区域尺度地形可视化无影响。关键是要说明<strong>你评估过</strong>这个取舍，不是随便压的。</td></tr>
+<tr><td>Gi* 和核密度有什么区别？</td><td>核密度只描述"密集程度"，是描述性统计；Gi* 是推断统计，给出 z 得分和显著性，能回答"这个聚集是不是偶然的"。做结论要用 Gi*。</td></tr>
+<tr><td>遇到过最难的技术问题？</td><td><strong>讲 5.5 那个高度一致性 bug</strong>——现象不报错只是"看起来不对"，定位到 CPU/GPU 高度公式不一致。这类问题能体现调试深度。</td></tr>
+</tbody>
+</table>
+
+<!-- ============ 9 ============ -->
+<h2 id="s9"><span class="num">09</span>技术债与可延展方向</h2>
+
+<p>诚实列出来。面试官问"有什么不足"时，主动说这些，反而加分。</p>
+
+<table>
+<thead><tr><th style="width:24%">欠的债</th><th>说明</th><th style="width:16%">改造成本</th></tr></thead>
+<tbody>
+<tr><td><strong>无 LOD 分级</strong></td><td>地形是固定 1024×1024 网格，全区域同一精度。放大到细节会不够，全域又浪费顶点。正解是四叉树瓦片 + 按需加载。</td><td>高</td></tr>
+<tr><td><strong>无实时查询能力</strong></td><td>所有分析构建期算死。想改参数（如核密度带宽）必须重跑 Python。正解是加轻量后端（FastAPI + PostGIS）。</td><td>中</td></tr>
+<tr><td><strong>单文件 1922 行</strong></td><td>可维护性差。正解是拆模块 + 引入 Vite 构建。</td><td>中</td></tr>
+<tr><td><strong>无坐标转换严谨性</strong></td><td>分析用平面近似（<code>M_PER_DEG = 111320</code>），赣南纬度约 25°N，误差约 10%。科研发表级需严格投影。</td><td>低</td></tr>
+<tr><td><strong>无性能 profiling</strong></td><td>没测过帧率、顶点数、显存占用。加个 stats.js 就能看。</td><td>低</td></tr>
+</tbody>
+</table>
+
+<div class="card tip">
+  <p><strong>如果想继续做，最值钱的一步</strong>：加 FastAPI + PostGIS 后端，把 Gi* 分析做成可调参数的实时接口。这样项目就从"可视化Demo"升级成"空间分析服务"，简历含金量直接上一个台阶。而且能顺带学后端和数据库，补齐"只会前端"的短板。</p>
+</div>
+
+<!-- ============ 10 ============ -->
+<h2 id="s10"><span class="num">10</span>文件速查表</h2>
+
+<table>
+<thead><tr><th style="width:26%">文件</th><th style="width:10%">大小</th><th>作用</th></tr></thead>
+<tbody>
+<tr><td><code>赣南矿脉_数字孪生大屏.html</code></td><td>主交付</td><td>1922 行，全部前端逻辑 + 着色器</td></tr>
+<tr><td><code>dem_terrain_data.js</code></td><td>4.1 MB</td><td>DEM 高程（uint16 base64）+ 掩膜位打包 + 山体阴影 JPEG</td></tr>
+<tr><td><code>analysis_layers.js</code></td><td>4.3 MB</td><td>8 个分析图层：核密度(渔网格)、LISA、泰森多边形、最近邻、Gi*(网格/矿点)、按矿种、县级统计</td></tr>
+<tr><td><code>dash_data.js</code></td><td>443 KB</td><td>县域统计、排行、指标</td></tr>
+<tr><td><code>point_score.js</code></td><td>54 KB</td><td>408 个矿点，字段：<code>lon/lat/cats/dom/county/score/lv/hs/gi</code></td></tr>
+<tr><td><code>hotspot_data.js</code></td><td>1.8 KB</td><td>热点汇总</td></tr>
+<tr><td><code>脚本/build_*.py</code></td><td>—</td><td>数据构建管线（DEM / 分析图层 / 矿点 / 热点）</td></tr>
+<tr><td><code>脚本/spatial_analysis.py</code></td><td>—</td><td><strong>重点读</strong>：Gi*、NNI、泰森多边形实现</td></tr>
+<tr><td><code>脚本/test_ui*.js</code></td><td>—</td><td>Playwright 渲染冒烟测试（ui5–ui10 共 6 版）</td></tr>
+<tr><td><code>工艺图/</code></td><td>4 张 PNG</td><td>四代稀土开采工艺图（池浸/堆浸/原地浸矿/无铵绿色）</td></tr>
+</tbody>
+</table>
+
+<footer>
+  <p>本文档基于项目实际代码生成，所有行号、数据、代码片段均取自当前版本（commit c68acf4）。<br>
+  文件路径：<code>E:\Data\赣州稀土\技术复盘与学习指南.html</code></p>
+</footer>
+
+</div>
+
+<script>
+// 轻量语法高亮（避免手写大量 span）
+(function(){
+  var PAT = {
+    py: [
+      [/#[^\n]*/g, 'cm'],
+      [/(def|return|for|in|if|else|import|from|None|True|False|and|or|not|while|with|as)\b/g, 'kw'],
+      [/(np|base64|os|io)\b/g, 'ty'],
+      [/(\.[a-z_]+)(?=\()/g, 'fn'],
+      [/(['"])(?:\\.|(?!\1)[^\\])*\1/g, 'str'],
+      [/\b(\d+\.?\d*)\b/g, 'num']
+    ],
+    js: [
+      [/\/\/[^\n]*/g, 'cm'],
+      [/\b(var|function|return|for|if|else|new|Math|continue|break|in|of)\b/g, 'kw'],
+      [/\b(Cesium|Float64Array|Float32Array|Int32Array|Uint8Array|Uint32Array|Number)\b/g, 'ty'],
+      [/\b([a-zA-Z_$][\w$]*)(?=\s*\()/g, 'fn'],
+      [/(['"])(?:\\.|(?!\1)[^\\])*\1/g, 'str'],
+      [/\b(\d+\.?\d*)\b/g, 'num']
+    ],
+    glsl: [
+      [/\/\/[^\n]*/g, 'cm'],
+      [/\b(void|float|vec2|vec3|vec4|in|out|uniform|sampler2D|if|else|return|const)\b/g, 'kw'],
+      [/\b(clamp|mix|smoothstep|fract|abs|max|min|normalize|texture|czm_viewProjection)\b/g, 'fn'],
+      [/\b(\d+\.?\d*)\b/g, 'num']
+    ]
+  };
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function hi(html, rules){
+    // 先抽离注释与字符串占位，避免嵌套替换破坏标签
+    var slots = [];
+    html = html.replace(/(#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(['"])(?:\\.|(?!\2)[^\\])*\2)/g, function(m){
+      slots.push(m); return '<!--s' + (slots.length - 1).toString(36) + '-->';
+    });
+    rules.forEach(function(r){
+      if (r.cls === 'skip') return;
+      html = html.replace(r.re, '<span class="' + r.cls + '">$&</span>');
+    });
+    html = html.replace(/<!--s([0-9a-z]+)-->/g, function(_, k){
+      var s = slots[parseInt(k, 36)];
+      var cls = s.charAt(0) === '#' || s.slice(0,2) === '//' ? 'cm' : 'str';
+      return '<span class="' + cls + '">' + esc(s) + '</span>';
+    });
+    return html;
+  }
+  document.querySelectorAll('pre code').forEach(function(el){
+    var lang = (el.className || 'js').split(/\s+/)[0];
+    var rules = PAT[lang] || PAT.js;
+    var mapped = rules.map(function(r){ return { re: r[0], cls: r[1] }; })
+                      .filter(function(r){ return r.cls !== 'cm' && r.cls !== 'str'; });
+    var raw = el.innerHTML;
+    // 已转义的 HTML 实体先还原成纯文本再处理
+    var txt = raw.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+    el.innerHTML = hi(esc(txt), mapped);
+  });
+})();
+</script>
+</body>
+</html>

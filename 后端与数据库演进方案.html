@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>赣南矿脉数字孪生 · 后端与数据库演进方案</title>
+<style>
+:root{
+  --bg:#f6f7f9; --bg2:#ffffff; --bg3:#eef1f6; --line:#dfe4ec;
+  --tx:#1b2331; --tx2:#4b5567; --tx3:#8a93a6;
+  --gold:#9a6b12; --blue:#1f6feb; --green:#17794a; --red:#c0392b; --purple:#7c4dcd;
+  --mono:'JetBrains Mono','Cascadia Code',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--tx);
+  font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;
+  font-size:15px; line-height:1.75; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:48px 32px 100px}
+
+header{border-bottom:1px solid var(--line); padding-bottom:28px; margin-bottom:36px}
+h1{font-size:30px; margin:0 0 10px; letter-spacing:.5px}
+h1 .accent{color:var(--gold)}
+.sub{color:var(--tx2); font-size:14px; margin:0}
+.meta{color:var(--tx3); font-size:12.5px; margin-top:14px; font-family:var(--mono)}
+
+.toc{background:var(--bg2); border:1px solid var(--line); border-radius:10px; padding:18px 24px; margin-bottom:40px}
+.toc h3{margin:0 0 12px; font-size:13px; color:var(--tx3); letter-spacing:2px; font-weight:600}
+.toc ol{margin:0; padding-left:20px; columns:2; column-gap:36px}
+.toc li{margin:5px 0; font-size:14px}
+.toc a{color:var(--blue); text-decoration:none}
+.toc a:hover{text-decoration:underline}
+
+h2{
+  font-size:22px; margin:52px 0 18px; padding-bottom:10px;
+  border-bottom:2px solid var(--line); color:var(--tx);
+}
+h2 .num{color:var(--gold); font-family:var(--mono); margin-right:10px; font-size:19px}
+h3{font-size:17px; margin:30px 0 12px; color:var(--tx)}
+h4{font-size:15px; margin:20px 0 8px; color:var(--tx2); font-weight:600}
+p{margin:12px 0}
+ul,ol{margin:12px 0; padding-left:24px}
+li{margin:6px 0}
+strong{color:#0f1729; font-weight:650}
+code{
+  font-family:var(--mono); font-size:13px; background:var(--bg3);
+  padding:2px 6px; border-radius:4px; color:var(--gold); border:1px solid var(--line);
+}
+a{color:var(--blue)}
+
+table{width:100%; border-collapse:collapse; margin:18px 0; font-size:13.5px}
+th{
+  background:var(--bg3); color:var(--tx2); text-align:left;
+  padding:10px 12px; border:1px solid var(--line); font-weight:600; font-size:12.5px;
+  letter-spacing:.5px;
+}
+td{padding:10px 12px; border:1px solid var(--line); vertical-align:top}
+tbody tr:nth-child(even){background:rgba(15,23,41,.028)}
+tbody tr:hover{background:rgba(31,111,235,.07)}
+
+.p0,.p1,.p2{
+  display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700;
+  padding:2px 7px; border-radius:4px; letter-spacing:.5px; vertical-align:middle;
+}
+.p0{background:rgba(230,115,107,.15); color:var(--red); border:1px solid rgba(230,115,107,.35)}
+.p1{background:rgba(224,178,94,.15); color:var(--gold); border:1px solid rgba(224,178,94,.35)}
+.p2{background:rgba(90,169,230,.15); color:var(--blue); border:1px solid rgba(90,169,230,.35)}
+
+pre{
+  background:#fbfcfe; border:1px solid var(--line); border-radius:8px;
+  padding:16px 18px; overflow-x:auto; margin:16px 0; line-height:1.6;
+}
+pre code{background:none; border:none; padding:0; color:var(--tx2); font-size:12.5px}
+.k{color:var(--purple)}    /* 关键字 */
+.s{color:var(--green)}     /* 字符串/注释 */
+.n{color:var(--gold)}      /* 数字 */
+.f{color:var(--blue)}      /* 函数/类型 */
+
+.callout{
+  border-left:3px solid var(--gold); background:rgba(224,178,94,.06);
+  padding:14px 18px; margin:18px 0; border-radius:0 8px 8px 0; font-size:14px;
+}
+.callout.warn{border-left-color:var(--red); background:rgba(230,115,107,.06)}
+.callout.ok{border-left-color:var(--green); background:rgba(111,207,151,.06)}
+.callout.info{border-left-color:var(--blue); background:rgba(90,169,230,.06)}
+.callout strong{display:block; margin-bottom:6px}
+
+.phase{
+  background:var(--bg2); border:1px solid var(--line); border-radius:10px;
+  padding:20px 24px; margin:20px 0;
+}
+.phase-h{display:flex; align-items:baseline; gap:12px; margin-bottom:6px}
+.phase-n{
+  font-family:var(--mono); font-size:12px; font-weight:700; color:var(--bg);
+  background:var(--gold); padding:3px 9px; border-radius:4px; letter-spacing:.5px;
+}
+.phase-t{font-size:17px; font-weight:600; color:var(--tx)}
+.phase-g{color:var(--tx3); font-size:12.5px; font-family:var(--mono); margin-left:auto}
+.kv{display:grid; grid-template-columns:88px 1fr; gap:6px 14px; margin-top:12px; font-size:13.5px}
+.kv dt{color:var(--tx3); font-family:var(--mono); font-size:12px}
+.kv dd{margin:0; color:var(--tx2)}
+
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0}
+.card{background:var(--bg2); border:1px solid var(--line); border-radius:8px; padding:16px 18px}
+.card h4{margin:0 0 8px; color:var(--gold); font-size:14px}
+.card p{margin:6px 0; font-size:13.5px; color:var(--tx2)}
+.card.yes{border-color:rgba(111,207,151,.3)}
+.card.no{border-color:rgba(230,115,107,.3)}
+.card.yes h4{color:var(--green)}
+.card.no h4{color:var(--red)}
+
+.tag{
+  display:inline-block; font-size:11.5px; font-family:var(--mono);
+  padding:2px 8px; border-radius:10px; margin-right:6px;
+  background:var(--bg3); color:var(--tx2); border:1px solid var(--line);
+}
+.tag.rec{background:rgba(111,207,151,.12); color:var(--green); border-color:rgba(111,207,151,.3)}
+.tag.no{background:rgba(230,115,107,.1); color:var(--red); border-color:rgba(230,115,107,.3)}
+
+footer{
+  margin-top:70px; padding-top:24px; border-top:1px solid var(--line);
+  color:var(--tx3); font-size:13px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>赣南矿脉数字孪生 · <span class="accent">后端与数据库演进方案</span></h1>
+  <p class="sub">从「静态烘焙的 data.js」走向「数据资产化 + API 服务」的分阶段路线</p>
+  <p class="meta">
+    编制日期：2026-09-03 · 基于项目真实数据资产盘点<br>
+    数据规模：408 矿点 / 市县乡三级边界 / 全国矿产地 / DEM 56M · 统一坐标系 WGS84 (EPSG:4326)
+  </p>
+</header>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#s1">一句话结论</a></li>
+    <li><a href="#s2">先想清楚：你真的需要后端吗</a></li>
+    <li><a href="#s3">选型结论与理由</a></li>
+    <li><a href="#s4">数据资产盘点</a></li>
+    <li><a href="#s5">数据库表设计（可直执行）</a></li>
+    <li><a href="#s6">四阶段演进路线</a></li>
+    <li><a href="#s7">环境准备：两个必须先解决的坑</a></li>
+    <li><a href="#s8">API 设计</a></li>
+    <li><a href="#s9">风险清单</a></li>
+    <li><a href="#s10">这件事对简历的价值</a></li>
+  </ol>
+</div>
+
+<!-- ============ 01 ============ -->
+<h2 id="s1"><span class="num">01</span>一句话结论</h2>
+
+<div class="callout ok">
+  <strong>推荐技术栈：PostgreSQL 16 + PostGIS 3.4 + FastAPI + GeoAlchemy2</strong>
+  但<span style="color:#0f1729">不要一次性重写前端</span>。真正该做的第一步不是写 API，而是<b>阶段 0「数据资产化」</b>——把散落的 shapefile 建成唯一的、可查询的数据源。这一步不做，后面所有后端工作都建立在流沙上。
+</div>
+
+<div class="grid2">
+  <div class="card yes">
+    <h4>✓ 该进数据库的</h4>
+    <p><b>矢量数据</b>：矿点、行政边界、矿山统计、案例矿区</p>
+    <p><b>分析结果的属性</b>：score / gi / hs / lv 这些指标字段</p>
+    <p><b>未来的用户配置与查询日志</b></p>
+  </div>
+  <div class="card no">
+    <h4>✗ 不该进数据库的</h4>
+    <p><b>DEM 栅格</b>（56M tif）→ 转 COG，用瓦片服务</p>
+    <p><b>山体阴影栅格</b>（173M）→ 建金字塔 + 静态托管</p>
+    <p><b>Cesium 渲染逻辑</b> → 保持纯前端，不要服务端渲染</p>
+  </div>
+</div>
+
+<!-- ============ 02 ============ -->
+<h2 id="s2"><span class="num">02</span>先想清楚：你真的需要后端吗</h2>
+
+<p>先说句实话：你现在的数据量（408 个矿点）用后端属于<b>杀鸡用牛刀</b>。所以下面的清单是帮你判断「做后端到底解决什么问题」——如果答案都是「无所谓」，那就别做，把时间花在别处。</p>
+
+<h3>当前架构的 4 个真实痛点</h3>
+
+<table>
+  <thead><tr><th style="width:34%">痛点</th><th>具体表现</th><th style="width:22%">后端能解决吗</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>① 数据是构建期烘焙的死文件</b></td>
+      <td>改一个矿点的属性，要重跑 <code>build_point_score.py</code> → 重新生成 <code>point_score.js</code> → 提交 54KB → 用户刷新才能看到。整个仓库 5 个 data.js 共 <b>8.6 MB</b> 硬编码进 HTML。</td>
+      <td><span class="p0">能，且是核心价值</span></td>
+    </tr>
+    <tr>
+      <td><b>② 87M 全国矿产地数据完全没用上</b></td>
+      <td><code>数据/全国矿产地分布/</code> 里的全国矿产地 shp 一直躺在磁盘上——前端一次性加载装不下，所以你根本没把它接进大屏。</td>
+      <td><span class="p0">能，且能立刻扩展项目</span></td>
+    </tr>
+    <tr>
+      <td><b>③ 空间分析是离线算死的</b></td>
+      <td>Gi* 热点、核密度、NNI 最近邻……参数一改就要重跑一遍 Python 脚本，无法在界面上交互试参。</td>
+      <td><span class="p1">部分能（Gi* 仍需 Python，但可参数化）</span></td>
+    </tr>
+    <tr>
+      <td><b>④ 没有用户 / 配置持久化</b></td>
+      <td>配色方案、图层开关、收藏的矿区，刷新一下全没了。</td>
+      <td><span class="p2">能，但优先级最低</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>注意：不要为了「学后端」而做后端</strong>
+  你的现实处境是三重拉扯（赚钱 / 考研 / 学业）。后端要产生价值，必须落在上面 ①② 两点上——它们能让这个项目从「一个好看的静态大屏」变成「一个真正能查、能扩展的 GIS 系统」，写在简历上分量完全不同。如果只为了 ④ 做后端，性价比极低。
+</div>
+
+<h3>哪些保持现状就好</h3>
+<ul>
+  <li><b>Cesium 三维渲染</b>：纯前端，不要动。服务端渲染三维是另一个赛道，没必要。</li>
+  <li><b>DEM 地形网格</b>：已经量化成 uint16 + base64 塞进 <code>dem_terrain_data.js</code>，4.1 MB 装下整个赣州 DEM，这个优化做得很好，静态托管没问题。</li>
+  <li><b>工艺画廊 / 图例 / 面板交互</b>：纯 UI，与后端无关。</li>
+</ul>
+
+<!-- ============ 03 ============ -->
+<h2 id="s3"><span class="num">03</span>选型结论与理由</h2>
+
+<table>
+  <thead><tr><th style="width:16%">层次</th><th style="width:26%">选型</th><th>为什么是它 / 为什么不选别的</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>数据库</b></td>
+      <td><span class="tag rec">推荐</span><b>PostgreSQL 16<br>+ PostGIS 3.4</b></td>
+      <td>
+        <b>选它的理由：</b>GIS 行业的绝对标准；<code>ST_DWithin</code> / <code>ST_Intersects</code> 让「赣南 50km 内的稀土矿」这种查询一行 SQL 搞定；GiST 空间索引成熟；<b>简历硬通货</b>，企业 GIS 岗几乎默认你会 PostGIS。<br>
+        <b>不选：</b>MySQL 空间能力弱（只有 MBR 近似，8.0 才补全）；MongoDB 的 GeoJSON 索引在复杂空间分析上不如 PostGIS；SQLite+SpatiaLite 只适合单机，做不了服务。
+      </td>
+    </tr>
+    <tr>
+      <td><b>后端框架</b></td>
+      <td><span class="tag rec">推荐</span><b>FastAPI<br>+ SQLAlchemy 2.0<br>+ GeoAlchemy2</b></td>
+      <td>
+        <b>选它的理由：</b>Python 栈，你现有的 <code>rasterio</code> / <code>shapely</code> 分析代码可以直接搬进后端，零重写成本；自动生成 OpenAPI 文档（作品集展示时非常加分）；异步支持，配 Cesium 的并发瓦片请求不吃力。<br>
+        <b>不选：</b>Node/Express 意味着你的 Python 分析代码要重写一遍；Django 太重，这个项目用不上 ORM 之外的东西；Flask 生态老化。
+      </td>
+    </tr>
+    <tr>
+      <td><b>栅格服务</b></td>
+      <td><span class="tag rec">推荐</span><b>COG<br>+ titiler</b><br><span style="color:var(--tx3);font-size:12px">（阶段 2 才需要）</span></td>
+      <td>
+        <b>关键点：DEM 不进数据库。</b>56 M 的 tif 塞进 PostGIS raster 会膨胀数倍、查询慢、生态弱。正确做法是把 DEM 转成 <b>COG（Cloud Optimized GeoTIFF）</b>，用 titiler 提供按需瓦片。<br>
+        <b>更省事的备选：</b>直接预切 Cesium 原生 <code>quantized-mesh</code> 地形瓦片，静态文件托管，连服务都不用起。
+      </td>
+    </tr>
+    <tr>
+      <td><b>前端改造</b></td>
+      <td><span class="tag rec">推荐</span><b>渐进替换<br>不重写</b></td>
+      <td>
+        先把 <code>point_score.js</code> 换成 <code>GET /api/points</code>，验证链路通了再换下一个。<b>不要一次性把 5 个 data.js 全换掉</b>——那会同时引入「前端渲染」和「后端接口」两类 bug，你会卡在调试里出不来。
+      </td>
+    </tr>
+    <tr>
+      <td><b>部署</b></td>
+      <td><span class="tag">阶段 3 再定</span><b>本机开发<br>服务器部署</b></td>
+      <td>
+        开发期装本机（PostgreSQL Windows 版 + PostGIS 扩展），避免跨网段调试地狱。<br>
+        你那台 4090 服务器（172.21.34.x）适合正式部署，但记得你之前踩过的<b>跨网段连通性</b>问题——开发阶段先别碰。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============ 04 ============ -->
+<h2 id="s4"><span class="num">04</span>数据资产盘点</h2>
+
+<p>我把你 <code>数据/</code> 目录（共 1.2 GB）完整盘了一遍，当前状态和入库优先级如下：</p>
+
+<table>
+  <thead><tr><th style="width:26%">数据资产</th><th style="width:12%">格式</th><th style="width:14%">坐标系</th><th>现状 / 入库优先级</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>矿点评分数据</b><br><span style="color:var(--tx3);font-size:12px">point_score.js → 已烘焙</span></td>
+      <td>JSON<br><span style="color:var(--tx3)">408 条</span></td>
+      <td>WGS84</td>
+      <td>字段：<code>lon, lat, cats[], dom, county, score, lv, hs, gi</code><br>
+      <span class="p0">P0</span> <b>第一个入库</b>。它是大屏的核心图层，且字段结构最完整。</td>
+    </tr>
+    <tr>
+      <td><b>行政边界</b><br><span style="color:var(--tx3);font-size:12px">赣州市_360700_批量下载/</span></td>
+      <td>Shapefile<br><span style="color:var(--tx3)">市/县/乡 三级</span></td>
+      <td>WGS84</td>
+      <td>市界、县界（<code>县级边界_360700.shp</code>）、乡镇边界齐全。<br>
+      <span class="p0">P0</span> 入库，用于空间聚合与「按县筛选」。</td>
+    </tr>
+    <tr>
+      <td><b>县级矿山统计</b><br><span style="color:var(--tx3);font-size:12px">县级矿山统计_赣州.shp</span></td>
+      <td>Shapefile</td>
+      <td>WGS84</td>
+      <td>面板上「县域统计 / 排行榜」的数据源。<br>
+      <span class="p0">P0</span> 入库。</td>
+    </tr>
+    <tr>
+      <td><b>全国矿产地分布</b><br><span style="color:var(--tx3);font-size:12px">87 MB</span></td>
+      <td>Shapefile</td>
+      <td>WGS84</td>
+      <td><b>目前完全没用上</b>（前端装不下）。入库后可做「全国矿产地底图 + 按区域按需加载」，是项目最有想象力的扩展点。<br>
+      <span class="p1">P1</span> 阶段 1 入库。</td>
+    </tr>
+    <tr>
+      <td><b>第二章案例矿区</b><br><span style="color:var(--tx3);font-size:12px">离子型稀土/钨矿/非金属矿</span></td>
+      <td>Shapefile<br>+ GeoJSON</td>
+      <td>WGS84</td>
+      <td>分矿种存了多份，且有 <code>_v2/_v4/_v5</code> 多个版本——<b>版本混乱，入库前需先确定用哪版</b>。<br>
+      <span class="p1">P1</span> 先清理再入库。</td>
+    </tr>
+    <tr>
+      <td><b>DEM 高程</b><br><span style="color:var(--tx3);font-size:12px">ganzhou_dem.tif 56 MB</span></td>
+      <td>GeoTIFF</td>
+      <td>—</td>
+      <td><b>不进数据库</b>。已烘焙成 4.1 MB 的 <code>dem_terrain_data.js</code>，效果很好。<br>
+      <span class="p2">P2</span> 阶段 2 转 COG 走瓦片服务。</td>
+    </tr>
+    <tr>
+      <td><b>坡向栅格</b><br><span style="color:var(--tx3);font-size:12px">ganzhou_aspect.tif 173 MB</span></td>
+      <td>GeoTIFF</td>
+      <td>—</td>
+      <td>173 MB 偏大，原始产出未优化。当前大屏用的是着色器实时计算山体阴影，这份 tif <b>其实没被使用</b>。<br>
+      <span class="p2">P2</span> 确认无用可归档。</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout info">
+  <strong>好消息：坐标系完全统一</strong>
+  我逐个查了 <code>.prj</code> 文件——市界、县界、矿山统计、全国矿产地<b>全部是 GCS_WGS_1984（EPSG:4326）</b>，与前端 Cesium 使用的坐标系一致。这意味着入库时<b>不需要做任何坐标转换</b>，能省掉一整类「图形偏移几百米」的经典坑。
+</div>
+
+<!-- ============ 05 ============ -->
+<h2 id="s5"><span class="num">05</span>数据库表设计（可直接执行）</h2>
+
+<p>下面是基于你真实字段设计的 DDL，可以直接贴进 <code>psql</code> 执行。设计要点：</p>
+<ul>
+  <li>几何列统一 <code>SRID 4326</code>，建 <b>GiST 空间索引</b>（PostGIS 查询性能的命脉）</li>
+  <li><code>cats</code>（多矿种）用 <code>TEXT[]</code> 数组 + GIN 索引，避免建多对多关联表</li>
+  <li>分析指标（<code>score/gi/hs/lv</code>）存成普通列，便于 SQL 聚合与排序</li>
+</ul>
+
+<pre><code><span class="c">-- 启用 PostGIS</span>
+<span class="k">CREATE EXTENSION</span> <span class="k">IF NOT EXISTS</span> postgis;
+
+<span class="c">-- ========== 矿点表（核心） ==========</span>
+<span class="k">CREATE TABLE</span> ore_points (
+  id          <span class="f">SERIAL</span> <span class="k">PRIMARY KEY</span>,
+  name        <span class="f">TEXT</span>,
+  county      <span class="f">TEXT</span>,                    <span class="c">-- 所属区县</span>
+  cats        <span class="f">TEXT</span>[],                   <span class="c">-- 矿种数组（多矿种共存）</span>
+  dom         <span class="f">TEXT</span>,                    <span class="c">-- 主导矿种</span>
+  score       <span class="f">NUMERIC</span>(<span class="n">6</span>,<span class="n">3</span>),             <span class="c">-- 综合评分</span>
+  lv          <span class="f">TEXT</span>,                    <span class="c">-- 评级</span>
+  gi          <span class="f">NUMERIC</span>(<span class="n">8</span>,<span class="n">4</span>),             <span class="c">-- Getis-Ord Gi* 统计量</span>
+  hs          <span class="f">NUMERIC</span>(<span class="n">8</span>,<span class="n">4</span>),             <span class="c">-- 核密度值</span>
+  geom        <span class="f">GEOGRAPHY</span>(<span class="f">POINT</span>, <span class="n">4326</span>)      <span class="c">-- 用 GEOGRAPHY：距离单位直接是米</span>
+);
+<span class="k">CREATE INDEX</span> idx_ore_geom   <span class="k">ON</span> ore_points <span class="k">USING</span> GIST (geom);
+<span class="k">CREATE INDEX</span> idx_ore_cats   <span class="k">ON</span> ore_points <span class="k">USING</span> GIN  (cats);
+<span class="k">CREATE INDEX</span> idx_ore_county <span class="k">ON</span> ore_points (county);
+
+<span class="c">-- ========== 行政边界（市/县/乡三级合一） ==========</span>
+<span class="k">CREATE TABLE</span> boundaries (
+  id       <span class="f">SERIAL</span> <span class="k">PRIMARY KEY</span>,
+  level    <span class="f">TEXT</span> <span class="k">NOT NULL</span>,          <span class="c">-- 'city' | 'county' | 'town'</span>
+  code     <span class="f">TEXT</span>,                    <span class="c">-- 行政区划代码，如 360700</span>
+  name     <span class="f">TEXT</span> <span class="k">NOT NULL</span>,
+  geom     <span class="f">GEOMETRY</span>(<span class="f">MULTIPOLYGON</span>, <span class="n">4326</span>)
+);
+<span class="k">CREATE INDEX</span> idx_bnd_geom  <span class="k">ON</span> boundaries <span class="k">USING</span> GIST (geom);
+<span class="k">CREATE INDEX</span> idx_bnd_level <span class="k">ON</span> boundaries (level, name);
+
+<span class="c">-- ========== 县域矿山统计 ==========</span>
+<span class="k">CREATE TABLE</span> county_stats (
+  id          <span class="f">SERIAL</span> <span class="k">PRIMARY KEY</span>,
+  county      <span class="f">TEXT</span> <span class="k">NOT NULL</span>,
+  mine_total  <span class="f">INT</span>,                    <span class="c">-- 矿山总数</span>
+  mine_re     <span class="f">INT</span>,                    <span class="c">-- 稀土矿山数</span>
+  area_km2    <span class="f">NUMERIC</span>(<span class="n">10</span>,<span class="n">2</span>),
+  geom        <span class="f">GEOMETRY</span>(<span class="f">MULTIPOLYGON</span>, <span class="n">4326</span>)
+);
+<span class="k">CREATE INDEX</span> idx_cs_geom <span class="k">ON</span> county_stats <span class="k">USING</span> GIST (geom);</code></pre>
+
+<h3>用 GEOGRAPHY 还是 GEOMETRY？</h3>
+<p>这是 PostGIS 新手最容易踩的坑，我按你的场景给结论：</p>
+<table>
+  <thead><tr><th style="width:20%">类型</th><th style="width:30%">距离/面积单位</th><th>用在哪</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>GEOGRAPHY</code></td>
+      <td>米 / 平方米<br><span style="color:var(--tx3)">（在球面上精确计算）</span></td>
+      <td><b>矿点表用它</b>。你要做「50 km 缓冲区内的稀土矿」，用 GEOGRAPHY 直接写 <code>ST_DWithin(geom, pt, 50000)</code>，单位是米，不用管投影。</td>
+    </tr>
+    <tr>
+      <td><code>GEOMETRY</code></td>
+      <td>度<br><span style="color:var(--tx3)">（平面笛卡尔，4326 下算面积会得到荒谬值）</span></td>
+      <td><b>边界/统计表用它</b>。面要素主要是渲染和点面包含判断（<code>ST_Contains</code>），不涉及距离计算，GEOMETRY 的函数支持面更全、更快。</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>入库后立刻能做的查询</h3>
+<pre><code><span class="c">-- 1) 龙南县的稀土矿点数量</span>
+<span class="k">SELECT</span> <span class="f">count</span>(*) <span class="k">FROM</span> ore_points
+<span class="k">WHERE</span> county = <span class="s">'龙南县'</span> <span class="k">AND</span> <span class="s">'rare_earth'</span> = <span class="k">ANY</span>(cats);
+
+<span class="c">-- 2) 距离赣州市中心 50km 内、评分前 10 的矿点</span>
+<span class="k">SELECT</span> name, county, score,
+       <span class="f">ST_Distance</span>(geom, <span class="f">ST_MakePoint</span>(<span class="n">114.93</span>, <span class="n">25.83</span>)::<span class="f">geography</span>) / <span class="n">1000</span> <span class="k">AS</span> dist_km
+<span class="k">FROM</span> ore_points
+<span class="k">WHERE</span> <span class="f">ST_DWithin</span>(geom, <span class="f">ST_MakePoint</span>(<span class="n">114.93</span>, <span class="n">25.83</span>)::<span class="f">geography</span>, <span class="n">50000</span>)
+<span class="k">ORDER BY</span> score <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">10</span>;
+
+<span class="c">-- 3) 每个县的热点矿点（Gi* > 1.96 即显著热点）数量</span>
+<span class="k">SELECT</span> b.name <span class="k">AS</span> county, <span class="f">count</span>(p.id) <span class="k">AS</span> hotspot_cnt
+<span class="k">FROM</span> boundaries b
+<span class="k">LEFT JOIN</span> ore_points p
+       <span class="k">ON</span> <span class="f">ST_Contains</span>(b.geom, p.geom::<span class="f">geometry</span>) <span class="k">AND</span> p.gi &gt; <span class="n">1.96</span>
+<span class="k">WHERE</span> b.level = <span class="s">'county'</span>
+<span class="k">GROUP BY</span> b.name <span class="k">ORDER BY</span> hotspot_cnt <span class="k">DESC</span>;</code></pre>
+
+<!-- ============ 06 ============ -->
+<h2 id="s6"><span class="num">06</span>四阶段演进路线</h2>
+
+<div class="callout">
+  <strong>执行原则：单线队列，一次只做一个阶段</strong>
+  四个阶段是严格串行的。不要并行推进——你过往的项目经验（大创 SOC、各种半成品）已经证明：多目标并行 = 全线卡在调试里。每阶段有明确验收标准，<b>过了再进下一个</b>。
+</div>
+
+<div class="phase">
+  <div class="phase-h">
+    <span class="phase-n">阶段 0</span>
+    <span class="phase-t">环境修复 + 数据资产化</span>
+    <span class="phase-g">1–2 周 · 最高优先级</span>
+  </div>
+  <p style="color:var(--tx2);font-size:13.5px;margin:6px 0 0">
+    不做这一步，后面全是空中楼阁。目标：把所有 shapefile 建成唯一可查询的数据源。
+  </p>
+  <dl class="kv">
+    <dt>做什么</dt>
+    <dd>① 修复 NumPy ABI 冲突（见 07 节）→ ② 装 PostgreSQL + PostGIS → ③ 建表 → ④ 写 <code>脚本/import_to_postgis.py</code> 把 shp 批量导入</dd>
+    <dt>产出</dt>
+    <dd>一个跑着的 PostGIS 库 + 可复用的导入脚本（数据更新时重跑即可）</dd>
+    <dt>验收</dt>
+    <dd>
+      <b>能跑通三件事</b>：矿点数 = 408 且各表 row count 与源文件一致；「龙南县稀土矿数量」这类 SQL 出正确结果；<b>QGIS 能连上库并看到图层渲染出来</b>（这一步能一眼看出坐标/几何有没有问题）
+    </dd>
+    <dt>不做</dt>
+    <dd>不写任何 API，不动前端</dd>
+  </dl>
+</div>
+
+<div class="phase">
+  <div class="phase-h">
+    <span class="phase-n">阶段 1</span>
+    <span class="phase-t">FastAPI 骨架 + 前端渐进切换</span>
+    <span class="phase-g">1 周</span>
+  </div>
+  <p style="color:var(--tx2);font-size:13.5px;margin:6px 0 0">
+    先让「一个接口 + 一处前端改动」跑通，验证链路，再批量替换。
+  </p>
+  <dl class="kv">
+    <dt>做什么</dt>
+    <dd>① FastAPI 骨架 + GeoAlchemy2 连库 → ② 先只写 <code>GET /api/points</code> 一个接口 → ③ 前端把 <code>point_score.js</code> 换成 fetch 这个接口 → ④ 验证大屏 408 个点照常渲染</dd>
+    <dt>产出</dt>
+    <dd>可运行的后端服务 + 前端第一个动态数据源</dd>
+    <dt>验收</dt>
+    <dd>关掉 <code>point_score.js</code> 的 script 标签，大屏矿点数仍为 408、坐标完全一致、渲染零报错</dd>
+    <dt>关键</dt>
+    <dd><b>保留 data.js 作为 fallback</b>：接口挂了自动回退静态文件，这样你调试后端时不会把大屏搞崩</dd>
+  </dl>
+</div>
+
+<div class="phase">
+  <div class="phase-h">
+    <span class="phase-n">阶段 2</span>
+    <span class="phase-t">剩余图层 API 化 + 全国矿产地接入</span>
+    <span class="phase-g">1–2 周</span>
+  </div>
+  <p style="color:var(--tx2);font-size:13.5px;margin:6px 0 0">
+    把剩下的 data.js 逐个换成接口，并把闲置的 87 MB 全国矿产地数据用起来。
+  </p>
+  <dl class="kv">
+    <dt>做什么</dt>
+    <dd>① <code>/api/boundaries/{level}</code>、<code>/api/stats/county</code> 等接口 → ② 全国矿产地入库 + 按 bbox 分页加载 → ③ 前端加「全国矿产地底图」图层，视野内按需请求</dd>
+    <dt>产出</dt>
+    <dd>大屏从「只能看赣州」扩展到「全国可缩放到赣州」，且首屏加载量不增反降</dd>
+    <dt>验收</dt>
+    <dd>首屏加载体积 &lt; 现在的 8.6 MB；缩放到全国能看到矿点密度分布</dd>
+  </dl>
+</div>
+
+<div class="phase">
+  <div class="phase-h">
+    <span class="phase-n">阶段 3</span>
+    <span class="phase-t">交互空间分析 + 栅格服务化</span>
+    <span class="phase-g">2–3 周 · 难度最高</span>
+  </div>
+  <p style="color:var(--tx2);font-size:13.5px;margin:6px 0 0">
+    让分析结果从「离线算死」变成「界面上调参实时算」——这是技术含量最高、简历最值钱的部分。
+  </p>
+  <dl class="kv">
+    <dt>做什么</dt>
+    <dd>① <code>POST /api/analysis/hotspot</code>：前端传带宽/字段，后端跑 Gi* 返回结果 → ② DEM 转 COG + titiler → ③ （可选）核密度、NNI 同样参数化</dd>
+    <dt>难点</dt>
+    <dd>Gi* 涉及空间权重矩阵，<b>不适合纯 SQL</b>。务实做法：仍用 Python（<code>pysal</code>/<code>esda</code>）算，但把参数做成接口入参、结果缓存进 PostGIS。不要硬用 SQL 重写。</dd>
+    <dt>验收</dt>
+    <dd>界面上调带宽滑块 → 热点图实时重算，响应时间 &lt; 3 秒</dd>
+  </dl>
+</div>
+
+<div class="callout warn">
+  <strong>阶段 4（用户系统 / 配置持久化）—— 建议先别做</strong>
+  理由是性价比：它技术含量最低（就是 CRUD），却要花掉认证、鉴权、会话管理一整套时间。等你确定这个项目要对外开放或写进毕设时再做。现在把时间押在阶段 3 上，简历回报高一个量级。
+</div>
+
+<!-- ============ 07 ============ -->
+<h2 id="s7"><span class="num">07</span>环境准备：两个必须先解决的坑</h2>
+
+<h3>坑 1：NumPy 2.x ABI 冲突（不修则 geopandas 完全不可用）</h3>
+<p>我实测了你本机的 Anaconda 环境，发现一个会直接卡死阶段 0 的问题：</p>
+<pre><code>ImportError: A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.5.1 as it may crash.</code></pre>
+<p>你的 Anaconda 是 <b>NumPy 2.5.1</b>，但 <code>geopandas</code> / <code>pandas</code> / <code>pyarrow</code> 都是按 NumPy 1.x 编译的，一 import 就崩。<b>而 shp 入库恰恰必须靠 geopandas</b>。</p>
+
+<div class="callout ok">
+  <strong>解法：新建独立 venv，不要动 Anaconda 主环境</strong>
+  直接给 Anaconda 降级 numpy 会连锁破坏其他已装包。正确做法是给这个项目单独开一个环境：
+</div>
+
+<pre><code><span class="c"># 在项目目录建独立虚拟环境（用 anaconda 的 python 作为基底）</span>
+E:/adaconda/python.exe -m venv E:/Data/赣州稀土/.venv
+
+<span class="c"># 关键：锁 numpy &lt; 2，避免 ABI 冲突</span>
+.venv/Scripts/python.exe -m pip install <span class="s">"numpy&lt;2"</span>
+
+<span class="c"># 地理栈</span>
+.venv/Scripts/python.exe -m pip install geopandas rasterio shapely pyproj fiona
+
+<span class="c"># 后端栈</span>
+.venv/Scripts/python.exe -m pip install fastapi uvicorn sqlalchemy geoalchemy2 <span class="s">"psycopg[binary]"</span></code></pre>
+
+<div class="callout info">
+  <strong>顺带一提</strong>
+  你之前跑 <code>build_dem_terrain.py</code> 用的是 managed Python 3.13.12 + anaconda 的 rasterio，那条路能跑通是因为 DEM 构建只用 numpy + rasterio、不碰 geopandas。但入库脚本一定会碰 geopandas，所以这个坑<b>绕不过去</b>。
+</div>
+
+<h3>坑 2：PostGIS 安装（本机没有 Docker）</h3>
+<p>实测你本机 <b>无 Docker、无 psql</b>。三条路，我按推荐顺序排：</p>
+
+<table>
+  <thead><tr><th style="width:22%">方案</th><th style="width:14%">难度</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="tag rec">推荐</span><b>EDB 安装包<br>+ StackBuilder</b></td>
+      <td>低<br><span style="color:var(--tx3)">约 20 分钟</span></td>
+      <td>
+        下载 PostgreSQL 16 Windows 安装包（EnterpriseDB 提供），装完运行 <b>StackBuilder</b> 勾选 PostGIS 扩展即可。<br>
+        <b>优点：</b>纯图形界面，无网络环境依赖，开发调试最省事。<br>
+        <b>缺点：</b>污染本机环境，卸载略麻烦。
+      </td>
+    </tr>
+    <tr>
+      <td><b>Docker Desktop<br>+ postgis 镜像</b></td>
+      <td>中<br><span style="color:var(--tx3)">约 1 小时</span></td>
+      <td>
+        <code>docker run -d -p 5432:5432 postgis/postgis:16-3.4</code><br>
+        <b>优点：</b>干净、可复现、和服务器部署环境一致。<br>
+        <b>缺点：</b>你要先装 Docker Desktop（Windows 上要开 WSL2，可能踩坑）。
+      </td>
+    </tr>
+    <tr>
+      <td><b>4090 服务器部署</b></td>
+      <td>高</td>
+      <td>
+        环境最接近生产，但你之前踩过 <b>172.21.34.x ↔ 172.22.20.x 跨网段</b> 的坑。<br>
+        <b>建议：阶段 0–2 都别用</b>，等阶段 3 联调时再迁。开发期跨网段调试会让你怀疑人生。
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>如果你暂时不想装数据库</strong>
+  有个低成本验证路径：先用 <b>GeoPackage</b>（<code>.gpkg</code>，单文件、基于 SQLite）把数据资产化做完，geopandas 直接读写。等确认路线可行了，再迁 PostGIS——因为 GeoPackage 和 PostGIS 的表结构几乎一致，迁移成本很低。<br>
+  但要注意：GeoPackage 做不了并发服务，最终还是要上 PostGIS。
+</div>
+
+<!-- ============ 08 ============ -->
+<h2 id="s8"><span class="num">08</span>API 设计</h2>
+
+<p>按阶段对应，先列阶段 1–3 需要的接口。<b>所有列表接口都支持 <code>bbox</code> 参数</b>——这是 GIS 后端的标准做法，让前端只请求视野内的数据。</p>
+
+<table>
+  <thead><tr><th style="width:16%">方法</th><th style="width:32%">路径</th><th>说明 / 关键参数</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="tag">阶段 1</span><code>GET</code></td>
+      <td><code>/api/points</code></td>
+      <td>
+        矿点列表。<br>
+        参数：<code>bbox</code>（minLon,minLat,maxLon,maxLat）、<code>county</code>、<code>cat</code>、<code>min_score</code>、<code>limit/offset</code><br>
+        返回 GeoJSON FeatureCollection，属性与现有 <code>point_score.js</code> 字段保持一致（前端改动最小）
+      </td>
+    </tr>
+    <tr>
+      <td><span class="tag">阶段 1</span><code>GET</code></td>
+      <td><code>/api/points/{id}</code></td>
+      <td>单个矿点详情（点击弹窗用）</td>
+    </tr>
+    <tr>
+      <td><span class="tag">阶段 2</span><code>GET</code></td>
+      <td><code>/api/boundaries/{level}</code></td>
+      <td>行政边界，<code>level</code> ∈ <code>city|county|town</code>；支持 <code>bbox</code> 与 <code>simplify</code>（按视野简化几何，减小传输体积）</td>
+    </tr>
+    <tr>
+      <td><span class="tag">阶段 2</span><code>GET</code></td>
+      <td><code>/api/stats/county</code></td>
+      <td>县域统计聚合（排行榜 / 面板数据），走 SQL <code>GROUP BY</code>，不用前端算</td>
+    </tr>
+    <tr>
+      <td><span class="tag">阶段 2</span><code>GET</code></td>
+      <td><code>/api/deposits</code></td>
+      <td>全国矿产地（87 MB 那份），<b>必须 bbox 分页</b>，一次最多返回 2000 条</td>
+    </tr>
+    <tr>
+      <td><span class="tag">阶段 3</span><code>POST</code></td>
+      <td><code>/api/analysis/hotspot</code></td>
+      <td>
+        参数化热点分析。<br>
+        入参：<code>{bbox, field, bandwidth, threshold}</code>；出参：GeoJSON + 显著性分级<br>
+        <b>实现：</b>后端调 <code>pysal</code>/<code>esda</code> 算 Gi*，结果按参数哈希缓存进 PostGIS
+      </td>
+    </tr>
+    <tr>
+      <td><span class="tag">阶段 3</span><code>GET</code></td>
+      <td><code>/api/terrain/{z}/{x}/{y}</code></td>
+      <td>DEM 瓦片（titiler 代理），或直接用预切的 quantized-mesh 静态文件</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>后端目录建议</h3>
+<pre><code>server/
+  main.py              <span class="c"># FastAPI 入口，注册路由</span>
+  db.py                <span class="c"># 数据库连接 + Session</span>
+  models.py            <span class="c"># SQLAlchemy / GeoAlchemy2 模型</span>
+  schemas.py           <span class="c"># Pydantic 请求/响应模型</span>
+  routers/
+    points.py
+    boundaries.py
+    stats.py
+    analysis.py
+  services/
+    hotspot.py         <span class="c"># Gi* 计算（复用现有 spatial_analysis.py 逻辑）</span>
+    cache.py</code></pre>
+
+<div class="callout ok">
+  <strong>关键复用点</strong>
+  <code>脚本/spatial_analysis.py</code> 和 <code>脚本/hotspot_analysis.py</code> 里已经写好的 Gi* / 核密度逻辑，<b>不要重写</b>——把它们 import 进 <code>services/</code>，加一层参数封装就变成 API。这是选 FastAPI（Python 栈）最大的好处。
+</div>
+
+<!-- ============ 09 ============ -->
+<h2 id="s9"><span class="num">09</span>风险清单</h2>
+
+<table>
+  <thead><tr><th style="width:22%">风险</th><th style="width:10%">等级</th><th>表现 / 应对</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>NumPy ABI 冲突</b></td>
+      <td><span class="p0">高</span></td>
+      <td>geopandas 一 import 就崩，阶段 0 直接卡死。<b>应对：</b>按 07 节建独立 venv 并锁 <code>numpy&lt;2</code>，先验证 <code>import geopandas</code> 成功再往下做。</td>
+    </tr>
+    <tr>
+      <td><b>案例矢量版本混乱</b></td>
+      <td><span class="p1">中</span></td>
+      <td><code>第二章典型案例_全部</code> 存在 <code>_new/_v2/_v4/_v5</code> 多个版本，且按矿种又各存一份。<b>应对：</b>入库前先人工确认用哪一版，并把选定版本重命名归档，避免导入错误数据。</td>
+    </tr>
+    <tr>
+      <td><b>shp 中文字段乱码</b></td>
+      <td><span class="p1">中</span></td>
+      <td>Shapefile 的 dbf 编码是历史遗留问题，中文属性常读成乱码。<b>应对：</b>用 geopandas 读入时显式指定 <code>encoding='utf-8'</code>（或 <code>'gbk'</code>），读出来先 <code>print</code> 几个中文县名核对。</td>
+    </tr>
+    <tr>
+      <td><b>一次换太多接口</b></td>
+      <td><span class="p0">高</span></td>
+      <td>同时引入前后端两类 bug，调试瘫痪。<b>应对：</b>严格遵守阶段 1「只换一个接口」的纪律，且保留 data.js fallback。</td>
+    </tr>
+    <tr>
+      <td><b>Gi* 用 SQL 硬写</b></td>
+      <td><span class="p1">中</span></td>
+      <td>空间权重矩阵在 SQL 里表达极其笨重，会写出几百行且跑不快。<b>应对：</b>老实用 Python 算，SQL 只负责存取。</td>
+    </tr>
+    <tr>
+      <td><b>服务器跨网段</b></td>
+      <td><span class="p2">低</span></td>
+      <td>你之前 172.21.34.x ↔ 172.22.20.x 的问题。<b>应对：</b>开发期全用本机，阶段 3 再迁。</td>
+    </tr>
+    <tr>
+      <td><b>战线拉太长</b></td>
+      <td><span class="p0">高</span></td>
+      <td>这是你过往项目最大的敌人——开局热情高，卡在枯燥调试就停摆。<b>应对：</b>把每阶段再拆成「半天能完成」的小任务；阶段 0 一旦完成就已经是实质成果（数据资产化本身就能写进简历），不要等全部做完才算成功。</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ============ 10 ============ -->
+<h2 id="s10"><span class="num">10</span>这件事对简历的价值</h2>
+
+<p>你之前问过「能带来真实收益 / 可写进简历的产出优先级更高」。所以我把这个后端做完之后，你具体能讲什么、值多少钱，摊开说：</p>
+
+<table>
+  <thead><tr><th style="width:26%">完成到</th><th style="width:30%">简历上可写的一句话</th><th>面试时能被追问的深度</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>仅阶段 0</b><br><span style="color:var(--tx3)">数据资产化</span></td>
+      <td>「基于 PostGIS 构建赣南矿产资源空间数据库，完成多源异构数据（shapefile / GeoTIFF / CSV）的统一入库与坐标规范化」</td>
+      <td>坐标系选择、GEOGRAPHY vs GEOMETRY、GiST 索引原理、数据体积优化</td>
+    </tr>
+    <tr>
+      <td><b>到阶段 1–2</b></td>
+      <td>「设计并实现空间数据 REST API 服务（FastAPI + GeoAlchemy2），支持 bbox 空间查询与按需加载，首屏加载体积降低 XX%」</td>
+      <td>bbox 查询与空间索引命中、GeoJSON 序列化性能、分页策略、缓存</td>
+    </tr>
+    <tr>
+      <td><b>到阶段 3</b><br><span class="p0">含金量最高</span></td>
+      <td>「实现空间分析服务化，将 Getis-Ord Gi* 热点分析、核密度估计从离线脚本改造为参数化在线服务，支持前端交互式调参与结果缓存」</td>
+      <td><b>这是区分度最大的一条。</b>绝大多数应届生只做过「跑通算法」，而你能讲「如何把算法变成服务」——参数设计、并发、缓存、结果一致性。<br>再叠加你已有的 GLSL 着色器经验，属于<b>「既懂 GIS 算法、又能做服务化、还能写 GPU 渲染」</b>的稀缺组合。</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>顺序建议：先做阶段 0，立刻就有收益</strong>
+  阶段 0 只需要 1–2 周，做完后你就已经有「PostGIS 空间数据库」这条可以写进简历的成果了。不要等做完阶段 3 才算「项目完成」——那个心态正是你之前几个半成品的成因。<b>每个阶段结束都是一个可交付节点。</b>
+</div>
+
+<h3>如果只能做一件事</h3>
+<p>那就做这个：<b>建 venv → 装 PostGIS → 把 408 个矿点导进去 → 用 QGIS 连上看一眼</b>。半天到一天能完成，但它会把这个项目从「静态网页」真正变成「空间信息系统」的第一步。剩下的路，走完这一步自然就清楚了。</p>
+
+<footer>
+  赣南矿脉数字孪生大屏 · 后端与数据库演进方案<br>
+  基于 2026-09-03 对项目数据资产与环境实测编写 · 所有数据规模、坐标系、环境状态均为实测结果
+</footer>
+
+</div>
+
+<script>
+(function(){
+  // 语法高亮：先抽离注释/字符串到占位符（用 HTML 注释，避免被数字正则误匹配）
+  function esc(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function hi(el){
+    var slots = [];
+    var html = el.innerHTML;
+    html = html.replace(/(#[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(['"])(?:\\.|(?!\2)[^\\])*\2)/g, function(m){
+      slots.push(m);
+      return '<!--SLOT' + (slots.length - 1) + '-->';
+    });
+    // 关键字（SQL + Python 合并集）
+    html = html.replace(/\b(CREATE|EXTENSION|IF|NOT|EXISTS|TABLE|INDEX|ON|USING|SELECT|FROM|WHERE|AND|OR|ORDER|BY|GROUP|LEFT|JOIN|LIMIT|DESC|ASC|COUNT|ANY|AS|SERIAL|PRIMARY|KEY|TEXT|INT|NUMERIC|GEOMETRY|GEOGRAPHY|POINT|MULTIPOLYGON|GIST|GIN|import|from|def|return|None|True|False|if|else|for|in|with|class|async|await)\b/g,
+      '<span class="k">$1</span>');
+    // 函数与类型
+    html = html.replace(/\b(ST_DWithin|ST_Distance|ST_MakePoint|ST_Contains|ST_Intersects|geopandas|rasterio|shapely|fastapi|sqlalchemy|geoalchemy2|psycopg|numpy|pandas)\b/g,
+      '<span class="f">$1</span>');
+    // 数字
+    html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="n">$1</span>');
+    // 还原注释与字符串
+    html = html.replace(/<!--SLOT(\d+)-->/g, function(m, i){
+      return '<span class="s">' + esc(slots[parseInt(i,10)]) + '</span>';
+    });
+    el.innerHTML = html;
+  }
+  var codes = document.querySelectorAll('pre code');
+  for (var i = 0; i < codes.length; i++) hi(codes[i]);
+})();
+</script>
+
+</body>
+</html>
