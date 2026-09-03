@@ -16,6 +16,9 @@
 __pycache__/
 *.pyc
 
+# 发布产物（dist 目录，不入库）
+dist/
+
 # 系统
 .DS_Store
 Thumbs.db
