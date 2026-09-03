@@ -9,7 +9,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_token():
-    out = subprocess.run(["git", "credential", "fill"], input=b"protocol=https\nhost=github.com\n",
+    out = subprocess.run(["git", "credential-manager", "get"], input=b"protocol=https\nhost=github.com\n",
                          capture_output=True).stdout.decode()
     for line in out.splitlines():
         if line.startswith("password="):
@@ -20,7 +20,7 @@ def get_token():
 def api(method, path, body=None):
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(API + path, method=method, data=data)
-    req.add_header("Authorization", "token " + TOKEN)
+    req.add_header("Authorization", "Bearer " + TOKEN)
     req.add_header("Accept", "application/vnd.github+json")
     req.add_header("X-GitHub-Api-Version", "2022-11-28")
     if data:
@@ -61,6 +61,11 @@ def upload_blob(path):
 def main():
     global TOKEN
     TOKEN = get_token()
+
+    # 代理（Python urllib 默认不读 http_proxy env，必须显式挂上）
+    _PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy") or os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy")
+    if _PROXY:
+        urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler({"http": _PROXY, "https": _PROXY})))
 
     add_modify, delete = list_diff()
     files = add_modify

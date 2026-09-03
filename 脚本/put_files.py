@@ -19,7 +19,7 @@ API = "https://api.github.com/repos/" + REPO
 
 
 def get_token():
-    p = subprocess.run(["git", "credential", "fill"], capture_output=True,
+    p = subprocess.run(["git", "credential-manager", "get"], capture_output=True,
                        cwd=ROOT, input=b"protocol=https\nhost=github.com\n\n")
     for line in p.stdout.decode().splitlines():
         if line.startswith("password="):
@@ -28,6 +28,11 @@ def get_token():
 
 
 TOKEN = get_token()
+
+# 代理（Python urllib 默认不读 http_proxy env，必须显式挂上）
+_PROXY = os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy") or os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy")
+if _PROXY:
+    urllib.request.install_opener(urllib.request.build_opener(urllib.request.ProxyHandler({"http": _PROXY, "https": _PROXY})))
 
 
 def api(method, path, payload=None, allow_404=False):
