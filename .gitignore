@@ -19,6 +19,11 @@ __pycache__/
 # 发布产物（dist 目录，不入库）
 dist/
 
+# 后端运行时产物（不入库）
+backend/.venv/
+backend/pgdata/
+backend/__pycache__/
+
 # 系统
 .DS_Store
 Thumbs.db
