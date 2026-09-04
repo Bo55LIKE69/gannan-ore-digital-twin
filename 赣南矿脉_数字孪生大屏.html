@@ -266,6 +266,43 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   .panel{width:288px}#rightPanel{width:300px}
   .tstat{padding:0 11px}
 }
+
+/* ===== 移动端 / 窄屏响应式（手机 + 小窗）===== */
+.navbtn{display:none;align-items:center;justify-content:center;width:38px;height:34px;flex-shrink:0;
+  border:1px solid var(--border);background:var(--panel-2);color:var(--gold);
+  border-radius:8px;font-size:16px;line-height:1;cursor:pointer;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:background .2s}
+.navbtn:active{background:rgba(201,148,74,.2)}
+.drawer-backdrop{position:fixed;inset:0;z-index:54;background:rgba(2,4,8,.5);
+  opacity:0;pointer-events:none;transition:opacity .3s}
+.drawer-backdrop.show{opacity:1;pointer-events:auto}
+
+/* 手机/窄屏：左右面板改为底部抽屉，由顶栏按钮切换，地图全屏铺底 */
+@media (max-width:900px){
+  .navbtn{display:inline-flex}
+  .topbar{height:52px;padding:0 12px;gap:10px}
+  .brand .zh{font-size:19px}
+  .brand .en{display:none}
+  .tstats{padding-left:4px}
+  .tstat{padding:0 9px}
+  .tstat .v{font-size:14px}
+  .src{display:none}
+  .panel{left:0;right:0;top:auto;bottom:0;width:auto;height:74vh;max-height:74vh;
+    padding:22px 14px 18px;border-radius:16px 16px 0 0;border-bottom:none;
+    transform:translateY(100%);opacity:1;pointer-events:none;
+    transition:transform .4s cubic-bezier(.22,.61,.36,1)}
+  .panel::before{left:50%;right:auto;top:7px;width:42px;height:4px;transform:translateX(-50%);
+    border-radius:3px;background:rgba(201,148,74,.5)}
+  #leftPanel,#rightPanel{left:0;right:0;width:auto}
+  #leftPanel.hidden,#rightPanel.hidden{transform:translateY(100%);opacity:0;pointer-events:none}
+  #leftPanel.open,#rightPanel.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .popup{max-width:min(92vw,330px)}
+}
+@media (max-width:560px){
+  .tstats{display:none}
+  .navbtn{width:40px;height:36px}
+  .panel{height:80vh;max-height:80vh}
+}
 </style>
 </head>
 <body>
@@ -287,6 +324,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
     <span class="zh">赣南矿脉</span>
     <span class="en">Ganzhou Ore Veins · 3D</span>
   </div>
+  <button class="navbtn" id="navLeft" title="控制面板（地形/图层/分析）">⚙</button>
   <div class="spacer"></div>
   <div class="tstats">
     <div class="tstat"><div class="v" id="ts-pts">—</div><div class="l">矿点</div></div>
@@ -296,6 +334,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
     <div class="tstat"><div class="v" id="ts-moran">—</div><div class="l">Moran's I</div></div>
   </div>
   <div class="src">ASTER GDEM 30m · 山体阴影 315°/45°<br>赣州市矿产地数据库（474 处）</div>
+  <button class="navbtn" id="navRight" title="信息排行（工艺/县级/详情）">☰</button>
 </div>
 
 <div class="hint" id="hint">H 隐藏面板 · 点击矿点查看详情</div>
@@ -406,6 +445,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   <div class="pg" id="ppTag"></div>
   <div class="pd" id="ppDesc"></div>
 </div>
+
+<div class="drawer-backdrop" id="backdrop"></div>
 
 <script>
 /* =========================================================
@@ -1870,6 +1911,43 @@ function bindUI(){
       $('rightPanel').classList.toggle('hidden');
     }
   });
+
+  /* 移动端：左右面板改为底部抽屉，由顶栏按钮切换，遮罩点击收起 */
+  var backdrop = $('backdrop');
+  function isMobile(){ return window.matchMedia('(max-width:900px)').matches; }
+  function openSheet(side){
+    if (!isMobile()) return;
+    var me = side === 'left' ? 'leftPanel' : 'rightPanel';
+    var other = side === 'left' ? 'rightPanel' : 'leftPanel';
+    $(me).classList.add('open');
+    $(me).classList.remove('hidden');
+    $(other).classList.remove('open');
+    if (backdrop) backdrop.classList.add('show');
+    setTimeout(function(){ if (viewer) viewer.resize(); }, 430);
+  }
+  function closeSheets(){
+    $('leftPanel').classList.remove('open');
+    $('rightPanel').classList.remove('open');
+    if (backdrop) backdrop.classList.remove('show');
+    setTimeout(function(){ if (viewer) viewer.resize(); }, 430);
+  }
+  var nl = $('navLeft'), nr = $('navRight');
+  if (nl) nl.addEventListener('click', function(){
+    if ($('leftPanel').classList.contains('open')) closeSheets(); else openSheet('left');
+  });
+  if (nr) nr.addEventListener('click', function(){
+    if ($('rightPanel').classList.contains('open')) closeSheets(); else openSheet('right');
+  });
+  if (backdrop) backdrop.addEventListener('click', closeSheets);
+  /* 面板内点击“导航类”条目（飞行/筛选）后自动收起抽屉，便于看地图 */
+  function onPanelNav(e){
+    if (!isMobile()) return;
+    if (e.target.closest('.rank, .ccard, .leg, .lv-legend .lv, .dcard')){
+      setTimeout(closeSheets, 360);
+    }
+  }
+  $('leftPanel').addEventListener('click', onPanelNav);
+  $('rightPanel').addEventListener('click', onPanelNav);
 
   // 相机开始飞行即收起弹窗, 避免导航后窗格残留
   viewer.camera.moveStart.addEventListener(function(){ hidePopup(); });
