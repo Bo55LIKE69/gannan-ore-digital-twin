@@ -1,6 +1,8 @@
 # ⛰️ 赣南矿脉数字孪生大屏
 
-> **作者**：谢泓铎 · GIS实验室
+> **Xie Hongduo** · Jiaying University · Geographic Information Science
+> 【谢泓铎，嘉应学院】GIS 实验室负责人，专注遥感时序分析、ArcGIS Pro、WebGIS、Python 地理数据处理，参与矿山生态、油茶林遥感相关大创项目。
+> 熟悉 GEE、GeoServer、空间插值、拓扑规则。
 > 基于 **CesiumJS 1.114** 的赣南稀土矿脉三维数字孪生可视化大屏：
 > 用本地 **30m DEM** 自建真三维地形 Primitive（**不依赖任何 terrainProvider**），
 > 叠加 **408 个矿点**（统一渲染、逐点标识、穿透地表锚点），
@@ -34,6 +36,7 @@
 | 🎛️ 图层贴地 | 多边形自适应细分（目标 ~900m）后**逐顶点按 DEM 采样抬升 +70m**，顶点色 + 自定义 Appearance，单 draw call |
 | 🧭 章节导览 | 6 个预设章节（总览 / 地形 / 矿点 / 空间分析 / 工艺演进 / 治理），自动飞行 + 图层联动 |
 | 💡 无水印 | 已移除 Cesium 版权水印与默认控件，界面为暗色大屏风格 |
+| 📱 移动端适配 | 宽屏双栏大屏，窄屏（≤900px）自动改底部抽屉，手机/PC 一套代码，顶栏按钮唤出 |
 
 ## 🚀 快速开始
 
@@ -131,7 +134,7 @@ MIT
 
 ## 👤 作者
 
-**谢泓铎** · GIS实验室
+**Xie Hongduo**【谢泓铎】 · 嘉应学院 GIS 实验室
 
 - GitHub：[@Bo55LIKE69](https://github.com/Bo55LIKE69)
 - 项目仓库：<https://github.com/Bo55LIKE69/gannan-ore-digital-twin>
