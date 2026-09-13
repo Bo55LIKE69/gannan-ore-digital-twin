@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="zh-CN" data-page-node-id="GGB498ijieozgawNVThrN4">
+<head data-page-node-id="XDRBIp0UbrMzJVsfDNRgdw">
+<meta charset="UTF-8" data-page-node-id="tDBbNsrgQPnsiVFFS1FZBX">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="vKGXWlUwqYCMwAtpPTLEAc">
 <title>赣南矿脉 · 三维故事</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=JetBrains+Mono:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 13L7 3l3 6 2-3 2 7z' fill='%23d4a96a'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=JetBrains+Mono:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" data-page-node-id="5b9Nx0m4AXxNFhytijC3hD">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 13L7 3l3 6 2-3 2 7z' fill='%23d4a96a'/%3E%3C/svg%3E" data-page-node-id="xfHOIOKQ2Ptkxl1LpOjqqA">
 <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
-<link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet" data-page-node-id="MQBFF3K2jriw0Rk4YrYkdH">
 <script src="dash_data.js"></script>
 <script src="dem_terrain_data.js"></script>
 <script src="hotspot_data.js"></script>
@@ -15,27 +15,31 @@
 <script src="analysis_layers.js"></script>
 <style>
 :root{
-  --bg:#05070c;
-  --panel:rgba(11,16,24,.82);
-  --panel-2:rgba(18,25,36,.7);
-  --gold:#c9944a;
-  --gold-soft:rgba(201,148,74,.16);
-  --copper:#c0703a;
-  --teal:#5f9e8c;
-  --red:#e2544a;
-  --green:#5aa06a;
-  --blue:#5a86bd;
-  --text:#dde2e8;
-  --dim:#828b9a;
-  --dim2:#5c6574;
-  --border:rgba(201,148,74,.16);
-  --border-2:rgba(255,255,255,.06);
+  /* 矿图风 · 浅底鎏金 */
+  --bg:#F5F1E8;
+  --panel:rgba(255,255,255,.90);
+  --panel-2:rgba(237,231,218,.82);
+  --gold:#B8923F;
+  --gold-soft:rgba(184,146,63,.14);
+  --gold-deep:#8A6A2F;
+  --gold-lite:#D4AF5E;
+  --copper:#A8663A;
+  --teal:#2E6B4F;
+  --red:#B03A2E;
+  --green:#2E6B4F;
+  --blue:#2C5F8A;
+  --text:#2A2418;
+  --dim:#5A5344;
+  --dim2:#8A7F68;
+  --border:rgba(184,146,63,.30);
+  --border-2:rgba(42,36,24,.10);
+  --grid:rgba(42,36,24,.055);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
 body{font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
 #cesium{position:absolute;inset:0}
-.cesium-widget,.cesium-widget canvas{background:#05070c!important}
+.cesium-widget,.cesium-widget canvas{background:#F5F1E8!important}
 /* 去掉 Cesium 自带版权/水印与所有控件残留 */
 .cesium-widget-credits,.cesium-viewer-bottom,.cesium-credit-textContainer,
 .cesium-credit-logoContainer,.cesium-credit-lightbox,.cesium-credit-expand-link{
@@ -45,18 +49,57 @@ body{font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:
 
 /* 背景氛围 */
 .vignette{position:absolute;inset:0;pointer-events:none;z-index:5;
-  background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)}
+  background:radial-gradient(ellipse at 50% 45%,rgba(245,241,232,0) 48%,rgba(160,140,100,.20) 100%)}
 .scanline{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:.35;
-  background:repeating-linear-gradient(180deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+  background:repeating-linear-gradient(180deg,rgba(42,36,24,.03) 0 1px,transparent 1px 3px)}
+
+/* ===== 矿图质感层（网格 + 等高线底纹 + 坐标刻度）=====
+   原则：只做「纸的肌理」，不做「第二层地图」。
+   网格压到几乎看不见、等高线极淡，绝不出现在大屏正中与地形抢视觉。 */
+.graticule{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:.75}
+.graticule .minor{position:absolute;inset:0;
+  background-image:
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+    linear-gradient(180deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px}
+.graticule .major{position:absolute;inset:0;
+  background-image:
+    linear-gradient(90deg,rgba(42,36,24,.07) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(42,36,24,.07) 1px,transparent 1px);
+  background-size:200px 200px}
+/* 等高线底纹：四角角花为主 + 极淡的呼吸动画，中央留白 */
+.contour-tint{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:.38;
+  background-repeat:no-repeat;background-size:100% 100%;background-position:center;
+  animation:contourDrift 180s ease-in-out infinite alternate}
+@keyframes contourDrift{from{opacity:.26}to{opacity:.44}}
+/* 地图外框：四角矿图角标 */
+.mapframe{position:absolute;inset:9px;pointer-events:none;z-index:7;
+  border:1px solid rgba(184,146,63,.30);border-radius:4px}
+.mapframe::before,.mapframe::after{content:'';position:absolute;width:22px;height:22px;
+  border:2px solid rgba(184,146,63,.62)}
+.mapframe::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+.mapframe::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+/* 右侧经度刻度条 */
+.lonruler{position:absolute;top:96px;bottom:96px;right:2px;width:14px;pointer-events:none;z-index:7;
+  display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;opacity:.62}
+.lonruler i{display:block;width:9px;height:1px;background:rgba(184,146,63,.46)}
+.lonruler i:nth-child(5n+1){width:14px;height:1.5px;background:rgba(184,146,63,.72)}
+/* 左下矿图标尺 */
+.scalebar{position:absolute;left:26px;bottom:26px;pointer-events:none;z-index:7;
+  font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim2);letter-spacing:.08em}
+.scalebar .bar{display:flex;height:7px;margin-bottom:3px;border:1px solid rgba(110,100,80,.55)}
+.scalebar .bar span{width:26px}
+.scalebar .bar span:nth-child(odd){background:rgba(42,36,24,.72)}
+.scalebar .bar span:nth-child(even){background:rgba(245,241,232,.9)}
 
 /* ===== 顶栏 ===== */
 .topbar{position:absolute;top:0;left:0;right:0;height:62px;z-index:60;
   display:flex;align-items:center;padding:0 22px;gap:18px;
-  background:linear-gradient(180deg,rgba(5,7,12,.94),rgba(5,7,12,.55) 70%,transparent);
+  background:linear-gradient(180deg,rgba(245,241,232,.96),rgba(245,241,232,.62) 70%,transparent);
   border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:baseline;gap:12px}
 .brand .zh{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;letter-spacing:.08em;
-  background:linear-gradient(180deg,#f0d9a8,#c9944a 60%,#8d6a30);
+  background:linear-gradient(180deg,#A8862F,#B8923F 60%,#8A6A2F);
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .brand .en{font-size:10.5px;letter-spacing:.28em;color:var(--dim2);text-transform:uppercase;
   font-family:'JetBrains Mono',monospace}
@@ -67,7 +110,7 @@ body{font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:
 .tstat .v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;color:var(--gold);
   line-height:1.15;letter-spacing:.01em}
 .tstat .l{font-size:10.5px;color:var(--dim2);letter-spacing:.14em;margin-top:1px}
-.src{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#454e5c;letter-spacing:.06em;
+.src{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#7A7362;letter-spacing:.06em;
   text-align:right;line-height:1.5;max-width:210px}
 
 /* ===== 通用面板 ===== */
@@ -75,33 +118,33 @@ body{font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:
   background:var(--panel);border:1px solid var(--border);border-radius:10px;
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   padding:16px 14px;overflow-y:auto;overflow-x:hidden;
-  box-shadow:0 18px 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow:0 10px 30px rgba(90,76,48,.16),inset 0 1px 0 rgba(255,255,255,.7);
   transition:transform .38s cubic-bezier(.22,.61,.36,1),opacity .3s}
 #leftPanel{left:18px}
 #rightPanel{right:18px;width:336px}
 #leftPanel.hidden{transform:translateX(-360px);opacity:0;pointer-events:none}
 #rightPanel.hidden{transform:translateX(380px);opacity:0;pointer-events:none}
 .panel::before{content:'';position:absolute;top:0;left:14px;right:14px;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(201,148,74,.5),transparent)}
+  background:linear-gradient(90deg,transparent,rgba(184,146,63,.55),transparent)}
 .sec{margin-bottom:20px}
 .sec-t{font-size:11.5px;font-weight:600;color:var(--gold);letter-spacing:.16em;margin-bottom:11px;
   display:flex;align-items:center;gap:8px}
 .sec-t::before{content:'';width:3px;height:12px;background:var(--gold);border-radius:2px;
-  box-shadow:0 0 8px rgba(201,148,74,.7)}
+  box-shadow:0 0 6px rgba(184,146,63,.45)}
 .sec-t .sub{margin-left:auto;font-size:9.5px;color:var(--dim2);letter-spacing:.06em;font-weight:400}
 
 /* 冷热点图例 */
 .hot-legend{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
 .hot-legend .hl{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--dim)}
 .hot-legend .hl i{width:22px;height:11px;border-radius:3px;flex-shrink:0;
-  box-shadow:0 0 6px rgba(0,0,0,.4)}
+  box-shadow:0 1px 3px rgba(90,76,48,.28)}
 .hot-note{font-size:9.5px;line-height:1.5;color:var(--dim2);letter-spacing:.03em;
   border-top:1px solid var(--border);padding-top:7px}
 /* 矿产地分级图例 */
 .lv-legend{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
 .lv-legend .lv{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--dim);
   padding:4px 7px;border-radius:7px;cursor:pointer;transition:all .2s}
-.lv-legend .lv:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.lv-legend .lv:hover{background:rgba(42,36,24,.06);color:var(--text)}
 .lv-legend .lv.off{opacity:.38}
 .lv-legend .lv .cone{width:0;height:0;flex-shrink:0;
   border-left:6px solid transparent;border-right:6px solid transparent;
@@ -116,40 +159,40 @@ body{font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:
   color:var(--dim);margin-bottom:6px}
 .ctl-h .cv{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold)}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;
-  background:linear-gradient(90deg,var(--gold) 0%,var(--gold) var(--p,50%),rgba(255,255,255,.09) var(--p,50%));
+  background:linear-gradient(90deg,var(--gold) 0%,var(--gold) var(--p,50%),rgba(42,36,24,.11) var(--p,50%));
   outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
-  background:#e6c88c;border:2px solid #1a1206;box-shadow:0 0 8px rgba(201,148,74,.8);cursor:pointer}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#e6c88c;
-  border:2px solid #1a1206;cursor:pointer}
+  background:#D4AF5E;border:2px solid #F5F1E8;box-shadow:0 1px 4px rgba(150,120,50,.5);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#D4AF5E;
+  border:2px solid #F5F1E8;cursor:pointer}
 .sw-row{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;
   padding:6px 0;color:var(--text)}
 .note{margin-top:6px;font-size:10px;line-height:1.6;color:var(--dim2);
-  border-left:2px solid rgba(201,148,74,.35);padding-left:7px}
-.sw{position:relative;width:34px;height:18px;border-radius:9px;background:rgba(255,255,255,.09);
-  cursor:pointer;transition:background .22s;flex-shrink:0;border:1px solid rgba(255,255,255,.05)}
+  border-left:2px solid rgba(184,146,63,.45);padding-left:7px}
+.sw{position:relative;width:34px;height:18px;border-radius:9px;background:rgba(42,36,24,.11);
+  cursor:pointer;transition:background .22s;flex-shrink:0;border:1px solid rgba(42,36,24,.06)}
 .sw::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
-  background:#6b7482;transition:all .22s}
-.sw.on{background:rgba(201,148,74,.3);border-color:rgba(201,148,74,.5)}
-.sw.on::after{left:18px;background:var(--gold);box-shadow:0 0 8px rgba(201,148,74,.9)}
+  background:#B5AC98;transition:all .22s}
+.sw.on{background:rgba(184,146,63,.34);border-color:rgba(184,146,63,.60)}
+.sw.on::after{left:18px;background:var(--gold);box-shadow:0 1px 4px rgba(150,120,50,.55)}
 .pal-row{margin-top:2px}
-.pal-sel{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.12);
+.pal-sel{background:rgba(42,36,24,.07);color:var(--text);border:1px solid rgba(42,36,24,.14);
   border-radius:6px;padding:3px 6px;font-size:11px;outline:none;cursor:pointer;max-width:160px}
-.pal-sel:focus{border-color:rgba(201,148,74,.6)}
+.pal-sel:focus{border-color:rgba(184,146,63,.6)}
 
 /* 高程色带 */
 .ramp{height:10px;border-radius:5px;margin:2px 0 5px;
-  background:linear-gradient(90deg,#0a1620 0%,#10303c 16%,#1a4a4c 34%,#2f5c47 54%,#6a7a45 72%,#a08f5c 87%,#e8dcc0 100%);
-  border:1px solid rgba(255,255,255,.07)}
+  background:linear-gradient(90deg,#2C5F8A 0%,#47798A 16%,#2E6B4F 34%,#5C7A45 54%,#96893F 72%,#B8923F 87%,#8A6A2F 100%);
+  border:1px solid rgba(42,36,24,.085)}
 .ramp-lbl{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
   font-size:9.5px;color:var(--dim2)}
 
 /* 图例 */
 .leg{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:4.5px 0;cursor:pointer;
   transition:opacity .18s;user-select:none}
-.leg:hover{background:rgba(201,148,74,.05)}
+.leg:hover{background:rgba(184,146,63,.09)}
 .leg.off{opacity:.28}
-.leg .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 7px currentColor}
+.leg .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 1px 3px rgba(70,60,40,.35)}
 .leg .nm{flex:1}
 .leg .ct{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim2)}
 .leg .pct{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim2);width:38px;text-align:right}
@@ -170,11 +213,11 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 
 /* 排行 */
 .rank{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;border-radius:4px;
-  border-bottom:1px solid rgba(255,255,255,.035);transition:background .15s}
-.rank:hover{background:rgba(201,148,74,.07)}
+  border-bottom:1px solid rgba(42,36,24,.045);transition:background .15s}
+.rank:hover{background:rgba(184,146,63,.11)}
 .rank .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim2);width:18px}
 .rank .nm{font-size:12px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rank .tr{width:74px;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;flex-shrink:0}
+.rank .tr{width:74px;height:5px;background:rgba(42,36,24,.07);border-radius:3px;overflow:hidden;flex-shrink:0}
 .rank .fl{height:100%;border-radius:3px}
 .rank .c{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);width:26px;text-align:right}
 
@@ -188,7 +231,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .drow .v{font-family:'JetBrains Mono',monospace;color:var(--text)}
 .mbar{display:flex;align-items:center;gap:6px;font-size:10.5px;margin:3.5px 0}
 .mbar .mn{width:64px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mbar .mt{flex:1;height:3.5px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.mbar .mt{flex:1;height:3.5px;background:rgba(42,36,24,.07);border-radius:2px;overflow:hidden}
 .mbar .mf{height:100%;background:var(--copper);border-radius:2px}
 .mbar .mv{font-family:'JetBrains Mono',monospace;width:18px;text-align:right;color:var(--text)}
 
@@ -196,8 +239,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ccard{background:var(--panel-2);border:1px solid var(--border-2);border-radius:7px;padding:10px 12px;
   margin-bottom:7px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
 .ccard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .22s}
-.ccard:hover{border-color:rgba(201,148,74,.42);background:rgba(201,148,74,.06)}
-.ccard.on{border-color:var(--gold);background:rgba(201,148,74,.1)}
+.ccard:hover{border-color:rgba(184,146,63,.45);background:rgba(184,146,63,.10)}
+.ccard.on{border-color:var(--gold);background:rgba(184,146,63,.12)}
 .ccard.on::before{background:var(--gold)}
 .ccard .cn{font-size:12.5px;font-weight:600;color:var(--text)}
 .ccard .ct{font-size:10px;color:var(--copper);margin:2px 0 3px}
@@ -205,16 +248,16 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 
 /* 稀土开采工艺画廊 */
 .proccard{display:flex;gap:11px;align-items:stretch;padding:9px;border-radius:9px;cursor:pointer;
-  border:1px solid rgba(201,148,74,.18);background:var(--panel-2);margin-bottom:11px;
+  border:1px solid rgba(184,146,63,.22);background:var(--panel-2);margin-bottom:11px;
   transition:all .22s;overflow:hidden}
-.proccard:hover{border-color:var(--gold);background:rgba(201,148,74,.1);
-  box-shadow:0 0 14px rgba(201,148,74,.2)}
+.proccard:hover{border-color:var(--gold);background:rgba(184,146,63,.12);
+  box-shadow:0 2px 10px rgba(150,120,50,.20)}
 .procimg{width:104px;height:78px;object-fit:cover;border-radius:6px;flex:0 0 auto;
-  border:1px solid rgba(255,255,255,.08);background:#1a1d24}
+  border:1px solid rgba(42,36,24,.10);background:#E6DFCF}
 .procmeta{display:flex;flex-direction:column;justify-content:space-between;min-width:0;flex:1}
 .proc-h{display:flex;align-items:center;gap:7px}
-.proc-gen{font-size:9px;font-weight:700;color:#1a1206;padding:1px 6px;border-radius:10px;white-space:nowrap}
-.proc-name{font-size:13px;font-weight:600;color:#f0e0c0}
+.proc-gen{font-size:9px;font-weight:700;color:#F5F1E8;padding:1px 6px;border-radius:10px;white-space:nowrap}
+.proc-name{font-size:13px;font-weight:600;color:#3F3728}
 .proc-yr{font-size:9.5px;color:var(--dim2);margin-left:auto;font-family:'JetBrains Mono',monospace}
 .proc-d{font-size:10.5px;color:var(--dim);line-height:1.5;margin:4px 0;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -230,15 +273,15 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   .sec.collapsed #procList{display:none;margin:0}
 
 /* 弹窗 */
-.popup{position:absolute;z-index:200;background:var(--panel);border:1px solid rgba(201,148,74,.5);
+.popup{position:absolute;z-index:200;background:var(--panel);border:1px solid rgba(184,146,63,.55);
   border-radius:10px;padding:15px 17px;min-width:250px;max-width:330px;
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:0 20px 56px rgba(0,0,0,.62);display:none;animation:pop .3s cubic-bezier(.22,.61,.36,1)}
+  box-shadow:0 16px 44px rgba(90,76,48,.26);display:none;animation:pop .3s cubic-bezier(.22,.61,.36,1)}
 .popup.show{display:block}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
 .popup .pt{font-size:14.5px;font-weight:600;color:var(--gold);margin-bottom:4px;padding-right:18px}
 .popup .pg{font-size:10.5px;color:var(--copper);margin-bottom:7px}
-.popup .pd{font-size:11.5px;color:#9aa4b2;line-height:1.8}
+.popup .pd{font-size:11.5px;color:#8A7F68;line-height:1.8}
 .popup .pc{position:absolute;top:8px;right:11px;cursor:pointer;color:var(--dim2);font-size:15px;line-height:1}
 .popup .pc:hover{color:var(--text)}
 
@@ -247,15 +290,15 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
   transition:opacity .7s}
 .loader.hide{opacity:0;pointer-events:none}
-.loader .ring{width:46px;height:46px;border:2px solid rgba(201,148,74,.14);border-top-color:var(--gold);
+.loader .ring{width:46px;height:46px;border:2px solid rgba(184,146,63,.18);border-top-color:var(--gold);
   border-radius:50%;animation:spin .9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loader .tt{font-size:14px;color:#c9cfd8;letter-spacing:.32em}
+.loader .tt{font-size:14px;color:#5A5344;letter-spacing:.32em}
 .loader .mm{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim2);letter-spacing:.1em}
 
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(201,148,74,.22);border-radius:2px}
+::-webkit-scrollbar-thumb{background:rgba(184,146,63,.30);border-radius:2px}
 
 .hint{position:absolute;left:50%;transform:translateX(-50%);top:70px;z-index:58;
   font-size:10.5px;color:var(--dim2);letter-spacing:.12em;pointer-events:none;
@@ -272,14 +315,25 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   border:1px solid var(--border);background:var(--panel-2);color:var(--gold);
   border-radius:8px;font-size:16px;line-height:1;cursor:pointer;
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:background .2s}
-.navbtn:active{background:rgba(201,148,74,.2)}
-.drawer-backdrop{position:fixed;inset:0;z-index:54;background:rgba(2,4,8,.5);
+.navbtn:active{background:rgba(184,146,63,.20)}
+.drawer-backdrop{position:fixed;inset:0;z-index:54;background:rgba(74,64,44,.34);
   opacity:0;pointer-events:none;transition:opacity .3s}
 .drawer-backdrop.show{opacity:1;pointer-events:auto}
 
 /* 手机/窄屏：左右面板改为底部抽屉，由顶栏按钮切换，地图全屏铺底 */
 @media (max-width:900px){
   .navbtn{display:inline-flex}
+  /* 窄屏：网格更稀、角花更淡，避免和地图抢注意力 */
+  .graticule{opacity:.35}
+  .graticule .minor{background-size:32px 32px;background-image:none}
+  .graticule .major{background-size:160px 160px}
+  .contour-tint{opacity:.14;animation:none}
+  .mapframe{inset:6px}
+  .lonruler{top:64px;bottom:64px;opacity:.35}
+  .lonruler i{width:6px}
+  .lonruler i:nth-child(5n+1){width:10px}
+  .scalebar{left:14px;bottom:14px;font-size:8px}
+  .scalebar .bar span{width:16px}
   .topbar{height:52px;padding:0 12px;gap:10px}
   .brand .zh{font-size:19px}
   .brand .en{display:none}
@@ -292,7 +346,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
     transform:translateY(100%);opacity:1;pointer-events:none;
     transition:transform .4s cubic-bezier(.22,.61,.36,1)}
   .panel::before{left:50%;right:auto;top:7px;width:42px;height:4px;transform:translateX(-50%);
-    border-radius:3px;background:rgba(201,148,74,.5)}
+    border-radius:3px;background:rgba(184,146,63,.55)}
   #leftPanel,#rightPanel{left:0;right:0;width:auto}
   #leftPanel.hidden,#rightPanel.hidden{transform:translateY(100%);opacity:0;pointer-events:none}
   #leftPanel.open,#rightPanel.open{transform:translateY(0);opacity:1;pointer-events:auto}
@@ -305,148 +359,154 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 }
 </style>
 </head>
-<body>
+<body data-page-node-id="ryNH4PHThYDeWklebqJUcQ">
 
-<div class="loader" id="loader">
-  <div class="ring"></div>
-  <div class="tt">赣 南 矿 脉</div>
-  <div class="mm" id="loadMsg">正在构建三维地形</div>
+<div class="loader" id="loader" data-page-node-id="D5dAEqH1g9XcC95PAekdjY">
+  <div class="ring" data-page-node-id="mDfH2ci8om6AdD8iycRqEA"></div>
+  <div class="tt" data-page-node-id="E4rWIqrOHjquyXPHWx5gtJ">赣 南 矿 脉</div>
+  <div class="mm" id="loadMsg" data-page-node-id="E1VcdBbhIznDHCXlav41nH">正在构建三维地形</div>
 </div>
 
-<div id="cesium"></div>
-<div class="vignette"></div>
-<div class="scanline"></div>
-<div id="creditSink"></div>
+<div id="cesium" data-page-node-id="aVPpSnb4wwkBpp1pu3gAw0"></div>
+<div class="graticule" data-page-node-id="FEVOSaJO2MYFapvUOr4Qrp"><div class="minor" data-page-node-id="xxegUDIN5lvorqn0iNqzhF"></div><div class="major" data-page-node-id="yasAiCShNe5u0It6Eyt8h2"></div></div>
+<div class="contour-tint" id="contourTint" data-page-node-id="o8F08OF2MYCoXMEhWhYHjZ"></div>
+<div class="vignette" data-page-node-id="28f09EDO60wF1wVvOeB4bl"></div>
+<div class="mapframe" data-page-node-id="AVHjawLRHXn4COdLOVz6c5"></div>
+<div class="lonruler" id="lonRuler" data-page-node-id="p67SyqeT6nCwk1liQjt2HO"></div>
+<div class="scalebar" data-page-node-id="5QBFcDZ2liojTHoMvjKIO6"><div class="bar" data-page-node-id="D5UYzJikFHvMBh40NVlliT"><span data-page-node-id="K3ttMYiA8KMfInDXULBbcR"></span><span data-page-node-id="xDEgPfR9gSvCLQNl97G6kE"></span><span data-page-node-id="NsZCmvO64C3T4nytFFVNVv"></span><span data-page-node-id="x28SnhTXJGQm8vav1vQBW3"></span><span data-page-node-id="vHar2FP5SHiwF7QiRBFx3B"></span></div><span id="sbLabel" data-page-node-id="22q4RZBY54H5FBhl5qPpkq">5 km</span></div>
+<div class="scanline" data-page-node-id="6lo8Z7x31wfbC81lA0zVLW"></div>
+<div id="creditSink" data-page-node-id="LjDwupOOlPJTA6ia2X2XuL"></div>
 
 <!-- 顶栏 -->
-<div class="topbar">
-  <div class="brand">
-    <span class="zh">赣南矿脉</span>
-    <span class="en">Ganzhou Ore Veins · 3D</span>
+<div class="topbar" data-page-node-id="nugai0uMKkHXdsBf4OXA42">
+  <div class="brand" data-page-node-id="f95cPKvrwkGqTQhwaZwUjm">
+    <span class="zh" data-page-node-id="nFWVR7Hs3GGHu5qTLmeB70">赣南矿脉</span>
+    <span class="en" data-page-node-id="7KolDPQRuubkvJRgtaCCur">Ganzhou Ore Veins · 3D</span>
   </div>
-  <button class="navbtn" id="navLeft" title="控制面板（地形/图层/分析）">⚙</button>
-  <div class="spacer"></div>
-  <div class="tstats">
-    <div class="tstat"><div class="v" id="ts-pts">—</div><div class="l">矿点</div></div>
-    <div class="tstat"><div class="v" id="ts-cty">—</div><div class="l">县域</div></div>
-    <div class="tstat"><div class="v" id="ts-hot">—</div><div class="l">热点核心</div></div>
-    <div class="tstat"><div class="v" id="ts-nni">—</div><div class="l">NNI</div></div>
-    <div class="tstat"><div class="v" id="ts-moran">—</div><div class="l">Moran's I</div></div>
+  <button class="navbtn" id="navLeft" title="控制面板（地形/图层/分析）" data-page-node-id="WAvEOh64qNedtWAsvVOXGf">⚙</button>
+  <div class="spacer" data-page-node-id="NdabiKwQx4f4f2NVkNt0ZF"></div>
+  <div class="tstats" data-page-node-id="fmuZBp2j11PKiGoY0M3xzj">
+    <div class="tstat" data-page-node-id="IEWDuiGOlgrDRRyf59EDqI"><div class="v" id="ts-pts" data-page-node-id="riagdA1CIsQQxjsEwyS6qV">—</div><div class="l" data-page-node-id="qpRkHm6wsmP1rHk58uE6nZ">矿点</div></div>
+    <div class="tstat" data-page-node-id="zYS9DykopUY79wPez49oZZ"><div class="v" id="ts-cty" data-page-node-id="qsKMOsCBJEJufixEWGCyUc">—</div><div class="l" data-page-node-id="lXOJpWsh9Q6Rhq5kgBCQOr">县域</div></div>
+    <div class="tstat" data-page-node-id="GnxOhMLA7mObCau816lDhM"><div class="v" id="ts-hot" data-page-node-id="BHQ7JGTdo9vtREKdFp7fFw">—</div><div class="l" data-page-node-id="kMftTzqaUinanDT5NxoDP9">热点核心</div></div>
+    <div class="tstat" data-page-node-id="4oYEB7lFKNR0lUF3WXFQts"><div class="v" id="ts-nni" data-page-node-id="EjFTz95EokTcxwOQ4kYjFz">—</div><div class="l" data-page-node-id="jTTA3GsdIA7gXeqTBbRCl7">NNI</div></div>
+    <div class="tstat" data-page-node-id="pkENjdWyrbiO5esBPGl23u"><div class="v" id="ts-moran" data-page-node-id="Ku5KRE9KwouEOayr2ACDQc">—</div><div class="l" data-page-node-id="Flcus4LM1lB5D7uzHFC7jC">Moran's I</div></div>
   </div>
-  <div class="src">ASTER GDEM 30m · 山体阴影 315°/45°<br>赣州市矿产地数据库（474 处）</div>
-  <button class="navbtn" id="navRight" title="信息排行（工艺/县级/详情）">☰</button>
+  <div class="src" data-page-node-id="EELPj0P7MTwz4fhpD6EGI3">ASTER GDEM 30m · 山体阴影 315°/45°<br data-page-node-id="WUc1SqFZ9z7wo5xix8Ad3A">赣州市矿产地数据库（474 处）</div>
+  <button class="navbtn" id="navRight" title="信息排行（工艺/县级/详情）" data-page-node-id="8pTlNd4Z24QwUtKYtSoHit">☰</button>
 </div>
 
-<div class="hint" id="hint">H 隐藏面板 · 点击矿点查看详情</div>
+<div class="hint" id="hint" data-page-node-id="iXGVnVKqTLyaVEVI0m7HlD">H 隐藏面板 · 点击矿点查看详情</div>
 
 <!-- 左面板 -->
-<div class="panel" id="leftPanel">
-  <div class="sec">
-    <div class="sec-t">地形渲染 <span class="sub">DEM 30m</span></div>
-    <div class="ctl">
-      <div class="ctl-h"><span>垂直夸张</span><span class="cv" id="vExag">1.6×</span></div>
-      <input type="range" id="sExag" min="1" max="3" step="0.1" value="1.6">
+<div class="panel" id="leftPanel" data-page-node-id="DjfbYklQOivkY9wYCihOzy">
+  <div class="sec" data-page-node-id="mgDOR20Aq3rYxGZDzJjgZq">
+    <div class="sec-t" data-page-node-id="WrqLsRpUAQbzusIzHP0jkB">地形渲染 <span class="sub" data-page-node-id="XqfXzK4HaTC0hReqHORjTx">DEM 30m</span></div>
+    <div class="ctl" data-page-node-id="V4fl6SzNFqVZbVQaLYNW81">
+      <div class="ctl-h" data-page-node-id="DUgZd9mes2VFRyQPNLCTrI"><span data-page-node-id="oFJZv9owbZ6kE2YisGFrXi">垂直夸张</span><span class="cv" id="vExag" data-page-node-id="5XJYzR2BPpRdV17vjydZfp">1.6×</span></div>
+      <input type="range" id="sExag" min="1" max="3" step="0.1" value="1.6" data-page-node-id="5CGsRmqgM9Wl4L7Hg1AebZ">
     </div>
-    <div class="ctl">
-      <div class="ctl-h"><span>晕渲强度</span><span class="cv" id="vHs">55%</span></div>
-      <input type="range" id="sHs" min="0" max="100" step="1" value="55">
+    <div class="ctl" data-page-node-id="L8Wl81IUIWAWoJSJGZcPvg">
+      <div class="ctl-h" data-page-node-id="ydH8JBu4f105q7Y8DWwksH"><span data-page-node-id="RccnPywQqaslod5SLugZFG">晕渲强度</span><span class="cv" id="vHs" data-page-node-id="W63EoWzqncXjW27AqIGL9W">55%</span></div>
+      <input type="range" id="sHs" min="0" max="100" step="1" value="55" data-page-node-id="cXB9PfgLbuzmBK2mn7M3Nl">
     </div>
-    <div class="ctl">
-      <div class="ctl-h"><span>地形配色</span></div>
-      <select id="palSel" class="pal-sel">
-        <option value="terrain">地形（棕黄）</option>
-        <option value="elev">高程彩虹</option>
-        <option value="gray">灰度</option>
-        <option value="green">植被绿阶</option>
+    <div class="ctl" data-page-node-id="AglFvWXC3eCyhqtlV6HBI3">
+      <div class="ctl-h" data-page-node-id="eD2xFHAF1KEfnWI4EI0GA6"><span data-page-node-id="ebSCqBxKynxYchgCgQXgYM">地形配色</span></div>
+      <select id="palSel" class="pal-sel" data-page-node-id="VCImeM88S4zvRztLOT2tzG">
+        <option value="mz" selected data-page-node-id="TBTzu0KAwOzPJvUWIli3s3">山地绿韵</option>
+        <option value="terrain" data-page-node-id="j1dLTXSPGVM8EZWYn1svkR">地形（棕黄）</option>
+        <option value="elev" data-page-node-id="rFnFyvYaDKIQANDvFRwmAF">高程彩虹</option>
+        <option value="gray" data-page-node-id="9ixLjCaBRYugOESvPUDewQ">灰度</option>
+        <option value="green" data-page-node-id="HcPuAFkGGxX1TaCaCpAXca">植被绿阶</option>
       </select>
     </div>
-    <div class="ramp"></div>
-    <div class="ramp-lbl"><span id="rl0">—</span><span>海拔配色</span><span id="rl1">—</span></div>
+    <div class="ramp" data-page-node-id="gbgZPnSlAoRA34pfeGSitb"></div>
+    <div class="ramp-lbl" data-page-node-id="7iV4350zkM4cCrgtLbtWKI"><span id="rl0" data-page-node-id="Sks8uDODJOOVbqaibBhSVn">—</span><span data-page-node-id="2QAIOaG578fxarc3I2tCEd">海拔配色</span><span id="rl1" data-page-node-id="C2PQr2eJACZEfnzbLblG4H">—</span></div>
   </div>
 
-  <div class="sec">
-    <div class="sec-t">显示图层</div>
-    <div class="sw-row"><span>等高线</span><div class="sw on" id="swContour"></div></div>
-    <div class="sw-row"><span>县域面 / 边界</span><div class="sw" id="swCounty"></div></div>
-    <div class="sw-row"><span>矿点光柱</span><div class="sw on" id="swPoints"></div></div>
-    <div class="sw-row"><span>名称标注</span><div class="sw on" id="swLabels"></div></div>
+  <div class="sec" data-page-node-id="3pGci6LIhoAqicEOFBN0sM">
+    <div class="sec-t" data-page-node-id="0UTPOQHnjoL9pIvvzIi1XQ">显示图层</div>
+    <div class="sw-row" data-page-node-id="LLKVov9V8joy4UbmPvZ4O7"><span data-page-node-id="5kmLSA8wxG7wKyu5GRbaHf">等高线</span><div class="sw on" id="swContour" data-page-node-id="l0pStHeWJX7HNp1jaz5O0N"></div></div>
+    <div class="sw-row" data-page-node-id="yIIJTh3G7pTlowQWdUH2Ju"><span data-page-node-id="vSchLUop53Qs6XLUwj9tcf">县域面 / 边界</span><div class="sw" id="swCounty" data-page-node-id="hBipBWjuDcV5sQH9cytq8H"></div></div>
+    <div class="sw-row" data-page-node-id="90MHWKH9yfUy5D3hNszCV8"><span data-page-node-id="gTl2EWJk1Cj7DdVVMHQ6PG">矿点光柱</span><div class="sw on" id="swPoints" data-page-node-id="t2kusHHqHcAlxdZo2Ap0k4"></div></div>
+    <div class="sw-row" data-page-node-id="SA3u7DNOTXt38mlLDDKKbg"><span data-page-node-id="cG1UCdjEStwZm5OgZOOBYv">名称标注</span><div class="sw on" id="swLabels" data-page-node-id="0UIMz7xTT3AEQSGV2Y2EJQ"></div></div>
   </div>
 
 
-  <div class="sec">
-    <div class="sec-t">空间分析图层 <span class="sub">来自数据集</span></div>
-    <div class="sw-row"><span>矿点核密度</span><div class="sw" id="swAl_density"></div></div>
-    <div class="sw-row"><span>LISA 空间自相关</span><div class="sw" id="swAl_lisa"></div></div>
-    <div class="sw-row"><span>Gi* 冷热点(网格)</span><div class="sw" id="swAl_gistar_grid"></div></div>
-    <div class="sw-row"><span>县级矿山统计</span><div class="sw" id="swAl_county"></div></div>
-    <div class="sw-row"><span>矿点冷热点 (Gi*)</span><div class="sw on" id="swHotspot"></div></div>
-    <div class="hot-note" id="alNote">点击叠加到地形；默认仅显示核密度；冷热点按县域上色。</div>
-    <div id="alLegend" class="hot-legend"></div>
+  <div class="sec" data-page-node-id="ErLSxxlc0hYCsqUML2lGjg">
+    <div class="sec-t" data-page-node-id="2f34adswFFUiyDoc9NBeES">空间分析图层 <span class="sub" data-page-node-id="hnIl4z6auIMAX3VP2CfREV">来自数据集</span></div>
+    <div class="sw-row" data-page-node-id="hTYrXIsYZ8gneEnuu5D76H"><span data-page-node-id="wyUtC4c8Fv1RrT0DS4UKwL">矿点核密度</span><div class="sw" id="swAl_density" data-page-node-id="308KKjmQ74xX4jl0elunyH"></div></div>
+    <div class="sw-row" data-page-node-id="UiYPhP4GnJMvYlv8BHZdqj"><span data-page-node-id="mfLiA44aiOBcdSJ1adubP9">LISA 空间自相关</span><div class="sw" id="swAl_lisa" data-page-node-id="2fMtIEbBKivVWf3FXZeROe"></div></div>
+    <div class="sw-row" data-page-node-id="fp7XWgX0bZoqLTQyFPiJba"><span data-page-node-id="DDcZti4gDUseIumITcaTyu">Gi* 冷热点(网格)</span><div class="sw" id="swAl_gistar_grid" data-page-node-id="gDxqAprlzRpblkn7lDmocD"></div></div>
+    <div class="sw-row" data-page-node-id="4juBuGzXsJmkhn4odF3xz5"><span data-page-node-id="rQYZylVCYmrl7vKRGyEmQS">县级矿山统计</span><div class="sw" id="swAl_county" data-page-node-id="18zBKqAVFdLJkShoi5AoYM"></div></div>
+    <div class="sw-row" data-page-node-id="tzMzlwHr0xEeB6YB4ULaVd"><span data-page-node-id="0V02FrE7xVrMbnY33ZDmf2">矿点冷热点 (Gi*)</span><div class="sw on" id="swHotspot" data-page-node-id="V4La76nuGsq8GicmOZs9Yr"></div></div>
+    <div class="hot-note" id="alNote" data-page-node-id="YZnIUUjFy14NCXDEf12IJq">点击叠加到地形；默认仅显示核密度；冷热点按县域上色。</div>
+    <div id="alLegend" class="hot-legend" data-page-node-id="dgXuulsc4Q0V8319S0RpYU"></div>
   </div>
 
-  <div class="sec">
-    <div class="sec-t">冷热点图例 <span class="sub">Gi* 显著性</span></div>
-    <div id="hotLegend" class="hot-legend"></div>
-    <div class="hot-note">基于 408 个矿点的网格密度 Getis-Ord Gi*（距离带 42 km）</div>
+  <div class="sec" data-page-node-id="zJpDrd8UB9rI7pA58eTGhB">
+    <div class="sec-t" data-page-node-id="P8ESrWCzd8y4MPKEiuJP3A">冷热点图例 <span class="sub" data-page-node-id="OqGfW0KmYUj2o7gtzC0vjR">Gi* 显著性</span></div>
+    <div id="hotLegend" class="hot-legend" data-page-node-id="aale7U2TfVTBjjKHYmq1ye"></div>
+    <div class="hot-note" data-page-node-id="hAN321FyAKdTaOTHgdu8JU">基于 408 个矿点的网格密度 Getis-Ord Gi*（距离带 42 km）</div>
   </div>
 
-  <div class="sec">
-    <div class="sec-t">矿种构成 <span class="sub">点击筛选</span></div>
-    <div id="legend"></div>
+  <div class="sec" data-page-node-id="cx10OxeTXEIBuGr6LAXDGu">
+    <div class="sec-t" data-page-node-id="tPmYS12QqBo9QjEG65dkFj">矿种构成 <span class="sub" data-page-node-id="Hv0so4SinV9zaMKF72YH7o">点击筛选</span></div>
+    <div id="legend" data-page-node-id="w32uYpaDgoytGKJU64h8Zf"></div>
   </div>
 
-  <div class="sec">
-    <div class="sec-t">空间统计</div>
-    <div class="mcard">
-      <div class="lb">最邻近指数 NNI</div><div class="vl" id="mNNI">—</div>
-      <div class="ds">Z = <span id="mNNIZ">—</span> · 显著聚集</div>
-      <div class="bar" style="width:41%"></div>
+  <div class="sec" data-page-node-id="BAwlCUnkSxWiIMSIl0riqK">
+    <div class="sec-t" data-page-node-id="l53DcsXShmlxEmVCnsqGG9">空间统计</div>
+    <div class="mcard" data-page-node-id="pmJTrACRc2JfYkiHZeJfEC">
+      <div class="lb" data-page-node-id="52MdCL6L99zlpEgAUpCjnx">最邻近指数 NNI</div><div class="vl" id="mNNI" data-page-node-id="RpdynXfMCV3ldg4bNd6ySs">—</div>
+      <div class="ds" data-page-node-id="FAhWIlzeTNbxuRBxL7MfdT">Z = <span id="mNNIZ" data-page-node-id="UWfzp71iAqWFqcNGZxe1Ax">—</span> · 显著聚集</div>
+      <div class="bar" style="width:41%" data-page-node-id="kPeSAnzqPxXIbKDOHV8nRu"></div>
     </div>
-    <div class="mcard">
-      <div class="lb">全局莫兰指数 Moran's I</div><div class="vl" id="mMI">—</div>
-      <div class="ds">Z = <span id="mMIZ">—</span> · 正空间自相关</div>
-      <div class="bar" style="width:53%"></div>
+    <div class="mcard" data-page-node-id="p1AXQP7sXVESgVL4WjK7O9">
+      <div class="lb" data-page-node-id="N2vwVBUJH2uAxzePUq6etK">全局莫兰指数 Moran's I</div><div class="vl" id="mMI" data-page-node-id="c9mJ3UFcTdxLHq1yxLETvm">—</div>
+      <div class="ds" data-page-node-id="Fw7CZbdoEnPLqvdukTBqJB">Z = <span id="mMIZ" data-page-node-id="0LgpsrZgWp8PfjDO9pRbm3">—</span> · 正空间自相关</div>
+      <div class="bar" style="width:53%" data-page-node-id="DHPfAc9kG1KiyFyxippOee"></div>
     </div>
-    <div class="mcard warm">
-      <div class="lb">泰森多边形变异系数 CV</div><div class="vl" id="mCV">—</div>
-      <div class="ds">远超 64% 阈值</div>
-      <div class="bar" style="width:88%"></div>
+    <div class="mcard warm" data-page-node-id="PUPDtlEAqtm3DDAuHwP0mD">
+      <div class="lb" data-page-node-id="fWmbYpD45mZLBQk5xJDUEb">泰森多边形变异系数 CV</div><div class="vl" id="mCV" data-page-node-id="OLodndDV2E87VUd4XTFxvX">—</div>
+      <div class="ds" data-page-node-id="bJiYxHCKQAcBqXr0DKvs6y">远超 64% 阈值</div>
+      <div class="bar" style="width:88%" data-page-node-id="ShHSkAwWFo91ZuxH4dB2GB"></div>
     </div>
-    <div class="mcard hot">
-      <div class="lb">Gi* 热点核心</div><div class="vl" id="mHot">—</div>
-      <div class="ds">西热东冷格局</div>
-      <div class="bar" style="width:70%"></div>
+    <div class="mcard hot" data-page-node-id="hLB3zNqqMvdjOBKsjynJOF">
+      <div class="lb" data-page-node-id="mFQUE8Z2gRaSzzzuDeKth4">Gi* 热点核心</div><div class="vl" id="mHot" data-page-node-id="IS8LTElwY5CGvDPPd4IvLI">—</div>
+      <div class="ds" data-page-node-id="H8JdUfFNrppAnNTl3wKUWh">西热东冷格局</div>
+      <div class="bar" style="width:70%" data-page-node-id="lfUeZdHaZ7xS1kD5iBHXD3"></div>
     </div>
   </div>
 </div>
 
 <!-- 右面板 -->
-<div class="panel" id="rightPanel">
-  <div class="sec" id="procSec">
-    <div class="sec-t" id="procSecT">稀土开采工艺 <span class="sub">点击飞行 · 四代演进</span><span class="collapse-arrow">▾</span></div>
-    <div id="procList"></div>
+<div class="panel" id="rightPanel" data-page-node-id="xu70Y1EMlFsALPo3C5ZYIe">
+  <div class="sec" id="procSec" data-page-node-id="7X4ne8CBm01HVLzcO26tCK">
+    <div class="sec-t" id="procSecT" data-page-node-id="IjEpkOx5ryp2wJGU1IR9L7">稀土开采工艺 <span class="sub" data-page-node-id="1SC4SUIIIRfmCNyfaaz11Z">点击飞行 · 四代演进</span><span class="collapse-arrow" data-page-node-id="82YItFUiVrj9JxFeTTyqPz">▾</span></div>
+    <div id="procList" data-page-node-id="zfCHxvdZ5t9QRwhRnIQa9g"></div>
   </div>
 
-  <div class="sec">
-    <div class="sec-t">县级矿点排行 <span class="sub">点击飞行</span></div>
-    <div id="rankList"></div>
+  <div class="sec" data-page-node-id="uL2AZP674lAZsSEDda6UnO">
+    <div class="sec-t" data-page-node-id="WhMbHRhw7g1XOttFicUViP">县级矿点排行 <span class="sub" data-page-node-id="Uc3XjsrjZEMKvQazfcNquS">点击飞行</span></div>
+    <div id="rankList" data-page-node-id="POjABJ0qNL0U2S2ALCdPAZ"></div>
   </div>
 
-  <div class="sec" id="ctyDetail" style="display:none">
-    <div class="sec-t">县域详情</div>
-    <div id="detailContent"></div>
+  <div class="sec" id="ctyDetail" style="display:none" data-page-node-id="lHEi9AOjLBaIGLUO0nppse">
+    <div class="sec-t" data-page-node-id="LBYO5glvHxZp7344zCo04X">县域详情</div>
+    <div id="detailContent" data-page-node-id="8geYa08xSRKkWTKZgTdRO4"></div>
   </div>
 
 </div>
 
-<div class="popup" id="popup">
-  <span class="pc" id="ppClose">×</span>
-  <div class="pt" id="ppTitle"></div>
-  <div class="pg" id="ppTag"></div>
-  <div class="pd" id="ppDesc"></div>
+<div class="popup" id="popup" data-page-node-id="EmcR7OmUkdMwkDbwvFfBT3">
+  <span class="pc" id="ppClose" data-page-node-id="AiOSb8nZTSByk0Az08wlkF">×</span>
+  <div class="pt" id="ppTitle" data-page-node-id="MW5lxpJiNQWSNHDfCmhzfx"></div>
+  <div class="pg" id="ppTag" data-page-node-id="NMUAX2Hqhwbt4LpUcdj74x"></div>
+  <div class="pd" id="ppDesc" data-page-node-id="7hnuBxvuFHAhq8JeEY1zaM"></div>
 </div>
 
-<div class="drawer-backdrop" id="backdrop"></div>
+<div class="drawer-backdrop" id="backdrop" data-page-node-id="9HrOZCuD9AHgkmNc7L6ZUd"></div>
 
 <script>
 /* =========================================================
@@ -462,19 +522,19 @@ var EXAG = 1.6;
 var SINK = 180;               // 光柱底部扎入地表的深度，保证"钉"在 DEM 上
 
 var CAT_COLORS = {
-  tungsten:'#e0a040', ferrous:'#8a7060', precious:'#e0c050', rare_earth:'#e2544a',
-  rare:'#b878dc', nonmetal:'#5f9e8c', nonferrous:'#7a9ab0', other:'#5f6878'
+  tungsten:'#B8923F', ferrous:'#4A4438', precious:'#8A6A2F', rare_earth:'#B03A2E',
+  rare:'#7A4B9E', nonmetal:'#2E6B4F', nonferrous:'#A8663A', other:'#6E6656'
 };
 var CAT_NAMES = {
   tungsten:'钨锡多金属', ferrous:'黑色金属', precious:'贵金属', rare_earth:'稀土金属',
   rare:'稀有金属', nonmetal:'非金属', nonferrous:'有色及贵金属', other:'其他'
 };
 var HOT_STYLE = {
-  '热点':   {c:'rgba(226,84,74,.42)', b:'#ff5a4e', t:'#ff8a80', w:3.0},
-  '次热点': {c:'rgba(201,112,58,.30)', b:'#e0a070', t:'#e8b088', w:2.0},
-  '不显著': {c:'rgba(120,130,145,.10)', b:'rgba(201,148,74,.45)', t:'rgba(221,226,232,.72)', w:1.3},
-  '次冷点': {c:'rgba(90,134,189,.20)', b:'rgba(120,160,210,.7)', t:'rgba(160,190,225,.8)', w:1.3},
-  '冷点':   {c:'rgba(90,134,189,.28)', b:'rgba(110,150,210,.85)', t:'rgba(160,190,225,.85)', w:1.6}
+  '热点':   {c:'rgba(226,84,74,.42)', b:'#B03A2E', t:'#C0553A', w:3.0},
+  '次热点': {c:'rgba(201,112,58,.30)', b:'#A8663A', t:'#A8663A', w:2.0},
+  '不显著': {c:'rgba(120,130,145,.10)', b:'rgba(184,146,63,.50)', t:'rgba(58,50,36,.78)', w:1.3},
+  '次冷点': {c:'rgba(44,95,138,.18)', b:'rgba(74,120,176,.75)', t:'rgba(44,95,138,.92)', w:1.3},
+  '冷点':   {c:'rgba(44,95,138,.26)', b:'rgba(60,110,170,.9)', t:'rgba(36,84,128,.95)', w:1.6}
 };
 
 /* =========================================================
@@ -735,26 +795,47 @@ var TERRAIN_FS = [
   '    c = mix(c, c3, smoothstep(0.70, 1.00, t));',
   '    return c;',
   '}',
+  'vec3 rampMZ(float t) {',
+  '    // 梅州非遗项目同款：深绿-绿-黄绿-黄-橙-棕-白',
+  '    vec3 c = vec3(0.180, 0.420, 0.227);',
+  '    c = mix(c, vec3(0.310, 0.616, 0.310), smoothstep(0.00, 0.18, t));',
+  '    c = mix(c, vec3(0.616, 0.761, 0.247), smoothstep(0.18, 0.34, t));',
+  '    c = mix(c, vec3(0.878, 0.824, 0.290), smoothstep(0.34, 0.52, t));',
+  '    c = mix(c, vec3(0.851, 0.604, 0.235), smoothstep(0.52, 0.70, t));',
+  '    c = mix(c, vec3(0.659, 0.416, 0.239), smoothstep(0.70, 0.86, t));',
+  '    c = mix(c, vec3(0.949, 0.949, 0.949), smoothstep(0.86, 1.00, t));',
+  '    return c;',
+  '}',
   'void main() {',
   '    float t = clamp((v_h - u_hmin) / max(u_hmax - u_hmin, 1.0), 0.0, 1.0);',
   '    vec3 col;',
   '    if (u_demPal < 0.5) col = rampTerrain(t);',
   '    else if (u_demPal < 1.5) col = rampElev(t);',
   '    else if (u_demPal < 2.5) col = rampGray(t);',
-  '    else col = rampGreen(t);',
+  '    else if (u_demPal < 3.5) col = rampGreen(t);',
+  '    else col = rampMZ(t);',
 
   '    float hs = texture(u_hillshade, v_st).r;',
   '    col *= mix(1.0 - u_hs, 1.0 + u_hs * 0.85, hs);',
   '    if (u_contour > 0.5) {',
+  '        if (u_demPal >= 3.5) {',
+  '            // 山地绿韵：200m 单线 + fwidth 抗锯齿。浅底上改用暖褐描线（压暗会糊进绿底）',
+  '            float ci = v_h / 200.0;',
+  '            float df = min(fract(ci), 1.0 - fract(ci));',
+  '            float aa = max(fwidth(ci), 1e-5);',
+  '            float line = 1.0 - smoothstep(0.0, aa * 1.6, df);',
+  '            col = mix(col, mix(col * 0.62, vec3(0.34, 0.26, 0.15), 0.55), line * 0.85);',
+  '        } else {',
   '        float mpp = max(v_dist * u_px, 0.6);',
   '        float d2 = abs(fract(v_h / 200.0 + 0.5) - 0.5) * 200.0;',
   '        float l2 = 1.0 - smoothstep(mpp * 0.7, mpp * 1.8, d2);',
   '        float d1 = abs(fract(v_h / 1000.0 + 0.5) - 0.5) * 1000.0;',
   '        float l1 = 1.0 - smoothstep(mpp * 0.9, mpp * 2.2, d1);',
-  '        // 200m 次等高线：浅金提亮，可见但不抢眼',
-  '        col = mix(col, col * 1.32 + vec3(0.05, 0.04, 0.02), l2 * 0.55);',
-  '        // 1000m 主等高线：明显暗褐描边，强对比',
-  '        col = mix(col, vec3(0.16, 0.09, 0.05), l1 * 0.72);',
+  '        // 200m 次等高线：浅底上「压暗」才看得见（原来提亮是给深底的）',
+  '        col = mix(col, col * 0.72, l2 * 0.60);',
+  '        // 1000m 主等高线：深褐描边，强对比',
+  '        col = mix(col, vec3(0.22, 0.15, 0.07), l1 * 0.68);',
+  '        }',
   '    }',
   '    float fog = clamp((v_dist - u_fogNear) / max(u_fogFar - u_fogNear, 1.0), 0.0, 1.0);',
   '    col = mix(col, u_fogColor, fog * 0.88);',
@@ -795,10 +876,10 @@ function addTerrain(){
     u_contour: LAYER.contour ? 1.0 : 0.0,
     u_px: _uPx,
     u_alpha: 1.0,
-    u_demPal: 0.0,
+    u_demPal: DEM_PAL_IDX[DEM_PAL],
     u_fogNear: _uFogNear,
     u_fogFar: _uFogFar,
-    u_fogColor: new Cesium.Cartesian3(0.058, 0.050, 0.043)
+    u_fogColor: new Cesium.Cartesian3(0.945, 0.929, 0.890)   // 纸底浮尘（原为深空黑）
   };
   terrainApp = new Cesium.Appearance({
     translucent: false,
@@ -848,6 +929,8 @@ function addTerrain(){
     var far = Math.max(420000, camH * 5.5);
     terrainUniforms.u_fogFar = far;
     terrainUniforms.u_fogNear = far * 0.34;
+    // 比例尺节流更新（每 ~12 帧）
+    if ((updateScaleBar._n = (updateScaleBar._n || 0) + 1) % 12 === 0) updateScaleBar();
   });
 }
 
@@ -1047,7 +1130,7 @@ function addPoints(){
       cylinder: {
         length: h, topRadius: 0, bottomRadius: st.r,
         material: col.withAlpha(st.a), outline: true,
-        outlineColor: Cesium.Color.fromCssColorString('#ffe6bc').withAlpha(0.85),
+        outlineColor: Cesium.Color.fromCssColorString('#8A6A2F').withAlpha(0.85),
         outlineWidth: 2
       }
     });
@@ -1064,13 +1147,18 @@ function addPoints(){
       label: {
         text: p.county + ' · ' + (CAT_NAMES[p.dom] || ''),
         font: '600 10px "Noto Serif SC"',
-        fillColor: Cesium.Color.fromCssColorString('#ffe6bc'),
+        fillColor: Cesium.Color.fromCssColorString('#8A6A2F'),
         showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString('rgba(8,12,20,.72)'),
+        backgroundColor: Cesium.Color.fromCssColorString('rgba(255,255,255,.86)'),
         backgroundPadding: new Cesium.Cartesian2(4, 2),
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
         scaleByDistance: new Cesium.NearFarScalar(90000, 1.0, 650000, 0.4),
-        translucencyByDistance: new Cesium.NearFarScalar(300000, 1.0, 650000, 0.25)
+        translucencyByDistance: new Cesium.NearFarScalar(300000, 1.0, 650000, 0.25),
+        // 远景直接不渲染，避免全览时 408 个标签糊成一片；窄屏阈值再收紧
+        distanceDisplayCondition: (function(){
+          var narrow = Math.min(window.innerWidth, window.innerHeight) < 700;
+          return new Cesium.DistanceDisplayCondition(0, narrow ? 180000 : 420000);
+        })()
       }
     });
     lb._lon = p.lon; lb._lat = p.lat; lb._h = 28;
@@ -1082,7 +1170,7 @@ function addPoints(){
       point: {
         pixelSize: 11,
         color: col.withAlpha(0.95),
-        outlineColor: Cesium.Color.fromCssColorString('#ffe6bc').withAlpha(0.9),
+        outlineColor: Cesium.Color.fromCssColorString('#8A6A2F').withAlpha(0.9),
         outlineWidth: 2,
         scaleByDistance: new Cesium.NearFarScalar(5000, 1.7, 900000, 0.55),
         translucencyByDistance: new Cesium.NearFarScalar(1200000, 1.0, 2400000, 0.25)
@@ -1106,12 +1194,12 @@ function addCountyLabels(){
       label: {
         text: c.name + (c.n ? '  ' + c.n : ''),
         font: (isHot ? '600 15px "Noto Serif SC"' : '500 13px "Noto Serif SC"'),
-        fillColor: Cesium.Color.fromCssColorString(isHot ? '#ffd9a0' : '#f3ead6'),
+        fillColor: Cesium.Color.fromCssColorString(isHot ? '#B03A2E' : '#3F3728'),
         showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString(isHot ? 'rgba(120,30,20,.72)' : 'rgba(22,26,34,.66)'),
+        backgroundColor: Cesium.Color.fromCssColorString(isHot ? 'rgba(255,246,240,.90)' : 'rgba(253,251,246,.88)'),
         backgroundPadding: new Cesium.Cartesian2(7, 4),
-        outlineColor: Cesium.Color.fromCssColorString(isHot ? 'rgba(255,120,90,.95)' : 'rgba(200,210,225,.55)'),
-        outlineWidth: isHot ? 2.5 : 1.2,
+        outlineColor: Cesium.Color.fromCssColorString(isHot ? 'rgba(176,58,46,.75)' : 'rgba(184,146,63,.55)'),
+        outlineWidth: isHot ? 2.2 : 1.2,
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
@@ -1171,8 +1259,8 @@ function initCesium(){
   });
 
   var sc = viewer.scene;
-  sc.backgroundColor = Cesium.Color.fromCssColorString('#05070c');
-  sc.globe.baseColor = Cesium.Color.fromCssColorString('#05080f');
+  sc.backgroundColor = Cesium.Color.fromCssColorString('#F5F1E8');
+  sc.globe.baseColor = Cesium.Color.fromCssColorString('#E6DFCF');
   sc.globe.showGroundAtmosphere = false;
   sc.globe.enableLighting = false;
   sc.skyBox.show = false;
@@ -1229,13 +1317,14 @@ function flyTo(lon, lat, range, pitch, heading, dur){
    7. 面板内容
    ========================================================= */
 // DEM 地形配色方案（多套，客户端可切换）；与着色器 u_demPal 一一对应
-var DEM_PAL = 'terrain';
-var DEM_PAL_IDX = { terrain: 0.0, elev: 1.0, gray: 2.0, green: 3.0 };
+var DEM_PAL = 'mz';
+var DEM_PAL_IDX = { terrain: 0.0, elev: 1.0, gray: 2.0, green: 3.0, mz: 4.0 };
 var DEM_PALS = {
   terrain: { stops:['rgb(31,15,11)','rgb(58,30,18)','rgb(98,54,30)','rgb(142,90,45)','rgb(185,139,81)','rgb(218,179,120)','rgb(243,230,198)'], pos:[0,16,34,54,72,87,100] },
   elev:    { stops:['rgb(26,51,140)','rgb(0,140,191)','rgb(38,179,89)','rgb(242,217,51)','rgb(230,77,46)'], pos:[0,25,50,72,100] },
   gray:    { stops:['rgb(33,33,38)','rgb(140,140,148)','rgb(237,237,242)'], pos:[0,50,100] },
-  green:   { stops:['rgb(26,56,31)','rgb(77,140,56)','rgb(179,204,77)','rgb(199,168,102)'], pos:[0,40,70,100] }
+  green:   { stops:['rgb(26,56,31)','rgb(77,140,56)','rgb(179,204,77)','rgb(199,168,102)'], pos:[0,40,70,100] },
+  mz:      { stops:['rgb(46,107,58)','rgb(79,157,79)','rgb(157,194,63)','rgb(224,210,74)','rgb(217,154,60)','rgb(168,106,61)','rgb(242,242,242)'], pos:[0,18,34,52,70,86,100] }
 };
 function buildDemLegend(){
   var el = document.querySelector('.ramp'); if (!el) return;
@@ -1411,13 +1500,13 @@ function fillStats(){
    8. 故事章节
    ========================================================= */
 var PROCS = [
-  { g:1, img:'工艺图/池浸.png',            n:'池浸',     y:'1970s',  r:'30~38%', c:'#e2544a',
+  { g:1, img:'工艺图/池浸.png',            n:'池浸',     y:'1970s',  r:'30~38%', c:'#B03A2E',
     d:'全坡面剥离表土、筑池浸矿，植被损毁最大，是第一代工艺。' },
-  { g:2, img:'工艺图/堆浸.png',            n:'堆浸',     y:'1980s末', r:'45~55%', c:'#c0703a',
+  { g:2, img:'工艺图/堆浸.png',            n:'堆浸',     y:'1980s末', r:'45~55%', c:'#A8663A',
     d:'原矿就地筑堆、喷淋浸出，处理规模与效率显著提升。' },
-  { g:3, img:'工艺图/原地浸矿.png',         n:'原地浸矿', y:'1990s',  r:'70~78%', c:'#c9944a',
+  { g:3, img:'工艺图/原地浸矿.png',         n:'原地浸矿', y:'1990s',  r:'70~78%', c:'#B8923F',
     d:'打注液井原地浸出，不搬动矿石，地表扰动大幅减小。' },
-  { g:4, img:'工艺图/无铵绿色原地浸矿.png', n:'无铵绿色', y:'近年',   r:'82~88%', c:'#5aa06a',
+  { g:4, img:'工艺图/无铵绿色原地浸矿.png', n:'无铵绿色', y:'近年',   r:'82~88%', c:'#2E6B4F',
     d:'无铵浸矿剂 + 废液闭环回收，绿色工艺、外排水达Ⅲ类。' }
 ];
 
@@ -1489,23 +1578,23 @@ function initView(){
 // 分类配色：cluster=LISA, hotspot_cl=Gi*, 大类=矿种大类
 window.AL_CAT = {
   cluster: {
-    '高-高集聚 (HH)': 'rgba(226,59,59,0.60)',
-    '低-低集聚 (LL)': 'rgba(59,111,226,0.60)',
+    '高-高集聚 (HH)': 'rgba(176,58,46,.62)',
+    '低-低集聚 (LL)': 'rgba(44,95,138,.60)',
     '高-低集聚 (HL)': 'rgba(240,144,47,0.62)',
-    '低-高集聚 (LH)': 'rgba(47,182,192,0.62)',
-    '不显著 (NS)':    'rgba(138,143,153,0.06)'
+    '低-高集聚 (LH)': 'rgba(46,107,79,.60)',
+    '不显著 (NS)':    'rgba(90,83,68,.07)'
   },
   hotspot_cl: {
-    '热点':   'rgba(226,59,59,0.60)',
+    '热点':   'rgba(176,58,46,.62)',
     '次热点': 'rgba(240,144,47,0.60)',
-    '不显著': 'rgba(138,143,153,0.06)',
-    '次冷点': 'rgba(95,168,224,0.55)',
-    '冷点':   'rgba(47,111,226,0.60)'
+    '不显著': 'rgba(90,83,68,.07)',
+    '次冷点': 'rgba(44,95,138,.55)',
+    '冷点':   'rgba(44,95,138,.60)'
   },
   大类: {
     '有色金属矿产': 'rgba(232,146,58,0.92)',
     '稀有金属矿产': 'rgba(155,107,214,0.92)',
-    '稀土金属矿产': 'rgba(63,174,107,0.92)',
+    '稀土金属矿产': 'rgba(46,107,79,.90)',
     '贵金属矿产':   'rgba(255,210,63,0.95)',
     '黑色金属矿产': 'rgba(122,130,144,0.92)',
     '非金属矿产':   'rgba(176,123,74,0.92)'
@@ -1810,9 +1899,9 @@ function buildAlLegend(key, on){
     var pstops = (window.PALETTES[curPal] || window.PALETTES['blue-red']).stops;
     var grad = pstops.map(function(st){ return 'rgb(' + st[1][0] + ',' + st[1][1] + ',' + st[1][2] + ') ' + Math.round(st[0] * 100) + '%'; }).join(',');
     el.innerHTML = '<div class="hl" style="width:100%;display:flex;align-items:center">' +
-      '<span style="color:#9fb4d8">低</span>' +
+      '<span style="color:#3C6E9E">低</span>' +
       '<i style="flex:1;height:8px;margin:0 6px;border-radius:4px;background:linear-gradient(90deg,' + grad + ')"></i>' +
-      '<span style="color:#f0a05a">高</span>' +
+      '<span style="color:#A8663A">高</span>' +
       '<span style="margin-left:6px;color:#7e8794">(' + rg.mn.toFixed(2) + '–' + rg.mx.toFixed(2) + ')</span></div>';
   }
 }
@@ -1963,10 +2052,98 @@ function bindUI(){
 }
 
 /* =========================================================
+   10.5 矿图质感层：等高线底纹 / 经度刻度 / 比例尺
+   ========================================================= */
+/* 等高线角花：只在四角画等高线，中间留白。
+   整屏铺满等高线会变成"第二层地图"，和地形抢视觉，所以改成角花。
+   生成 1200x750 画布，四条曲线簇分别贴四角，radius 以角落为中心向外扩散。 */
+function contourPattern(){
+  var W = 1200, H = 750;
+  // 四个角：中心点坐标 + 该角的起始角度（朝画面内侧扇出）
+  var CORNERS = [
+    {x: 0,   y: 0,   a0: 0.00, a1: Math.PI * 0.5},   // 左上
+    {x: W,   y: 0,   a0: Math.PI * 0.5, a1: Math.PI},// 右上
+    {x: W,   y: H,   a0: Math.PI, a1: Math.PI * 1.5},// 右下
+    {x: 0,   y: H,   a0: Math.PI * 1.5, a1: Math.PI * 2} // 左下
+  ];
+  var paths = '';
+  for (var c = 0; c < CORNERS.length; c++){
+    var o = CORNERS[c];
+    // 每个角 5 圈，半径逐渐外扩并淡出
+    for (var i = 0; i < 5; i++){
+      var r = 96 + i * 74;
+      var op = (0.42 - i * 0.065).toFixed(3);
+      var sw = (i === 0 ? 1.2 : 0.8).toFixed(1);
+      var N = 34, d = '';
+      for (var k = 0; k <= N; k++){
+        var t = k / N;
+        // 只在角落扇区内绘制（张角约 52°），曲线自然断在画面里
+        var a = o.a0 + (o.a1 - o.a0) * (t * 0.29) + 0.06;
+        // 双频正弦制造"被地形切割"的起伏，不是完美圆弧
+        var wob = 1 + 0.16 * Math.sin(t * 9 + c * 1.3 + i * 0.8)
+                    + 0.09 * Math.sin(t * 17 - c * 2.1 + i * 1.5);
+        var rr = r * wob;
+        var x = (o.x + Math.cos(a) * rr).toFixed(1);
+        var y = (o.y + Math.sin(a) * rr * 0.92).toFixed(1);
+        d += (k ? 'L' : 'M') + x + ' ' + y;
+      }
+      paths += '<path d="' + d + '" fill="none" stroke="#6E6656" stroke-width="'
+             + sw + '" opacity="' + op + '" stroke-linecap="round"/>';
+    }
+  }
+  var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + W + "' height='" + H + "' "
+          + "viewBox='0 0 " + W + " " + H + "'>" + paths + "</svg>";
+  return "url(\"data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg))) + "\")";
+}
+function buildMapTextures(){
+  // 等高线肌理
+  var ct = $('contourTint');
+  if (ct) ct.style.backgroundImage = contourPattern();
+  // 经度刻度
+  var lr = $('lonRuler');
+  if (lr && !lr.childNodes.length){
+    var h = '';
+    for (var i = 0; i < 30; i++) h += '<i></i>';
+    lr.innerHTML = h;
+  }
+  // 比例尺随缩放更新
+  if (viewer) viewer.camera.percentageChanged = 0.12;
+}
+
+function updateScaleBar(){
+  if (!viewer || !viewer.camera) return;
+  var bar = document.querySelector('.scalebar .bar');
+  var sb = $('sbLabel');
+  if (!bar || !sb) return;
+  var canvas = viewer.canvas;
+  var cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (!cw || !ch) return;
+  // 取屏幕中心点，量算 100px 对应多少米
+  var c = new Cesium.Cartesian2(cw / 2, ch / 2);
+  var a = viewer.camera.pickEllipsoid(c);
+  var b = viewer.camera.pickEllipsoid(new Cesium.Cartesian2(cw / 2 + 100, ch / 2));
+  if (!a || !b) return;
+  var m = Cesium.Cartesian3.distance(a, b);
+  // 取整到 1/2/5 的整数倍
+  var target = m > 0 ? m : 1;
+  var pow = Math.pow(10, Math.floor(Math.log(target) / Math.LN10));
+  var nice = [1, 2, 5, 10].map(function(k){ return k * pow; })
+                           .filter(function(v){ return v >= target; })[0] || pow * 10;
+  var px = 100 * nice / target;
+  px = Math.max(40, Math.min(180, px));
+  var seg = px / 5;
+  var spans = bar.querySelectorAll('span');
+  for (var i = 0; i < spans.length; i++) spans[i].style.width = seg.toFixed(1) + 'px';
+  sb.textContent = nice >= 1000 ? (nice / 1000).toFixed(nice % 1000 ? 1 : 0) + ' km'
+                                : Math.round(nice) + ' m';
+}
+
+/* =========================================================
    11. 启动
    ========================================================= */
 function startApp(){
   if (!DM){ $('loadMsg').textContent = '缺少 dem_terrain_data.js'; return; }
+  buildMapTextures();
   initDem();
   initCesium();
   addTerrain();

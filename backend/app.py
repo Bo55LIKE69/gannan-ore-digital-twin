@@ -62,13 +62,18 @@ def to_geojson(cur):
 
 @app.get("/health")
 def health():
-    c = get_conn()
-    cur = c.cursor()
-    cur.execute("SELECT PostGIS_Full_Version();")
-    version = cur.fetchone()[0]
-    cur.close()
-    c.close()
-    return {"status": "ok", "postgis": version}
+    out = {"status": "ok"}
+    try:
+        c = get_conn()
+        cur = c.cursor()
+        cur.execute("SELECT PostGIS_Full_Version();")
+        out["postgis"] = cur.fetchone()[0]
+        cur.close()
+        c.close()
+    except Exception as e:
+        out["postgis"] = "unavailable: " + str(e).splitlines()[0]
+        out["mode"] = "plain-sql (mines_cn 用 lon/lat bbox)"
+    return out
 
 
 @app.get("/mines")
@@ -173,6 +178,106 @@ def stats():
     out["by_level"] = [{"level": r[0], "count": r[1]} for r in cur.fetchall()]
     cur.execute("SELECT count(*) FROM mines WHERE hotspot = '热点'")
     out["hotspot_count"] = cur.fetchone()[0]
+    cur.close()
+    c.close()
+    return out
+
+
+# ---------------- 全国矿产地（mines_cn，3.3 万条） ----------------
+
+CN_COLUMNS = (
+    "id, name, kind, scale, status, lon, lat, ST_AsGeoJSON(geom) AS geom"
+)
+CN_COLUMNS_PLAIN = "id, name, kind, scale, status, lon, lat"
+
+
+def has_postgis():
+    """检测实例是否装了 PostGIS（进程内缓存一次）。"""
+    global _HAS_GIS
+    if _HAS_GIS is None:
+        try:
+            c = get_conn()
+            cur = c.cursor()
+            cur.execute(
+                "SELECT count(*) FROM pg_extension WHERE extname = 'postgis';")
+            _HAS_GIS = cur.fetchone()[0] > 0
+            cur.close()
+            c.close()
+        except Exception:
+            _HAS_GIS = False
+    return _HAS_GIS
+
+
+_HAS_GIS = None
+
+
+@app.get("/mines_cn")
+def mines_cn(
+    bbox: Optional[str] = None,      # minx,miny,maxx,maxy（WGS84 经纬度）
+    kind: Optional[str] = None,      # 矿种，如 稀土 / 煤 / 铁
+    scale: Optional[str] = None,     # 规模，如 大型矿床 / 矿点
+    status: Optional[str] = None,    # 开发现状，如 生产矿区
+    limit: int = Query(500, le=5000),
+):
+    """全国矿点按视口查询：前端镜头到哪就取哪块，空间过滤下沉数据库。"""
+    where, params = [], []
+    if bbox:
+        minx, miny, maxx, maxy = map(float, bbox.split(","))
+        if has_postgis():
+            where.append("geom && ST_MakeEnvelope(%s, %s, %s, %s, 4326)")
+            params += [minx, miny, maxx, maxy]
+        else:
+            # 顺序注意：lon 收 (minx, maxx)，lat 收 (miny, maxy)
+            where.append("lon BETWEEN %s AND %s AND lat BETWEEN %s AND %s")
+            params += [minx, maxx, miny, maxy]
+    if kind:
+        where.append("kind = %s")
+        params.append(kind)
+    if scale:
+        where.append("scale = %s")
+        params.append(scale)
+    if status:
+        where.append("status = %s")
+        params.append(status)
+
+    cols = CN_COLUMNS if has_postgis() else CN_COLUMNS_PLAIN
+    sql = f"SELECT {cols} FROM mines_cn"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " LIMIT %d" % int(limit)
+
+    c = get_conn()
+    cur = c.cursor()
+    cur.execute(sql, params)
+    fc = to_geojson(cur) if has_postgis() else _plain_features(cur)
+    cur.close()
+    c.close()
+    return fc
+
+
+def _plain_features(cur):
+    """纯 SQL 模式下用 lon/lat 现场拼 GeoJSON Point 几何。"""
+    cols = [d[0] for d in cur.description]
+    feats = []
+    for row in cur.fetchall():
+        d = dict(zip(cols, row))
+        geom = {"type": "Point", "coordinates": [d.pop("lon"), d.pop("lat")]}
+        feats.append({"type": "Feature", "geometry": geom, "properties": d})
+    return {"type": "FeatureCollection", "features": feats}
+
+
+@app.get("/stats_cn")
+def stats_cn():
+    """全国矿点总览：按规模 / 开发现状 / 矿种 分组计数。"""
+    c = get_conn()
+    cur = c.cursor()
+    out = {}
+    cur.execute("SELECT scale, count(*) FROM mines_cn GROUP BY scale ORDER BY 2 DESC")
+    out["by_scale"] = [{"scale": r[0], "count": r[1]} for r in cur.fetchall()]
+    cur.execute("SELECT status, count(*) FROM mines_cn GROUP BY status ORDER BY 2 DESC")
+    out["by_status"] = [{"status": r[0], "count": r[1]} for r in cur.fetchall()]
+    cur.execute("SELECT count(*) FROM mines_cn")
+    out["total"] = cur.fetchone()[0]
     cur.close()
     c.close()
     return out

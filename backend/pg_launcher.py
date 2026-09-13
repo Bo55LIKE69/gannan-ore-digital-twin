@@ -89,8 +89,18 @@ def setup():
     )
     if r.returncode != 0:
         print("(库已存在，跳过 createdb)")
-    # 扩展必须在目标库里启用（扩展是 per-database 的）
-    psql(PG["dbname"], "CREATE EXTENSION IF NOT EXISTS postgis;")
+    # 扩展必须在目标库里启用（扩展是 per-database 的）。
+    # 容错：实例没有 PostGIS（如直接用系统 PG17 的二进制）时提示但不中断，
+    # load_national / app 会自动退到纯 SQL bbox 模式。
+    r = run(
+        [bin("psql.exe"), "-h", PG["host"], "-p", str(PG["port"]),
+         "-U", PG["user"], "-d", PG["dbname"],
+         "-c", "CREATE EXTENSION IF NOT EXISTS postgis;"],
+        capture_output=True, text=True,
+    )
+    if r.returncode != 0:
+        print("⚠ PostGIS 扩展不可用， mines_cn 将使用纯 SQL bbox 模式")
+        print(" ", (r.stderr or "").strip().splitlines()[-1] if r.stderr else "")
 
 
 def stop():

@@ -113,6 +113,11 @@ a small{display:block;color:#8a93a6;font-size:12.5px;margin-top:4px}
 def build_html():
     s = io.open(os.path.join(ROOT, SRC_HTML), encoding="utf-8").read()
 
+    # 0) 清洗可视化编辑器注入的临时属性（会打断下面的精确匹配）
+    s, n_strip = re.subn(r'\s*data-page-node-id="[^"]*"', '', s)
+    if n_strip:
+        print("  ~ 清除编辑器注入属性 %d 处" % n_strip)
+
     # 1) Cesium 本地化（必须在引入 Cesium.js 之前声明 CESIUM_BASE_URL）
     old_cdn = '<script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>'
     assert s.count(old_cdn) == 1
@@ -121,7 +126,7 @@ def build_html():
                   '<script src="./Cesium/Cesium.js"></script>')
 
     old_css = '<link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">'
-    assert s.count(old_css) == 1
+    assert s.count(old_css) == 1, "widgets.css 引用未匹配（是否被编辑器改写？）"
     s = s.replace(old_css, '<link href="./Cesium/Widgets/widgets.css" rel="stylesheet">')
 
     # 2) Google Fonts 异步化：国内可能加载慢，不能阻塞首屏渲染

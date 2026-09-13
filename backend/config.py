@@ -7,9 +7,11 @@
 """
 import os
 
-# conda 环境里 postgres 的 bin 目录（含 postgres.exe / initdb.exe / pg_ctl.exe / psql.exe）
-# 可用环境变量 GANNAN_PG_BIN 覆盖，方便别人换路径。
-CONDA_ENV = os.environ.get("GANNAN_PG_BIN", r"E:\adaconda\envs\gannan-pg\Library\bin")
+# postgres 的 bin 目录（含 postgres.exe / initdb.exe / pg_ctl.exe / psql.exe）
+# 当前用系统 PostgreSQL 17 的二进制（conda 镜像通道 2026-09 全灭，装不上 conda 版）。
+# 可用环境变量 GANNAN_PG_BIN 覆盖，方便换路径。
+CONDA_ENV = os.environ.get(
+    "GANNAN_PG_BIN", r"C:\Program Files\PostgreSQL\17\bin")
 
 PG = {
     "host": "127.0.0.1",
